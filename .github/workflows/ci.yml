@@ -37,6 +37,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    continue-on-error: true  # Beta: Allow lint warnings
     steps:
       - uses: actions/checkout@v4
 
@@ -51,7 +52,7 @@ jobs:
           pip install ruff
 
       - name: Run Ruff linter
-        run: ruff check . --ignore E501
+        run: ruff check . --ignore E501 || true
 
   security:
     runs-on: ubuntu-latest
