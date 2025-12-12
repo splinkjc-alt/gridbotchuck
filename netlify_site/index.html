@@ -8,6 +8,10 @@
   <meta name="description"
     content="Professional cryptocurrency grid trading bot. Automate your trading strategy with advanced grid algorithms, multi-pair support, and real-time market scanning.">
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="gridboticon.png">
+  <link rel="apple-touch-icon" href="gridboticon.png">
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,7 +76,9 @@
     }
 
     .logo-icon {
-      font-size: 2rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
     }
 
     .pro-badge {
@@ -1000,7 +1006,7 @@
   <section class="hero">
     <nav>
       <div class="logo">
-        <span class="logo-icon">📊</span>
+        <img src="gridboticon.png" alt="GridBot Pro" class="logo-icon">
         <span>GridBot <span class="pro-badge">PRO</span></span>
       </div>
       <ul class="nav-links">
@@ -1193,7 +1199,8 @@
           <span>50% launch discount for beta testers</span>
         </div>
       </div>
-      <form class="beta-form" id="betaForm" name="beta-signup" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <form class="beta-form" id="betaForm" name="beta-signup" method="POST" data-netlify="true"
+        netlify-honeypot="bot-field">
         <input type="hidden" name="form-name" value="beta-signup">
         <p hidden><input name="bot-field"></p>
         <input type="email" id="betaEmail" name="email" placeholder="Enter your email address" required>
@@ -1311,7 +1318,7 @@
       const email = document.getElementById('betaEmail').value;
       const form = this;
       const button = form.querySelector('button');
-      
+
       // Show loading state
       button.innerHTML = '⏳ Signing up...';
       button.disabled = true;
