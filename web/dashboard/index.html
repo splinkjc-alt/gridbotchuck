@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GridBot Pro - Automated Grid Trading</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+  <!-- Chart.js for live price charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Google Fonts for professional typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="brand">
+          <span class="brand-logo">📊</span>
+          <div class="brand-text">
+            <h1>GridBot <span class="pro-badge">PRO</span></h1>
+            <span class="brand-tagline">Automated Grid Trading</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="live-price" id="live-price-display">
+            <span class="price-label">Live Price</span>
+            <span class="price-value" id="header-price">$--</span>
+            <span class="price-change positive" id="header-change">+0.00%</span>
+          </div>
+          <div class="connection-status">
+            <span id="status-indicator" class="status-dot"></span>
+            <span id="connection-text">Connecting...</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Control Panel -->
+    <main class="main-content">
+      <!-- Bot Control Section -->
+      <section class="control-section">
+        <h2>Bot Control</h2>
+        <div class="control-buttons">
+          <button id="btn-start" class="btn btn-success" onclick="startBot()">
+            <span class="btn-icon">▶</span>
+            <span class="btn-text">Start Bot</span>
+          </button>
+          <button id="btn-pause" class="btn btn-warning" onclick="pauseBot()">
+            <span class="btn-icon">⏸</span>
+            <span class="btn-text">Pause</span>
+          </button>
+          <button id="btn-resume" class="btn btn-info" onclick="resumeBot()">
+            <span class="btn-icon">⏩</span>
+            <span class="btn-text">Resume</span>
+          </button>
+          <button id="btn-stop" class="btn btn-danger" onclick="stopBot()">
+            <span class="btn-icon">⏹</span>
+            <span class="btn-text">Stop Bot</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- P&L Summary Dashboard -->
+      <section class="pnl-dashboard">
+        <div class="pnl-cards">
+          <div class="pnl-card total-value">
+            <div class="pnl-icon">💰</div>
+            <div class="pnl-info">
+              <span class="pnl-label">Total Portfolio</span>
+              <span class="pnl-value" id="pnl-total">$0.00</span>
+            </div>
+          </div>
+          <div class="pnl-card profit">
+            <div class="pnl-icon">📈</div>
+            <div class="pnl-info">
+              <span class="pnl-label">Session P&L</span>
+              <span class="pnl-value positive" id="pnl-session">+$0.00</span>
+              <span class="pnl-percent" id="pnl-percent">(0.00%)</span>
+            </div>
+          </div>
+          <div class="pnl-card trades">
+            <div class="pnl-icon">🔄</div>
+            <div class="pnl-info">
+              <span class="pnl-label">Trades Today</span>
+              <span class="pnl-value" id="pnl-trades">0</span>
+            </div>
+          </div>
+          <div class="pnl-card uptime">
+            <div class="pnl-icon">⏱️</div>
+            <div class="pnl-info">
+              <span class="pnl-label">Bot Uptime</span>
+              <span class="pnl-value" id="pnl-uptime">00:00:00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Price Chart -->
+      <section class="chart-section">
+        <div class="chart-header">
+          <h2>📈 Live Price Chart</h2>
+          <div class="chart-controls">
+            <button class="chart-btn active" data-range="1h">1H</button>
+            <button class="chart-btn" data-range="4h">4H</button>
+            <button class="chart-btn" data-range="1d">1D</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="priceChart"></canvas>
+        </div>
+        <div class="grid-levels-overlay" id="grid-levels">
+          <!-- Grid levels will be rendered here -->
+        </div>
+      </section>
+
+      <!-- Market Scanner Section -->
+      <section class="scanner-section">
+        <h2>🔍 Market Scanner - Top Coin Finder</h2>
+        <div class="scanner-controls">
+          <div class="scanner-filters">
+            <div class="filter-group">
+              <label for="min-price">Min Price ($)</label>
+              <input type="number" id="min-price" value="1.00" min="0" step="0.5">
+            </div>
+            <div class="filter-group">
+              <label for="max-price">Max Price ($)</label>
+              <input type="number" id="max-price" value="20.00" min="0" step="1">
+            </div>
+            <div class="filter-group">
+              <label for="scan-timeframe">Timeframe</label>
+              <select id="scan-timeframe">
+                <option value="5m">5 min</option>
+                <option value="15m" selected>15 min</option>
+                <option value="1h">1 hour</option>
+                <option value="4h">4 hour</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="ema-fast-period">EMA Fast</label>
+              <input type="number" id="ema-fast-period" value="9" min="2" max="50" step="1">
+            </div>
+            <div class="filter-group">
+              <label for="ema-slow-period">EMA Slow</label>
+              <input type="number" id="ema-slow-period" value="21" min="5" max="200" step="1">
+            </div>
+            <button id="btn-scan" class="btn btn-primary" onclick="scanMarkets()">
+              <span class="btn-icon">🔍</span>
+              <span class="btn-text">Scan Markets</span>
+            </button>
+          </div>
+
+          <div class="auto-scan-controls">
+            <div class="filter-group">
+              <label for="auto-scan-interval">Auto-Scan (min)</label>
+              <input type="number" id="auto-scan-interval" value="5" min="1" max="60" step="1">
+            </div>
+            <button class="btn btn-secondary" onclick="toggleAutoScan()">
+              <span class="btn-icon">⏱️</span>
+              <span class="btn-text">Toggle Auto-Scan</span>
+            </button>
+            <span class="auto-scan-label">Status: <span id="auto-scan-status"
+                class="auto-scan-inactive">Off</span></span>
+          </div>
+
+          <div id="scan-status" class="scan-status"></div>
+        </div>
+
+        <div class="scanner-results">
+          <h3>Top Coins <span id="results-count">(0 results)</span></h3>
+          <div class="results-container">
+            <table class="scanner-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Pair</th>
+                  <th>Price</th>
+                  <th>24h %</th>
+                  <th>Score</th>
+                  <th>Signal</th>
+                  <th>EMA</th>
+                  <th>CCI</th>
+                  <th>MACD</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="scanner-tbody">
+                <tr>
+                  <td colspan="10" class="no-data">Click "Scan Markets" to find top coins</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Coin Details Modal -->
+        <div id="coin-details-modal" class="modal hidden">
+          <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3 id="modal-pair-name">Coin Details</h3>
+            <div class="modal-body">
+              <div class="indicator-grid" id="indicator-details"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Multi-Pair Trading Section -->
+      <section class="multi-pair-section">
+        <h2>📊 Multi-Pair Trading</h2>
+        <div class="multi-pair-controls">
+          <div class="multi-pair-config">
+            <div class="filter-group">
+              <label for="max-pairs">Max Pairs</label>
+              <input type="number" id="max-pairs" value="2" min="1" max="5" step="1">
+            </div>
+            <div class="filter-group">
+              <label for="min-balance-per-pair">Min $ Per Pair</label>
+              <input type="number" id="min-balance-per-pair" value="15" min="5" max="100" step="5">
+            </div>
+            <button id="btn-start-multi" class="btn btn-success" onclick="startMultiPair()">
+              <span class="btn-icon">▶</span>
+              <span class="btn-text">Start Multi-Pair</span>
+            </button>
+            <button id="btn-stop-multi" class="btn btn-danger" onclick="stopMultiPair()">
+              <span class="btn-icon">⏹</span>
+              <span class="btn-text">Stop All</span>
+            </button>
+          </div>
+          <div id="multi-pair-status" class="multi-pair-status">
+            <span class="status-label">Status:</span>
+            <span id="multi-status-text" class="status-value">Disabled</span>
+          </div>
+        </div>
+
+        <div class="multi-pair-summary" id="multi-pair-summary" style="display: none;">
+          <div class="summary-card">
+            <span class="summary-label">Total Allocated</span>
+            <span id="multi-total-allocated" class="summary-value">$0.00</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Current Value</span>
+            <span id="multi-current-value" class="summary-value">$0.00</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Total P&L</span>
+            <span id="multi-total-pnl" class="summary-value pnl-neutral">$0.00 (0%)</span>
+          </div>
+        </div>
+
+        <div class="multi-pair-grid" id="multi-pair-grid">
+          <p class="no-data">Enable multi-pair trading to see active pairs</p>
+        </div>
+      </section>
+
+      <!-- Status Section -->
+      <section class="status-section">
+        <div class="status-card">
+          <h3>Bot Status</h3>
+          <div class="status-grid">
+            <div class="status-item">
+              <label>Status:</label>
+              <span id="bot-status" class="value status-running">Not Running</span>
+            </div>
+            <div class="status-item">
+              <label>Trading Mode:</label>
+              <span id="trading-mode" class="value">--</span>
+            </div>
+            <div class="status-item">
+              <label>Trading Pair:</label>
+              <span id="trading-pair" class="value">--</span>
+            </div>
+            <div class="status-item">
+              <label>Last Update:</label>
+              <span id="last-update" class="value">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Balance Section -->
+        <div class="status-card">
+          <h3>Balance</h3>
+          <div class="balance-grid">
+            <div class="balance-item">
+              <label>Fiat Balance:</label>
+              <span id="fiat-balance" class="value currency">$0.00</span>
+            </div>
+            <div class="balance-item">
+              <label>Crypto Balance:</label>
+              <span id="crypto-balance" class="value currency">0 coins</span>
+            </div>
+            <div class="balance-item">
+              <label>Total Value:</label>
+              <span id="total-value" class="value currency">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid Info -->
+        <div class="status-card">
+          <h3>Grid Configuration</h3>
+          <div class="grid-info">
+            <div class="grid-item">
+              <label>Central Price:</label>
+              <span id="central-price" class="value">--</span>
+            </div>
+            <div class="grid-item">
+              <label>Total Grids:</label>
+              <span id="total-grids" class="value">--</span>
+            </div>
+            <div class="grid-item">
+              <label>Buy Grids:</label>
+              <span id="buy-grids" class="value">--</span>
+            </div>
+            <div class="grid-item">
+              <label>Sell Grids:</label>
+              <span id="sell-grids" class="value">--</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Metrics Section -->
+      <section class="metrics-section">
+        <div class="metrics-card">
+          <h3>Trading Metrics</h3>
+          <div class="metrics-grid">
+            <div class="metric">
+              <span class="metric-label">Total Orders</span>
+              <span id="total-orders" class="metric-value">0</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Open Orders</span>
+              <span id="open-orders" class="metric-value">0</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Filled Orders</span>
+              <span id="filled-orders" class="metric-value">0</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Total Fees</span>
+              <span id="total-fees" class="metric-value">$0.00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Orders Section -->
+      <section class="orders-section">
+        <h3>Recent Orders</h3>
+        <div class="orders-container">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Side</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>Status</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="orders-tbody">
+              <tr>
+                <td colspan="6" class="no-data">No orders yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section class="settings-section">
+        <h3>Configuration</h3>
+        <div class="config-card">
+          <div class="config-item">
+            <label>
+              <input type="checkbox" id="take-profit-toggle" onchange="updateConfig()">
+              Take Profit Enabled
+            </label>
+            <span id="tp-threshold" class="config-value">--</span>
+          </div>
+          <div class="config-item">
+            <label>
+              <input type="checkbox" id="stop-loss-toggle" onchange="updateConfig()">
+              Stop Loss Enabled
+            </label>
+            <span id="sl-threshold" class="config-value">--</span>
+          </div>
+          <div class="config-item">
+            <label>Strategy Type:</label>
+            <span id="strategy-type" class="config-value">--</span>
+          </div>
+          <div class="config-item">
+            <label>Grid Spacing:</label>
+            <span id="grid-spacing" class="config-value">--</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Logs Section -->
+      <section class="logs-section">
+        <h3>Status Log</h3>
+        <div class="logs-container">
+          <div id="logs-display" class="logs-display"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span>📊 GridBot Pro</span>
+          <span class="footer-version">v2.0</span>
+        </div>
+        <div class="footer-stats">
+          <span>Auto-updates every 2s</span>
+          <span class="separator">•</span>
+          <span>Last refresh: <span id="footer-time">--:--:--</span></span>
+        </div>
+        <div class="footer-links">
+          <a href="#" class="footer-link" onclick="showAbout()">About</a>
+          <a href="#" class="footer-link" onclick="showHelp()">Help</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

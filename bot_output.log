@@ -1,0 +1,36 @@
+2025-12-10 23:01:16,314 - root - INFO - Logging initialized. Log level: 20
+2025-12-10 23:01:16,314 - root - INFO - File logging enabled. Logs are stored in: logs\bot_SOL_USD_PAPER_TRADING_strategyHEDGED_GRID_spacingGEOMETRIC_size8_range210-240_20251211_0401.log
+2025-12-10 23:01:16,485 - EventBus - INFO - Callback '_send_notification_on_order_filled' subscribed to event: order_filled by __init__ (from C:\Users\splin\OneDrive\Documents\grid_trading_bot-master\core\bot_management\notification\notification_handler.py:35)
+2025-12-10 23:01:16,486 - EventBus - INFO - Callback '_handle_stop_bot_event' subscribed to event: stop_bot by __init__ (from C:\Users\splin\OneDrive\Documents\grid_trading_bot-master\core\bot_management\grid_trading_bot.py:50)
+2025-12-10 23:01:16,487 - EventBus - INFO - Callback '_handle_start_bot_event' subscribed to event: start_bot by __init__ (from C:\Users\splin\OneDrive\Documents\grid_trading_bot-master\core\bot_management\grid_trading_bot.py:51)
+2025-12-10 23:01:16,487 - GridTradingBot - INFO - Starting Grid Trading Bot in paper_trading mode with strategy: hedged_grid
+2025-12-10 23:01:16,489 - LiveExchangeService - INFO - Kraken does not have a spot sandbox. Using live API for price data only.
+2025-12-10 23:01:16,490 - EventBus - INFO - Callback '_update_balance_on_order_completion' subscribed to event: order_filled by __init__ (from C:\Users\splin\OneDrive\Documents\grid_trading_bot-master\core\order_handling\balance_tracker.py:47)
+2025-12-10 23:01:16,491 - EventBus - INFO - Callback '_on_order_filled' subscribed to event: order_filled by __init__ (from C:\Users\splin\OneDrive\Documents\grid_trading_bot-master\core\order_handling\order_manager.py:49)
+2025-12-10 23:01:16,491 - EventBus - INFO - Callback '_on_order_cancelled' subscribed to event: order_cancelled by __init__ (from C:\Users\splin\OneDrive\Documents\grid_trading_bot-master\core\order_handling\order_manager.py:50)
+2025-12-10 23:01:16,492 - EventBus - INFO - Callback '_handle_stop_event' subscribed to event: stop_bot by __init__ (from C:\Users\splin\OneDrive\Documents\grid_trading_bot-master\core\bot_management\bot_controller\bot_controller.py:33)
+2025-12-10 23:01:16,493 - EventBus - INFO - Callback '_handle_stop' subscribed to event: stop_bot by __init__ (from C:\Users\splin\OneDrive\Documents\grid_trading_bot-master\core\bot_management\health_check.py:61)
+2025-12-10 23:01:16,493 - EventBus - INFO - Callback '_handle_start' subscribed to event: start_bot by __init__ (from C:\Users\splin\OneDrive\Documents\grid_trading_bot-master\core\bot_management\health_check.py:62)
+2025-12-10 23:01:16,494 - BotAPIServer - INFO - Bot API Server started on http://127.0.0.1:8080
+2025-12-10 23:01:16,494 - BotAPIIntegration - INFO - Bot API server started on port 8080
+2025-12-10 23:01:16,494 - BotAPIIntegration - INFO - Access dashboard at: http://localhost:8080
+2025-12-10 23:01:16,494 - GridTradingBot - INFO - Initializing Grid Trading Bot components...
+2025-12-10 23:01:16,494 - BotController - INFO - Command listener started. Type 'quit' to exit.
+2025-12-10 23:01:16,495 - HealthCheck - INFO - HealthCheck started.
+2025-12-10 23:01:16,495 - HealthCheck - INFO - Starting health checks for bot and system resources.
+2025-12-10 23:01:17,090 - HealthCheck - INFO - Fetched bot health status: {'strategy': True, 'exchange_status': 'ok', 'overall': True}
+2025-12-10 23:01:17,090 - HealthCheck - INFO - Bot health is within acceptable parameters.
+2025-12-10 23:01:18,148 - HealthCheck - INFO - System resource usage: {'cpu': 8.0, 'memory': 14.6, 'disk': 38.9, 'bot_cpu': 19.5, 'bot_memory_mb': 167.4296875, 'bot_memory_percent': 0.13022619501948457, 'open_files': 3, 'thread_count': 36, 'memory_available_mb': 109799.55859375}
+2025-12-10 23:01:20,370 - BalanceTracker - WARNING - Failed to fetch live balances for paper trading: Error fetching balance: kraken requires "apiKey" credential. Using default initial balances instead.
+2025-12-10 23:01:20,371 - GridManager - INFO - Grids and levels initialized. Central price: 224.50965493471728
+2025-12-10 23:01:20,371 - GridManager - INFO - Price grids: [210, 214.04439439470772, 218.1666798657009, 222.36835651884775, 226.65095335058678, 231.01602880433094, 235.4651713375875, 240.00000000000003]
+2025-12-10 23:01:20,371 - GridManager - INFO - Buy grids: [210, 214.04439439470772, 218.1666798657009, 222.36835651884775, 226.65095335058678, 231.01602880433094, 235.4651713375875]
+2025-12-10 23:01:20,371 - GridManager - INFO - Sell grids: [214.04439439470772, 218.1666798657009, 222.36835651884775, 226.65095335058678, 231.01602880433094, 235.4651713375875, 240.00000000000003]
+2025-12-10 23:01:20,371 - GridManager - INFO - Grid levels: {210: GridLevel(price=210, state=READY_TO_BUY_OR_SELL, num_orders=0, paired_buy_level=None), paired_sell_level=None), 214.04439439470772: GridLevel(price=214.04439439470772, state=READY_TO_BUY_OR_SELL, num_orders=0, paired_buy_level=None), paired_sell_level=None), 218.1666798657009: GridLevel(price=218.1666798657009, state=READY_TO_BUY_OR_SELL, num_orders=0, paired_buy_level=None), paired_sell_level=None), 222.36835651884775: GridLevel(price=222.36835651884775, state=READY_TO_BUY_OR_SELL, num_orders=0, paired_buy_level=None), paired_sell_level=None), 226.65095335058678: GridLevel(price=226.65095335058678, state=READY_TO_BUY_OR_SELL, num_orders=0, paired_buy_level=None), paired_sell_level=None), 231.01602880433094: GridLevel(price=231.01602880433094, state=READY_TO_BUY_OR_SELL, num_orders=0, paired_buy_level=None), paired_sell_level=None), 235.4651713375875: GridLevel(price=235.4651713375875, state=READY_TO_BUY_OR_SELL, num_orders=0, paired_buy_level=None), paired_sell_level=None), 240.00000000000003: GridLevel(price=240.00000000000003, state=READY_TO_SELL, num_orders=0, paired_buy_level=None), paired_sell_level=None)}
+2025-12-10 23:01:20,371 - GridTradingBot - INFO - Grid Trading Bot initialized.
+2025-12-10 23:01:20,371 - OrderStatusTracker - INFO - OrderStatusTracker has started tracking open orders.
+2025-12-10 23:01:20,371 - GridTradingStrategy - INFO - Starting paper trading
+2025-12-10 23:01:22,213 - LiveExchangeService - INFO - Connected to WebSocket for SOL/USD ticker current price: 129.21
+2025-12-10 23:01:33,046 - LiveExchangeService - INFO - Connected to WebSocket for SOL/USD ticker current price: 129.3
+2025-12-10 23:01:33,046 - GridTradingStrategy - INFO - Current price 129.3 did not cross trigger price 224.50965493471728. Last price: 129.21.
+2025-12-10 23:01:34,088 - LiveExchangeService - ERROR - WebSocket subscription for SOL/USD was cancelled.

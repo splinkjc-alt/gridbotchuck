@@ -1,0 +1,52 @@
+# API Dashboard Dependencies
+
+Add these packages to your requirements.txt or install them manually:
+
+## Installation
+
+```bash
+pip install aiohttp>=3.8.0 aiohttp-cors>=0.7.0
+```
+
+## Details
+
+### aiohttp (v3.8.0+)
+- Async HTTP client/server library
+- Used for REST API server
+- Provides web framework for dashboard backend
+
+### aiohttp-cors (v0.7.0+)
+- CORS (Cross-Origin Resource Sharing) support
+- Allows dashboard to make requests across origins
+- Needed for mobile/remote access
+
+## Complete Requirements
+
+If you want the full dependency list with all features:
+
+```
+# Core dependencies
+aiohttp>=3.8.0
+aiohttp-cors>=0.7.0
+
+# Existing dependencies (keep these)
+python-binance>=1.0.0
+pandas>=1.3.0
+numpy>=1.21.0
+ccxt>=1.100.0
+python-dotenv>=0.19.0
+tabulate>=0.8.9
+```
+
+## Verification
+
+After installation, verify it works:
+
+```bash
+python -c "import aiohttp; import aiohttp_cors; print('✓ All dependencies installed')"
+```
+
+Expected output:
+```
+✓ All dependencies installed
+```

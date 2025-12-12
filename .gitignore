@@ -1,0 +1,49 @@
+# Byte-compiled / optimized / DLL files
+*.DS_Store
+__pycache__/
+*.pyc
+*.py[cod]
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.lock
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+.tox/
+.coverage
+.cache
+coverage.xml
+
+# Ignore profiling output files
+*.prof
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Secrets
+secrets.json
+.env.yml
+.env
+loki-data/
+grafana-data/
+
+# API Keys and Config - IMPORTANT!
+config/config.json
+*.license
+beta_signups.json
+licenses/
+
+# `uv` Package Manager
+.uv/
+
+# Project specific
+/data/
+logs/*
