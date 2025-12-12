@@ -29,7 +29,7 @@
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--dark-bg);
-  background-image: 
+  background-image:
     radial-gradient(ellipse at top, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
     radial-gradient(ellipse at bottom, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
   color: var(--text-primary);
@@ -75,7 +75,7 @@ body {
 
 .brand-logo {
   font-size: 2.5rem;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .brand-text h1 {
@@ -1211,7 +1211,7 @@ section h3 {
 
 .pnl-icon {
   font-size: 2.5rem;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .pnl-info {
@@ -1371,13 +1371,16 @@ section h3 {
 }
 
 /* Improved Card Styles */
-.status-card, .metrics-card, .config-card {
+.status-card,
+.metrics-card,
+.config-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   transition: var(--transition);
 }
 
-.status-card:hover, .metrics-card:hover {
+.status-card:hover,
+.metrics-card:hover {
   border-color: var(--primary-color);
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
 }
@@ -1388,37 +1391,37 @@ section h3 {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .header-right {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .live-price {
     flex: 1;
     justify-content: center;
   }
-  
+
   .pnl-cards {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .pnl-card {
     padding: 1rem;
   }
-  
+
   .pnl-icon {
     font-size: 1.8rem;
   }
-  
+
   .pnl-value {
     font-size: 1.2rem;
   }
-  
+
   .chart-container {
     height: 200px;
   }
-  
+
   .main-content {
     padding: 1rem;
   }
@@ -1428,11 +1431,11 @@ section h3 {
   .pnl-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .brand-text h1 {
     font-size: 1.4rem;
   }
-  
+
   .footer-content {
     flex-direction: column;
     text-align: center;

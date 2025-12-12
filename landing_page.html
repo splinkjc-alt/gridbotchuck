@@ -1,23 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GridBot Pro - Automated Cryptocurrency Grid Trading Bot</title>
-  <meta name="description" content="Professional cryptocurrency grid trading bot. Automate your trading strategy with advanced grid algorithms, multi-pair support, and real-time market scanning.">
-  
+  <meta name="description"
+    content="Professional cryptocurrency grid trading bot. Automate your trading strategy with advanced grid algorithms, multi-pair support, and real-time market scanning.">
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
+
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     :root {
       --primary: #3b82f6;
       --primary-dark: #2563eb;
@@ -30,18 +32,18 @@
       --text: #f1f5f9;
       --text-muted: #94a3b8;
     }
-    
+
     body {
       font-family: 'Inter', sans-serif;
       background: var(--darker);
       color: var(--text);
       line-height: 1.6;
     }
-    
+
     /* Hero Section */
     .hero {
       min-height: 100vh;
-      background: 
+      background:
         radial-gradient(ellipse at top, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
         radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
         var(--darker);
@@ -49,7 +51,7 @@
       display: flex;
       flex-direction: column;
     }
-    
+
     /* Navigation */
     nav {
       display: flex;
@@ -60,7 +62,7 @@
       width: 100%;
       padding: 1rem 0;
     }
-    
+
     .logo {
       display: flex;
       align-items: center;
@@ -68,11 +70,11 @@
       font-size: 1.5rem;
       font-weight: 700;
     }
-    
+
     .logo-icon {
       font-size: 2rem;
     }
-    
+
     .pro-badge {
       background: linear-gradient(135deg, #fbbf24, #f59e0b);
       color: var(--dark);
@@ -81,24 +83,24 @@
       border-radius: 4px;
       font-weight: 700;
     }
-    
+
     .nav-links {
       display: flex;
       gap: 2rem;
       list-style: none;
     }
-    
+
     .nav-links a {
       color: var(--text-muted);
       text-decoration: none;
       font-weight: 500;
       transition: color 0.3s;
     }
-    
+
     .nav-links a:hover {
       color: var(--primary);
     }
-    
+
     .nav-cta {
       background: var(--primary);
       color: white;
@@ -108,12 +110,12 @@
       font-weight: 600;
       transition: all 0.3s;
     }
-    
+
     .nav-cta:hover {
       background: var(--primary-dark);
       transform: translateY(-2px);
     }
-    
+
     /* Hero Content */
     .hero-content {
       flex: 1;
@@ -125,11 +127,11 @@
       gap: 4rem;
       padding: 4rem 0;
     }
-    
+
     .hero-text {
       flex: 1;
     }
-    
+
     .hero-badge {
       display: inline-flex;
       align-items: center;
@@ -143,7 +145,7 @@
       font-weight: 500;
       margin-bottom: 1.5rem;
     }
-    
+
     .hero h1 {
       font-size: 3.5rem;
       font-weight: 800;
@@ -154,27 +156,27 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    
+
     .hero h1 span {
       background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    
+
     .hero-description {
       font-size: 1.25rem;
       color: var(--text-muted);
       margin-bottom: 2rem;
       max-width: 500px;
     }
-    
+
     .hero-buttons {
       display: flex;
       gap: 1rem;
       margin-bottom: 3rem;
     }
-    
+
     .btn {
       padding: 1rem 2rem;
       border-radius: 10px;
@@ -186,55 +188,55 @@
       align-items: center;
       gap: 0.5rem;
     }
-    
+
     .btn-primary {
       background: var(--primary);
       color: white;
       box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
     }
-    
+
     .btn-primary:hover {
       background: var(--primary-dark);
       transform: translateY(-3px);
       box-shadow: 0 8px 30px rgba(59, 130, 246, 0.5);
     }
-    
+
     .btn-secondary {
       background: transparent;
       color: var(--text);
       border: 1px solid var(--border);
     }
-    
+
     .btn-secondary:hover {
       border-color: var(--primary);
       color: var(--primary);
     }
-    
+
     .hero-stats {
       display: flex;
       gap: 3rem;
     }
-    
+
     .stat {
       text-align: left;
     }
-    
+
     .stat-value {
       font-size: 2rem;
       font-weight: 700;
       color: var(--success);
     }
-    
+
     .stat-label {
       font-size: 0.9rem;
       color: var(--text-muted);
     }
-    
+
     .hero-image {
       flex: 1;
       position: relative;
     }
-    
+
     .dashboard-preview {
       background: var(--card);
       border: 1px solid var(--border);
@@ -243,23 +245,31 @@
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
       transform: perspective(1000px) rotateY(-5deg) rotateX(5deg);
     }
-    
+
     .preview-header {
       display: flex;
       gap: 0.5rem;
       margin-bottom: 1rem;
     }
-    
+
     .preview-dot {
       width: 12px;
       height: 12px;
       border-radius: 50%;
     }
-    
-    .preview-dot.red { background: #ef4444; }
-    .preview-dot.yellow { background: #f59e0b; }
-    .preview-dot.green { background: #10b981; }
-    
+
+    .preview-dot.red {
+      background: #ef4444;
+    }
+
+    .preview-dot.yellow {
+      background: #f59e0b;
+    }
+
+    .preview-dot.green {
+      background: #10b981;
+    }
+
     .preview-content {
       background: var(--dark);
       border-radius: 8px;
@@ -268,30 +278,30 @@
       font-size: 0.85rem;
       color: var(--success);
     }
-    
+
     /* Features Section */
     .features {
       padding: 6rem 2rem;
       background: var(--dark);
     }
-    
+
     .section-header {
       text-align: center;
       max-width: 600px;
       margin: 0 auto 4rem;
     }
-    
+
     .section-header h2 {
       font-size: 2.5rem;
       font-weight: 700;
       margin-bottom: 1rem;
     }
-    
+
     .section-header p {
       color: var(--text-muted);
       font-size: 1.1rem;
     }
-    
+
     .features-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -299,7 +309,7 @@
       max-width: 1200px;
       margin: 0 auto;
     }
-    
+
     .feature-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -307,34 +317,34 @@
       padding: 2rem;
       transition: all 0.3s;
     }
-    
+
     .feature-card:hover {
       border-color: var(--primary);
       transform: translateY(-5px);
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     }
-    
+
     .feature-icon {
       font-size: 2.5rem;
       margin-bottom: 1rem;
     }
-    
+
     .feature-card h3 {
       font-size: 1.25rem;
       margin-bottom: 0.75rem;
     }
-    
+
     .feature-card p {
       color: var(--text-muted);
       font-size: 0.95rem;
     }
-    
+
     /* Pricing Section */
     .pricing {
       padding: 6rem 2rem;
       background: var(--darker);
     }
-    
+
     .pricing-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -342,7 +352,7 @@
       max-width: 1000px;
       margin: 0 auto;
     }
-    
+
     .pricing-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -352,13 +362,13 @@
       position: relative;
       transition: all 0.3s;
     }
-    
+
     .pricing-card.featured {
       border-color: var(--primary);
       transform: scale(1.05);
       box-shadow: 0 20px 50px rgba(59, 130, 246, 0.2);
     }
-    
+
     .pricing-card.featured::before {
       content: 'MOST POPULAR';
       position: absolute;
@@ -372,41 +382,41 @@
       font-size: 0.75rem;
       font-weight: 600;
     }
-    
+
     .pricing-card:hover {
       border-color: var(--primary);
     }
-    
+
     .pricing-name {
       font-size: 1.25rem;
       font-weight: 600;
       margin-bottom: 0.5rem;
     }
-    
+
     .pricing-price {
       font-size: 3rem;
       font-weight: 800;
       margin: 1rem 0;
     }
-    
+
     .pricing-price span {
       font-size: 1rem;
       font-weight: 400;
       color: var(--text-muted);
     }
-    
+
     .pricing-description {
       color: var(--text-muted);
       margin-bottom: 2rem;
       font-size: 0.9rem;
     }
-    
+
     .pricing-features {
       list-style: none;
       text-align: left;
       margin-bottom: 2rem;
     }
-    
+
     .pricing-features li {
       padding: 0.75rem 0;
       border-bottom: 1px solid var(--border);
@@ -414,31 +424,31 @@
       align-items: center;
       gap: 0.75rem;
     }
-    
+
     .pricing-features li:last-child {
       border-bottom: none;
     }
-    
+
     .check {
       color: var(--success);
     }
-    
+
     .pricing-card .btn {
       width: 100%;
       justify-content: center;
     }
-    
+
     /* FAQ Section */
     .faq {
       padding: 6rem 2rem;
       background: var(--dark);
     }
-    
+
     .faq-grid {
       max-width: 800px;
       margin: 0 auto;
     }
-    
+
     .faq-item {
       background: var(--card);
       border: 1px solid var(--border);
@@ -446,7 +456,7 @@
       margin-bottom: 1rem;
       overflow: hidden;
     }
-    
+
     .faq-question {
       padding: 1.5rem;
       cursor: pointer;
@@ -455,30 +465,30 @@
       align-items: center;
       font-weight: 600;
     }
-    
+
     .faq-answer {
       padding: 0 1.5rem 1.5rem;
       color: var(--text-muted);
       display: none;
     }
-    
+
     .faq-item.active .faq-answer {
       display: block;
     }
-    
+
     /* CTA Section */
     .cta {
       padding: 6rem 2rem;
       background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
       text-align: center;
     }
-    
+
     .cta h2 {
       font-size: 2.5rem;
       font-weight: 700;
       margin-bottom: 1rem;
     }
-    
+
     .cta p {
       font-size: 1.25rem;
       opacity: 0.9;
@@ -487,17 +497,17 @@
       margin-left: auto;
       margin-right: auto;
     }
-    
+
     .cta .btn {
       background: white;
       color: var(--primary);
     }
-    
+
     .cta .btn:hover {
       transform: translateY(-3px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
-    
+
     /* Beta Signup Section */
     .beta-signup {
       padding: 6rem 2rem;
@@ -505,13 +515,13 @@
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
-    
+
     .beta-container {
       max-width: 600px;
       margin: 0 auto;
       text-align: center;
     }
-    
+
     .beta-benefits {
       display: flex;
       flex-wrap: wrap;
@@ -519,7 +529,7 @@
       gap: 1rem;
       margin-bottom: 2rem;
     }
-    
+
     .beta-benefit {
       display: flex;
       align-items: center;
@@ -530,14 +540,14 @@
       border: 1px solid var(--border);
       font-size: 0.9rem;
     }
-    
+
     .beta-form {
       display: flex;
       flex-direction: column;
       gap: 1rem;
       align-items: center;
     }
-    
+
     .beta-form input[type="email"] {
       width: 100%;
       max-width: 400px;
@@ -549,12 +559,12 @@
       font-size: 1rem;
       transition: border-color 0.3s;
     }
-    
+
     .beta-form input[type="email"]:focus {
       outline: none;
       border-color: var(--primary);
     }
-    
+
     .beta-form .btn {
       width: 100%;
       max-width: 400px;
@@ -562,13 +572,13 @@
       font-size: 1.1rem;
       padding: 1rem 2rem;
     }
-    
+
     .beta-note {
       color: var(--text-muted);
       font-size: 0.85rem;
       margin-top: 0.5rem;
     }
-    
+
     .beta-success {
       background: var(--success);
       color: white;
@@ -576,11 +586,11 @@
       border-radius: 12px;
       display: none;
     }
-    
+
     .beta-success.show {
       display: block;
     }
-    
+
     /* Footer */
     footer {
       padding: 3rem 2rem;
@@ -588,90 +598,91 @@
       border-top: 1px solid var(--border);
       text-align: center;
     }
-    
+
     .footer-links {
       display: flex;
       justify-content: center;
       gap: 2rem;
       margin-bottom: 2rem;
     }
-    
+
     .footer-links a {
       color: var(--text-muted);
       text-decoration: none;
       transition: color 0.3s;
     }
-    
+
     .footer-links a:hover {
       color: var(--primary);
     }
-    
+
     .footer-copyright {
       color: var(--text-muted);
       font-size: 0.9rem;
     }
-    
+
     /* Responsive */
     @media (max-width: 968px) {
       .hero-content {
         flex-direction: column;
         text-align: center;
       }
-      
+
       .hero h1 {
         font-size: 2.5rem;
       }
-      
+
       .hero-description {
         margin-left: auto;
         margin-right: auto;
       }
-      
+
       .hero-buttons {
         justify-content: center;
       }
-      
+
       .hero-stats {
         justify-content: center;
       }
-      
+
       .hero-image {
         max-width: 500px;
       }
-      
+
       .dashboard-preview {
         transform: none;
       }
-      
+
       .nav-links {
         display: none;
       }
-      
+
       .pricing-card.featured {
         transform: none;
       }
     }
-    
+
     @media (max-width: 480px) {
       .hero h1 {
         font-size: 2rem;
       }
-      
+
       .hero-buttons {
         flex-direction: column;
       }
-      
+
       .hero-stats {
         flex-direction: column;
         gap: 1rem;
       }
-      
+
       .stat {
         text-align: center;
       }
     }
   </style>
 </head>
+
 <body>
   <!-- Hero Section -->
   <section class="hero">
@@ -687,7 +698,7 @@
       </ul>
       <a href="#pricing" class="nav-cta">Get Started</a>
     </nav>
-    
+
     <div class="hero-content">
       <div class="hero-text">
         <div class="hero-badge">
@@ -695,7 +706,8 @@
         </div>
         <h1>Automate Your <span>Crypto Trading</span> with Grid Strategy</h1>
         <p class="hero-description">
-          Professional grid trading bot that works 24/7. Set your parameters, let the bot handle the rest. Works with Kraken, Binance, and more.
+          Professional grid trading bot that works 24/7. Set your parameters, let the bot handle the rest. Works with
+          Kraken, Binance, and more.
         </p>
         <div class="hero-buttons">
           <a href="#beta" class="btn btn-primary">
@@ -742,7 +754,7 @@
       </div>
     </div>
   </section>
-  
+
   <!-- Features Section -->
   <section class="features" id="features">
     <div class="section-header">
@@ -782,7 +794,7 @@
       </div>
     </div>
   </section>
-  
+
   <!-- Pricing Section -->
   <section class="pricing" id="pricing">
     <div class="section-header">
@@ -834,7 +846,7 @@
       </div>
     </div>
   </section>
-  
+
   <!-- Beta Signup Section -->
   <section class="beta-signup" id="beta">
     <div class="section-header">
@@ -873,7 +885,7 @@
       </form>
     </div>
   </section>
-  
+
   <!-- FAQ Section -->
   <section class="faq" id="faq">
     <div class="section-header">
@@ -886,7 +898,8 @@
           <span>+</span>
         </div>
         <div class="faq-answer">
-          GridBot Pro supports Kraken out of the box. Support for Binance, Coinbase Pro, and other major exchanges coming soon.
+          GridBot Pro supports Kraken out of the box. Support for Binance, Coinbase Pro, and other major exchanges
+          coming soon.
         </div>
       </div>
       <div class="faq-item">
@@ -895,7 +908,8 @@
           <span>+</span>
         </div>
         <div class="faq-answer">
-          Yes! GridBot Pro runs on your own computer. Your API keys never leave your machine. We recommend using API keys with trading permissions only (no withdrawal permissions).
+          Yes! GridBot Pro runs on your own computer. Your API keys never leave your machine. We recommend using API
+          keys with trading permissions only (no withdrawal permissions).
         </div>
       </div>
       <div class="faq-item">
@@ -904,7 +918,8 @@
           <span>+</span>
         </div>
         <div class="faq-answer">
-          No coding required! Simply edit the config file with your settings and run the bot. Full documentation and video tutorials included.
+          No coding required! Simply edit the config file with your settings and run the bot. Full documentation and
+          video tutorials included.
         </div>
       </div>
       <div class="faq-item">
@@ -913,7 +928,8 @@
           <span>+</span>
         </div>
         <div class="faq-answer">
-          We offer a 14-day money-back guarantee. If you're not satisfied with GridBot Pro, contact us for a full refund.
+          We offer a 14-day money-back guarantee. If you're not satisfied with GridBot Pro, contact us for a full
+          refund.
         </div>
       </div>
       <div class="faq-item">
@@ -922,19 +938,20 @@
           <span>+</span>
         </div>
         <div class="faq-answer">
-          You can start with as little as $50-100. The bot works with any amount, though larger balances allow for more grid levels.
+          You can start with as little as $50-100. The bot works with any amount, though larger balances allow for more
+          grid levels.
         </div>
       </div>
     </div>
   </section>
-  
+
   <!-- CTA Section -->
   <section class="cta">
     <h2>Be an Early Adopter</h2>
     <p>Join the beta, help shape the product, and get exclusive launch discounts!</p>
     <a href="#beta" class="btn">Join Free Beta →</a>
   </section>
-  
+
   <!-- Footer -->
   <footer>
     <div class="footer-links">
@@ -947,7 +964,7 @@
       © 2025 GridBot Pro. All rights reserved. Trading involves risk.
     </p>
   </footer>
-  
+
   <script>
     // FAQ Toggle
     document.querySelectorAll('.faq-question').forEach(question => {
@@ -956,10 +973,10 @@
         item.classList.toggle('active');
       });
     });
-    
+
     // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
+      anchor.addEventListener('click', function (e) {
         e.preventDefault();
         const target = document.querySelector(this.getAttribute('href'));
         if (target) {
@@ -967,47 +984,48 @@
         }
       });
     });
-    
+
     // Beta Signup Handler
-    document.getElementById('betaForm').addEventListener('submit', async function(e) {
+    document.getElementById('betaForm').addEventListener('submit', async function (e) {
       e.preventDefault();
-      
+
       const email = document.getElementById('betaEmail').value;
       const form = this;
       const button = form.querySelector('button');
-      
+
       // Store email locally (you'll want to connect this to a backend later)
       const betaSignups = JSON.parse(localStorage.getItem('gridbot_beta_signups') || '[]');
-      
+
       if (!betaSignups.includes(email)) {
         betaSignups.push(email);
         localStorage.setItem('gridbot_beta_signups', JSON.stringify(betaSignups));
       }
-      
+
       // Show success message
       button.innerHTML = '✅ You\'re on the list!';
       button.style.background = '#10b981';
       button.disabled = true;
-      
+
       // Create download link for beta
       setTimeout(() => {
         form.innerHTML = `
           <div class="beta-success show">
             <h3>🎉 Welcome to the Beta!</h3>
             <p style="margin: 1rem 0;">Your beta access is ready. Download GridBot Pro and use this beta key:</p>
-            <code style="display: block; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 1.1rem; word-break: break-all;">BETA-${Date.now().toString(36).toUpperCase()}-${email.split('@')[0].toUpperCase().slice(0,4)}</code>
+            <code style="display: block; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 1.1rem; word-break: break-all;">BETA-${Date.now().toString(36).toUpperCase()}-${email.split('@')[0].toUpperCase().slice(0, 4)}</code>
             <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">Check your email for download instructions. Beta expires in 14 days.</p>
             <a href="https://github.com/YOUR_REPO/releases" class="btn" style="margin-top: 1rem; display: inline-block; background: white; color: #10b981;">📥 Download GridBot Pro</a>
           </div>
         `;
       }, 1000);
-      
+
       // In production, you'd send this to your backend:
       // await fetch('/api/beta-signup', { method: 'POST', body: JSON.stringify({ email }) });
-      
+
       console.log('Beta signup:', email);
       console.log('All signups:', betaSignups);
     });
   </script>
 </body>
+
 </html>

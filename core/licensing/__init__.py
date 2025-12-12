@@ -3,13 +3,13 @@
 from .license_manager import (
     LicenseManager,
     LicenseType,
-    get_license_manager,
     check_license,
+    get_license_manager,
 )
 
 __all__ = [
     "LicenseManager",
     "LicenseType",
-    "get_license_manager",
     "check_license",
+    "get_license_manager",
 ]

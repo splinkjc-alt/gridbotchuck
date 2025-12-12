@@ -865,7 +865,7 @@ let startBalance = null;
 function initPriceChart() {
   const ctx = document.getElementById('priceChart');
   if (!ctx) return;
-  
+
   priceChart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -905,7 +905,7 @@ function initPriceChart() {
           padding: 12,
           displayColors: false,
           callbacks: {
-            label: function(context) {
+            label: function (context) {
               return `Price: $${context.parsed.y.toFixed(2)}`;
             }
           }
@@ -929,7 +929,7 @@ function initPriceChart() {
           },
           ticks: {
             color: '#94a3b8',
-            callback: function(value) {
+            callback: function (value) {
               return '$' + value.toFixed(2);
             }
           }
@@ -943,20 +943,20 @@ function initPriceChart() {
 function updatePriceChart() {
   const priceElement = document.getElementById('header-price');
   if (!priceElement || !priceChart) return;
-  
+
   // Get current price from status
   const currentPrice = parseFloat(priceElement.textContent.replace('$', ''));
   if (isNaN(currentPrice) || currentPrice === 0) return;
-  
+
   const now = new Date();
   const timeLabel = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  
+
   // Add to history (keep last 60 points for 2 minute view at 2s intervals)
   priceHistory.push({ time: timeLabel, price: currentPrice });
   if (priceHistory.length > 60) {
     priceHistory.shift();
   }
-  
+
   // Update chart
   priceChart.data.labels = priceHistory.map(p => p.time);
   priceChart.data.datasets[0].data = priceHistory.map(p => p.price);
@@ -967,11 +967,11 @@ function updatePriceChart() {
 function updateHeaderPrice(price, previousPrice) {
   const priceEl = document.getElementById('header-price');
   const changeEl = document.getElementById('header-change');
-  
+
   if (priceEl) {
     priceEl.textContent = '$' + formatNumber(price, 2);
   }
-  
+
   if (changeEl && previousPrice && previousPrice > 0) {
     const change = ((price - previousPrice) / previousPrice) * 100;
     changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
@@ -990,20 +990,20 @@ function updatePnLDashboard() {
   if (totalValueEl && pnlTotalEl) {
     pnlTotalEl.textContent = totalValueEl.textContent;
   }
-  
+
   // Session P&L
   const currentTotal = parseFloat((document.getElementById('total-value')?.textContent || '0').replace(/[$,]/g, ''));
   if (startBalance === null && currentTotal > 0) {
     startBalance = currentTotal;
   }
-  
+
   if (startBalance && currentTotal) {
     const sessionPnL = currentTotal - startBalance;
     const sessionPercent = ((sessionPnL / startBalance) * 100);
-    
+
     const pnlSessionEl = document.getElementById('pnl-session');
     const pnlPercentEl = document.getElementById('pnl-percent');
-    
+
     if (pnlSessionEl) {
       pnlSessionEl.textContent = (sessionPnL >= 0 ? '+' : '') + '$' + formatNumber(Math.abs(sessionPnL), 2);
       pnlSessionEl.className = 'pnl-value ' + (sessionPnL >= 0 ? 'positive' : 'negative');
@@ -1012,14 +1012,14 @@ function updatePnLDashboard() {
       pnlPercentEl.textContent = '(' + (sessionPercent >= 0 ? '+' : '') + sessionPercent.toFixed(2) + '%)';
     }
   }
-  
+
   // Trades count
   const filledOrdersEl = document.getElementById('filled-orders');
   const pnlTradesEl = document.getElementById('pnl-trades');
   if (filledOrdersEl && pnlTradesEl) {
     pnlTradesEl.textContent = filledOrdersEl.textContent;
   }
-  
+
   // Uptime
   const uptimeEl = document.getElementById('pnl-uptime');
   if (uptimeEl) {
@@ -1027,9 +1027,9 @@ function updatePnLDashboard() {
     const hours = Math.floor(elapsed / 3600000);
     const minutes = Math.floor((elapsed % 3600000) / 60000);
     const seconds = Math.floor((elapsed % 60000) / 1000);
-    uptimeEl.textContent = 
-      String(hours).padStart(2, '0') + ':' + 
-      String(minutes).padStart(2, '0') + ':' + 
+    uptimeEl.textContent =
+      String(hours).padStart(2, '0') + ':' +
+      String(minutes).padStart(2, '0') + ':' +
       String(seconds).padStart(2, '0');
   }
 }
@@ -1040,10 +1040,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof Chart !== 'undefined') {
     initPriceChart();
   }
-  
+
   // Chart range button handlers
   document.querySelectorAll('.chart-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function () {
       document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
       // Range functionality can be extended here
