@@ -1,10 +1,11 @@
-# Grid Trading Bot
+# GridBot Pro
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![on_push_or_merge_pr_master](https://github.com/jordantete/grid_trading_bot/actions/workflows/run-tests-on-push-or-merge-pr-master.yml/badge.svg)](https://github.com/jordantete/grid_trading_bot/actions/workflows/run-tests-on-push-or-merge-pr-master.yml)
-[![codecov](https://codecov.io/github/jordantete/grid_trading_bot/graph/badge.svg?token=DOZRQAXAK7)](https://codecov.io/github/jordantete/grid_trading_bot)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/272a2527-5258-4fc8-9c37-4da01cfe03fc/deploy-status)](https://app.netlify.com/projects/gridbotchuck/deploys)
+[![CI](https://github.com/splinkjc-alt/gridbotchuck/actions/workflows/ci.yml/badge.svg)](https://github.com/splinkjc-alt/gridbotchuck/actions)
 
-Open-source Grid Trading Bot implemented in Python, allowing you to backtest and execute grid trading strategies on cryptocurrency markets. The bot is highly customizable and works with various exchanges using the CCXT library.
+Professional Grid Trading Bot for cryptocurrency markets. Automate your trading with advanced grid algorithms.
+
+🌐 **Website:** [gridbotchuck.netlify.app](https://gridbotchuck.netlify.app)
 
 ## 📚 Table of Contents
 
