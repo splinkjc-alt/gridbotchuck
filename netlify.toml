@@ -2,14 +2,18 @@
   # No base directory - publish from root
   # base = ""
   
-  # No build command needed for static HTML
-  command = ""
+  # Use "echo" as a no-op build command (empty string doesn't work)
+  command = "echo 'No build needed - static site'"
   
   # Publish directory - the folder with your static files
   publish = "netlify_site"
   
   # Disable functions (override UI setting)
   functions = ""
+
+# Skip dependency installation - we have no package.json
+[build.environment]
+  NPM_FLAGS = "--prefix=/dev/null"
 
 # Headers for security and caching
 [[headers]]
