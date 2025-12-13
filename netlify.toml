@@ -1,0 +1,27 @@
+[build]
+  # No base directory - publish from root
+  # base = ""
+  
+  # No build command needed for static HTML
+  command = ""
+  
+  # Publish directory - the folder with your static files
+  publish = "netlify_site"
+  
+  # Disable functions (override UI setting)
+  functions = ""
+
+# Headers for security and caching
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Cache-Control = "public, max-age=3600"
+
+# Redirect www to non-www (optional)
+[[redirects]]
+  from = "https://www.yourdomain.com/*"
+  to = "https://yourdomain.com/:splat"
+  status = 301
+  force = true
