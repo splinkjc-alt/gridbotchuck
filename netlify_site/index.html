@@ -17,6 +17,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+  <!-- EmailJS for automated emails -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
   <style>
     * {
       margin: 0;
@@ -1292,6 +1295,10 @@
   </footer>
 
   <script>
+    // Initialize EmailJS
+    // IMPORTANT: Replace 'YOUR_PUBLIC_KEY' with your actual EmailJS public key from dashboard
+    emailjs.init('YOUR_PUBLIC_KEY'); // You'll replace this after setting up EmailJS
+
     // FAQ Toggle
     document.querySelectorAll('.faq-question').forEach(question => {
       question.addEventListener('click', () => {
@@ -1311,7 +1318,7 @@
       });
     });
 
-    // Beta Signup Handler
+    // Beta Signup Handler with Email
     document.getElementById('betaForm').addEventListener('submit', async function (e) {
       e.preventDefault();
 
@@ -1319,20 +1326,42 @@
       const form = this;
       const button = form.querySelector('button');
 
+      // Generate beta key
+      const betaKey = `BETA-${Date.now().toString(36).toUpperCase()}-${email.split('@')[0].toUpperCase().slice(0, 4)}`;
+
       // Show loading state
       button.innerHTML = '⏳ Signing up...';
       button.disabled = true;
 
       try {
-        // Submit to Netlify Forms
+        // Submit to Netlify Forms (for your records)
         const formData = new FormData(form);
-        const response = await fetch('/', {
+        const netlifyResponse = await fetch('/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams(formData).toString()
         });
 
-        if (response.ok) {
+        if (netlifyResponse.ok) {
+          // Send confirmation email via EmailJS
+          try {
+            await emailjs.send(
+              'YOUR_SERVICE_ID',  // You'll replace this
+              'YOUR_TEMPLATE_ID', // You'll replace this
+              {
+                to_email: email,
+                to_name: email.split('@')[0],
+                beta_key: betaKey,
+                download_link: 'https://github.com/splinkjc-alt/gridbotchuck/releases/latest',
+                reply_to: 'gridbotchuck@gmail.com'
+              }
+            );
+            console.log('Confirmation email sent!');
+          } catch (emailError) {
+            console.error('Email failed, but signup recorded:', emailError);
+            // Continue even if email fails - signup is still recorded
+          }
+
           // Show success message
           button.innerHTML = '✅ You\'re on the list!';
           button.style.background = '#10b981';
@@ -1342,18 +1371,18 @@
             form.innerHTML = `
               <div class="beta-success show">
                 <h3>🎉 Welcome to the Beta!</h3>
-                <p style="margin: 1rem 0;">Your beta access is confirmed! Here's your beta key:</p>
-                <code style="display: block; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 1.1rem; word-break: break-all;">BETA-${Date.now().toString(36).toUpperCase()}-${email.split('@')[0].toUpperCase().slice(0, 4)}</code>
+                <p style="margin: 1rem 0;">Check your email for confirmation! Here's your beta key:</p>
+                <code style="display: block; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 1.1rem; word-break: break-all;">${betaKey}</code>
                 <p style="margin-top: 1rem;">
-                  <a href="https://github.com/splinkjc-alt/gridbotchuck/releases/latest" 
-                     target="_blank" 
+                  <a href="https://github.com/splinkjc-alt/gridbotchuck/releases/latest"
+                     target="_blank"
                      style="display: inline-block; background: #3b82f6; color: white; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600;">
-                    📥 Download GridBot Pro Beta
+                    📥 Download GridBot Chuck Beta
                   </a>
                 </p>
-                <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">✅ Your signup has been recorded. Beta access lasts 14 days.</p>
+                <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">📧 Confirmation email sent to ${email}</p>
                 <p style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.6;">💾 Save your beta key - you'll need it to activate the bot!</p>
-                <p style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.6;">📧 Questions? Email us at gridbotchuck@gmail.com</p>
+                <p style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.6;">❓ Questions? Email us at gridbotchuck@gmail.com</p>
               </div>
             `;
           }, 1000);
