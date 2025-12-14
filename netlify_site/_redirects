@@ -1,0 +1,2 @@
+# Redirect Netlify subdomain to custom domain
+https://chuckbot.netlify.app/*  https://gridbotchuck.app/:splat  301!
