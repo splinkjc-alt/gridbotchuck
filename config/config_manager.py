@@ -170,3 +170,88 @@ class ConfigManager:
     def should_log_to_file(self) -> bool:
         logging = self.get_logging()
         return logging.get("log_to_file", False)
+
+    # --- Multi-Timeframe Analysis Accessor Methods ---
+    def get_multi_timeframe_analysis(self) -> dict:
+        """Get multi-timeframe analysis configuration."""
+        return self.config.get("multi_timeframe_analysis", {})
+
+    def is_multi_timeframe_analysis_enabled(self) -> bool:
+        """Check if multi-timeframe analysis is enabled."""
+        mtf = self.get_multi_timeframe_analysis()
+        return mtf.get("enabled", False)
+
+    def get_mtf_timeframes(self) -> dict[str, str]:
+        """Get configured timeframes for multi-timeframe analysis."""
+        mtf = self.get_multi_timeframe_analysis()
+        return mtf.get("timeframes", {
+            "trend": "1d",
+            "config": "4h",
+            "execution": "1h"
+        })
+
+    def get_mtf_trend_filter(self) -> dict:
+        """Get trend filter settings."""
+        mtf = self.get_multi_timeframe_analysis()
+        return mtf.get("trend_filter", {
+            "enabled": True,
+            "pause_on_strong_trend": True,
+            "strong_trend_threshold": 75,
+            "warn_on_moderate_trend": True,
+            "moderate_trend_threshold": 40
+        })
+
+    def is_trend_filter_enabled(self) -> bool:
+        """Check if trend filter is enabled."""
+        trend_filter = self.get_mtf_trend_filter()
+        return trend_filter.get("enabled", True)
+
+    def should_pause_on_strong_trend(self) -> bool:
+        """Check if bot should pause on strong trends."""
+        trend_filter = self.get_mtf_trend_filter()
+        return trend_filter.get("pause_on_strong_trend", True)
+
+    def get_strong_trend_threshold(self) -> float:
+        """Get threshold for strong trend detection."""
+        trend_filter = self.get_mtf_trend_filter()
+        return trend_filter.get("strong_trend_threshold", 75)
+
+    def get_moderate_trend_threshold(self) -> float:
+        """Get threshold for moderate trend detection."""
+        trend_filter = self.get_mtf_trend_filter()
+        return trend_filter.get("moderate_trend_threshold", 40)
+
+    def get_mtf_volatility_spacing(self) -> dict:
+        """Get volatility-based spacing settings."""
+        mtf = self.get_multi_timeframe_analysis()
+        return mtf.get("volatility_spacing", {
+            "enabled": True,
+            "high_volatility_multiplier": 1.5,
+            "low_volatility_multiplier": 0.75,
+            "high_volatility_percentile": 80,
+            "low_volatility_percentile": 20
+        })
+
+    def is_volatility_spacing_enabled(self) -> bool:
+        """Check if volatility-based spacing adjustment is enabled."""
+        vol_spacing = self.get_mtf_volatility_spacing()
+        return vol_spacing.get("enabled", True)
+
+    def get_mtf_range_validation(self) -> dict:
+        """Get range validation settings."""
+        mtf = self.get_multi_timeframe_analysis()
+        return mtf.get("range_validation", {
+            "enabled": True,
+            "auto_suggest_range": True,
+            "warn_if_price_outside_range": True
+        })
+
+    def is_range_validation_enabled(self) -> bool:
+        """Check if range validation is enabled."""
+        range_val = self.get_mtf_range_validation()
+        return range_val.get("enabled", True)
+
+    def get_mtf_analysis_interval_minutes(self) -> int:
+        """Get how often to run multi-timeframe analysis."""
+        mtf = self.get_multi_timeframe_analysis()
+        return mtf.get("analysis_interval_minutes", 30)

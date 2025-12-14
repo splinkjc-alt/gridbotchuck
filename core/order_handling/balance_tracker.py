@@ -107,6 +107,47 @@ class BalanceTracker:
         )
         return quote_balance, base_balance
 
+    async def sync_balances_from_exchange(
+        self,
+        exchange_service: ExchangeInterface,
+    ) -> bool:
+        """
+        Syncs internal balances with actual exchange balances.
+        
+        This should be called before grid initialization to ensure
+        the internal state matches the exchange state, especially after
+        failed or partially executed orders.
+
+        Args:
+            exchange_service: The exchange instance.
+
+        Returns:
+            bool: True if sync was successful, False otherwise.
+        """
+        if self.trading_mode == TradingMode.BACKTEST:
+            self.logger.debug("Skipping balance sync in backtest mode.")
+            return True
+
+        try:
+            old_balance = self.balance
+            old_crypto = self.crypto_balance
+            
+            self.balance, self.crypto_balance = await self._fetch_live_balances(exchange_service)
+            
+            # Reset reserved amounts since we're syncing with actual exchange state
+            self.reserved_fiat = 0.0
+            self.reserved_crypto = 0.0
+            
+            if old_balance != self.balance or old_crypto != self.crypto_balance:
+                self.logger.info(
+                    f"Balance sync completed. Fiat: {old_balance:.4f} -> {self.balance:.4f}, "
+                    f"Crypto: {old_crypto:.6f} -> {self.crypto_balance:.6f}"
+                )
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to sync balances from exchange: {e}")
+            return False
+
     async def _update_balance_on_order_completion(self, order: Order) -> None:
         """
         Updates the account balance and crypto balance when an order is filled.

@@ -259,6 +259,140 @@
         </div>
       </section>
 
+      <!-- Multi-Timeframe Analysis Section -->
+      <section class="mtf-section">
+        <h2>🕐 Multi-Timeframe Analysis</h2>
+        <div class="mtf-header">
+          <div class="mtf-status-badge" id="mtf-status-badge">
+            <span class="badge-dot"></span>
+            <span class="badge-text">Loading...</span>
+          </div>
+          <button class="btn btn-secondary" onclick="runMTFAnalysis()">
+            <span class="btn-icon">🔄</span>
+            <span class="btn-text">Analyze Now</span>
+          </button>
+        </div>
+
+        <div class="mtf-cards">
+          <div class="mtf-card signal-card" id="mtf-signal-card">
+            <div class="mtf-card-header">
+              <span class="mtf-icon">📊</span>
+              <span class="mtf-title">Grid Signal</span>
+            </div>
+            <div class="mtf-signal" id="mtf-signal">--</div>
+            <div class="mtf-confidence">
+              <span>Confidence:</span>
+              <div class="confidence-bar">
+                <div class="confidence-fill" id="mtf-confidence-fill" style="width: 0%"></div>
+              </div>
+              <span id="mtf-confidence-value">0%</span>
+            </div>
+          </div>
+
+          <div class="mtf-card">
+            <div class="mtf-card-header">
+              <span class="mtf-icon">📈</span>
+              <span class="mtf-title">Primary Trend</span>
+            </div>
+            <div class="mtf-value" id="mtf-trend">--</div>
+            <div class="mtf-subtitle" id="mtf-condition">--</div>
+          </div>
+
+          <div class="mtf-card">
+            <div class="mtf-card-header">
+              <span class="mtf-icon">⚖️</span>
+              <span class="mtf-title">Recommended Bias</span>
+            </div>
+            <div class="mtf-value" id="mtf-bias">Neutral</div>
+            <div class="mtf-subtitle">
+              Spacing: <span id="mtf-spacing">1.0x</span>
+            </div>
+          </div>
+
+          <div class="mtf-card">
+            <div class="mtf-card-header">
+              <span class="mtf-icon">🎯</span>
+              <span class="mtf-title">Range Status</span>
+            </div>
+            <div class="mtf-value" id="mtf-range-valid">--</div>
+            <div class="mtf-subtitle" id="mtf-suggested-range">--</div>
+          </div>
+        </div>
+
+        <div class="mtf-timeframes">
+          <h3>Timeframe Details</h3>
+          <div class="timeframe-grid" id="mtf-timeframe-grid">
+            <div class="timeframe-card" data-tf="trend">
+              <div class="tf-header">
+                <span class="tf-name">Daily (Trend)</span>
+                <span class="tf-trend-badge" id="tf-trend-daily">--</span>
+              </div>
+              <div class="tf-metrics">
+                <div class="tf-metric">
+                  <span class="tf-label">RSI</span>
+                  <span class="tf-value" id="tf-rsi-daily">--</span>
+                </div>
+                <div class="tf-metric">
+                  <span class="tf-label">ATR %</span>
+                  <span class="tf-value" id="tf-atr-daily">--</span>
+                </div>
+                <div class="tf-metric">
+                  <span class="tf-label">Volatility</span>
+                  <span class="tf-value" id="tf-vol-daily">--</span>
+                </div>
+              </div>
+            </div>
+            <div class="timeframe-card" data-tf="config">
+              <div class="tf-header">
+                <span class="tf-name">4H (Config)</span>
+                <span class="tf-trend-badge" id="tf-trend-4h">--</span>
+              </div>
+              <div class="tf-metrics">
+                <div class="tf-metric">
+                  <span class="tf-label">RSI</span>
+                  <span class="tf-value" id="tf-rsi-4h">--</span>
+                </div>
+                <div class="tf-metric">
+                  <span class="tf-label">ATR %</span>
+                  <span class="tf-value" id="tf-atr-4h">--</span>
+                </div>
+                <div class="tf-metric">
+                  <span class="tf-label">Volatility</span>
+                  <span class="tf-value" id="tf-vol-4h">--</span>
+                </div>
+              </div>
+            </div>
+            <div class="timeframe-card" data-tf="execution">
+              <div class="tf-header">
+                <span class="tf-name">1H (Execution)</span>
+                <span class="tf-trend-badge" id="tf-trend-1h">--</span>
+              </div>
+              <div class="tf-metrics">
+                <div class="tf-metric">
+                  <span class="tf-label">RSI</span>
+                  <span class="tf-value" id="tf-rsi-1h">--</span>
+                </div>
+                <div class="tf-metric">
+                  <span class="tf-label">ATR %</span>
+                  <span class="tf-value" id="tf-atr-1h">--</span>
+                </div>
+                <div class="tf-metric">
+                  <span class="tf-label">Volatility</span>
+                  <span class="tf-value" id="tf-vol-1h">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mtf-recommendations" id="mtf-recommendations">
+          <h3>💡 Recommendations</h3>
+          <div class="recommendations-list" id="mtf-rec-list">
+            <p class="no-data">Run analysis to see recommendations</p>
+          </div>
+        </div>
+      </section>
+
       <!-- Status Section -->
       <section class="status-section">
         <div class="status-card">

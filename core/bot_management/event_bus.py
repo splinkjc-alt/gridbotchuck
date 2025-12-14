@@ -15,6 +15,11 @@ class Events:
     START_BOT = "start_bot"
     STOP_BOT = "stop_bot"
     SWITCH_PAIR = "switch_pair"
+    
+    # Multi-timeframe analysis events
+    MTF_ANALYSIS_COMPLETE = "mtf_analysis_complete"
+    MTF_TRADING_PAUSED = "mtf_trading_paused"
+    MTF_TRADING_RESUMED = "mtf_trading_resumed"
 
 
 class EventBus:

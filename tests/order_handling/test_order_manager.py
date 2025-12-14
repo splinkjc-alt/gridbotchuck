@@ -133,8 +133,9 @@ class TestOrderManager:
         grid_manager.get_initial_order_quantity.return_value = 0.01
         order_execution_strategy.execute_market_order = AsyncMock(return_value=Mock())
 
-        await manager.perform_initial_purchase(50000)
+        result = await manager.perform_initial_purchase(50000)
 
+        assert result is True
         order_execution_strategy.execute_market_order.assert_awaited_once()
 
     @pytest.mark.asyncio
@@ -302,8 +303,24 @@ class TestOrderManager:
         balance_tracker.balance = 1000
         balance_tracker.crypto_balance = 0
 
-        await manager.perform_initial_purchase(50000)
+        result = await manager.perform_initial_purchase(50000)
 
+        # Returns False because crypto_balance is 0 (no crypto held)
+        assert result is False
+        order_execution_strategy.execute_market_order.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_perform_initial_purchase_zero_quantity_with_existing_crypto(self, setup_order_manager):
+        """Test that when quantity is 0 but crypto is already held, returns True."""
+        manager, grid_manager, _, balance_tracker, _, _, order_execution_strategy, _ = setup_order_manager
+        grid_manager.get_initial_order_quantity.return_value = 0
+        balance_tracker.balance = 1000
+        balance_tracker.crypto_balance = 0.5  # Already holding crypto
+
+        result = await manager.perform_initial_purchase(50000)
+
+        # Returns True because we already have crypto
+        assert result is True
         order_execution_strategy.execute_market_order.assert_not_called()
 
     @pytest.mark.asyncio

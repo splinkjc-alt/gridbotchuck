@@ -30,8 +30,27 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
         quantity: float,
         price: float,
     ) -> Order | None:
+        last_order_id = None
+        
         for attempt in range(self.max_retries):
             try:
+                # If we have a previous order ID from a failed parse, check its status first
+                if last_order_id:
+                    try:
+                        self.logger.info(f"Checking status of previous order {last_order_id} before retry...")
+                        order_status = await self.exchange_service.fetch_order_status(last_order_id, pair)
+                        if order_status:
+                            parsed_order = await self._parse_order_result(order_status)
+                            if parsed_order.status == OrderStatus.CLOSED:
+                                self.logger.info(f"Previous order {last_order_id} was actually filled. Returning it.")
+                                return parsed_order
+                            elif parsed_order.status == OrderStatus.OPEN:
+                                self.logger.info(f"Previous order {last_order_id} is still open. Waiting for fill...")
+                                await self._handle_partial_fill(parsed_order, pair)
+                                continue
+                    except Exception as status_error:
+                        self.logger.warning(f"Could not check previous order status: {status_error}")
+                
                 raw_order = await self.exchange_service.place_order(
                     pair,
                     OrderType.MARKET.value.lower(),
@@ -39,6 +58,11 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
                     quantity,
                     price,
                 )
+                
+                # Store order ID in case parsing fails
+                if raw_order and isinstance(raw_order, dict):
+                    last_order_id = raw_order.get("id")
+                
                 order_result = await self._parse_order_result(raw_order)
 
                 if order_result.status == OrderStatus.CLOSED:
@@ -53,6 +77,15 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
 
             except Exception as e:
                 self.logger.error(f"Attempt {attempt + 1} failed with error: {e!s}")
+                
+                # If we got an order ID before the error, don't retry placing a new order
+                # Instead, try to check if the order was actually placed
+                if last_order_id:
+                    self.logger.warning(
+                        f"Order may have been placed (ID: {last_order_id}). "
+                        "Will check status before retrying."
+                    )
+                
                 await asyncio.sleep(self.retry_delay)
 
         raise OrderExecutionFailedError(
@@ -133,25 +166,30 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
         Returns:
             An Order object with standardized fields.
         """
+        # Safely get values, handling None explicitly (dict.get returns None if key exists but value is None)
+        status_str = raw_order_result.get("status") or "unknown"
+        order_type_str = raw_order_result.get("type") or "unknown"
+        side_str = raw_order_result.get("side") or "unknown"
+        
         return Order(
-            identifier=raw_order_result.get("id", ""),
-            status=OrderStatus(raw_order_result.get("status", "unknown").lower()),
-            order_type=OrderType(raw_order_result.get("type", "unknown").lower()),
-            side=OrderSide(raw_order_result.get("side", "unknown").lower()),
-            price=raw_order_result.get("price", 0.0),
+            identifier=raw_order_result.get("id") or "",
+            status=OrderStatus(status_str.lower()),
+            order_type=OrderType(order_type_str.lower()),
+            side=OrderSide(side_str.lower()),
+            price=raw_order_result.get("price") or 0.0,
             average=raw_order_result.get("average"),
-            amount=raw_order_result.get("amount", 0.0),
-            filled=raw_order_result.get("filled", 0.0),
-            remaining=raw_order_result.get("remaining", 0.0),
-            timestamp=raw_order_result.get("timestamp", 0),
+            amount=raw_order_result.get("amount") or 0.0,
+            filled=raw_order_result.get("filled") or 0.0,
+            remaining=raw_order_result.get("remaining") or 0.0,
+            timestamp=raw_order_result.get("timestamp") or 0,
             datetime=raw_order_result.get("datetime"),
             last_trade_timestamp=raw_order_result.get("lastTradeTimestamp"),
-            symbol=raw_order_result.get("symbol", ""),
+            symbol=raw_order_result.get("symbol") or "",
             time_in_force=raw_order_result.get("timeInForce"),
-            trades=raw_order_result.get("trades", []),
+            trades=raw_order_result.get("trades") or [],
             fee=raw_order_result.get("fee"),
             cost=raw_order_result.get("cost"),
-            info=raw_order_result.get("info", raw_order_result),
+            info=raw_order_result.get("info") or raw_order_result,
         )
 
     async def _adjust_price(

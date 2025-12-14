@@ -377,12 +377,16 @@ class OrderManager:
     async def perform_initial_purchase(
         self,
         current_price: float,
-    ) -> None:
+    ) -> bool:
         """
         Handles the initial crypto purchase for grid trading strategy if required.
 
         Args:
             current_price: The current price of the trading pair.
+
+        Returns:
+            bool: True if initial purchase succeeded or was skipped (already have crypto),
+                  False if the purchase failed.
         """
         initial_quantity = self.grid_manager.get_initial_order_quantity(
             current_fiat_balance=self.balance_tracker.balance,
@@ -392,7 +396,8 @@ class OrderManager:
 
         if initial_quantity <= 0:
             self.logger.warning("Initial purchase quantity is zero or negative. Skipping initial purchase.")
-            return
+            # Return True if we already have crypto balance, False otherwise
+            return self.balance_tracker.crypto_balance > 0
 
         self.logger.info(f"Performing initial crypto purchase: {initial_quantity} at price {current_price}.")
 
@@ -416,12 +421,15 @@ class OrderManager:
                 # Update fiat and crypto balance in LIVE & PAPER_TRADING modes without simulating it
                 self.balance_tracker.update_after_initial_purchase(initial_order=buy_order)
 
+            return True
+
         except OrderExecutionFailedError as e:
             self.logger.error(f"Failed while executing initial purchase - {e!s}", exc_info=True)
             await self.notification_handler.async_send_notification(
                 NotificationType.ORDER_FAILED,
                 error_details=f"Error while performing initial purchase. {e}",
             )
+            return False
 
         except Exception as e:
             self.logger.error(
@@ -432,6 +440,7 @@ class OrderManager:
                 NotificationType.ORDER_FAILED,
                 error_details=f"Error while performing initial purchase. {e}",
             )
+            return False
 
     async def execute_take_profit_or_stop_loss_order(
         self,

@@ -1053,9 +1053,262 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Helper functions for footer
 function showAbout() {
-  alert('GridBot Pro v2.0\\n\\nAutomated cryptocurrency grid trading bot.\\n\\nFeatures:\\n• Multi-pair trading\\n• Market scanner with technical indicators\\n• Real-time price monitoring\\n• Configurable grid strategies');
+  alert('GridBot Pro v2.0\\n\\nAutomated cryptocurrency grid trading bot.\\n\\nFeatures:\\n• Multi-pair trading\\n• Market scanner with technical indicators\\n• Multi-timeframe analysis\\n• Real-time price monitoring\\n• Configurable grid strategies');
 }
 
 function showHelp() {
   alert('GridBot Pro Help\\n\\n1. Set up your API keys in config.json\\n2. Configure grid parameters\\n3. Click Start Bot to begin trading\\n4. Monitor your positions in real-time\\n\\nFor support, check the documentation.');
 }
+
+// ================================================
+// Multi-Timeframe Analysis Functions
+// ================================================
+
+let mtfRefreshInterval = null;
+
+// Update MTF status periodically
+function startMTFRefresh() {
+  updateMTFStatus();
+  mtfRefreshInterval = setInterval(updateMTFStatus, 30000); // Every 30 seconds
+}
+
+// Stop MTF refresh
+function stopMTFRefresh() {
+  if (mtfRefreshInterval) {
+    clearInterval(mtfRefreshInterval);
+    mtfRefreshInterval = null;
+  }
+}
+
+// Fetch and update MTF status
+async function updateMTFStatus() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/mtf/status`);
+    if (!response.ok) return;
+
+    const data = await response.json();
+
+    if (!data.enabled) {
+      setMTFDisabled();
+      return;
+    }
+
+    if (data.status === 'waiting' || !data.analysis) {
+      setMTFWaiting();
+      return;
+    }
+
+    const analysis = data.analysis;
+    updateMTFDisplay(analysis);
+
+  } catch (error) {
+    console.error('Error fetching MTF status:', error);
+  }
+}
+
+// Set MTF section as disabled
+function setMTFDisabled() {
+  const badge = document.getElementById('mtf-status-badge');
+  badge.className = 'mtf-status-badge disabled';
+  badge.querySelector('.badge-text').textContent = 'Disabled';
+
+  document.getElementById('mtf-signal').textContent = 'DISABLED';
+  document.getElementById('mtf-signal').className = 'mtf-signal';
+}
+
+// Set MTF section as waiting
+function setMTFWaiting() {
+  const badge = document.getElementById('mtf-status-badge');
+  badge.className = 'mtf-status-badge';
+  badge.querySelector('.badge-text').textContent = 'Waiting for analysis...';
+
+  document.getElementById('mtf-signal').textContent = '--';
+  document.getElementById('mtf-signal').className = 'mtf-signal';
+}
+
+// Update the MTF display with analysis data
+function updateMTFDisplay(analysis) {
+  // Update status badge
+  const badge = document.getElementById('mtf-status-badge');
+  if (analysis.trading_paused) {
+    badge.className = 'mtf-status-badge paused';
+    badge.querySelector('.badge-text').textContent = 'Trading Paused';
+  } else {
+    badge.className = 'mtf-status-badge active';
+    badge.querySelector('.badge-text').textContent = 'Active';
+  }
+
+  // Update signal card
+  const signalEl = document.getElementById('mtf-signal');
+  const signal = analysis.grid_signal || '--';
+  signalEl.textContent = signal.replace('_', ' ');
+  signalEl.className = 'mtf-signal ' + signal.toLowerCase();
+
+  // Update confidence
+  const confidence = analysis.confidence || 0;
+  document.getElementById('mtf-confidence-fill').style.width = confidence + '%';
+  document.getElementById('mtf-confidence-value').textContent = confidence.toFixed(0) + '%';
+
+  // Update trend
+  document.getElementById('mtf-trend').textContent = analysis.primary_trend || '--';
+  document.getElementById('mtf-condition').textContent =
+    (analysis.market_condition || '--').replace(/_/g, ' ');
+
+  // Update bias
+  const biasEl = document.getElementById('mtf-bias');
+  const bias = analysis.recommended_bias || 'neutral';
+  biasEl.textContent = bias.charAt(0).toUpperCase() + bias.slice(1);
+  biasEl.className = 'mtf-value ' + bias;
+
+  // Update spacing
+  const spacing = analysis.spacing_multiplier || 1.0;
+  document.getElementById('mtf-spacing').textContent = spacing.toFixed(2) + 'x';
+
+  // Update range status
+  const rangeValidEl = document.getElementById('mtf-range-valid');
+  if (analysis.range_valid) {
+    rangeValidEl.textContent = '✓ Valid';
+    rangeValidEl.className = 'mtf-value valid';
+  } else {
+    rangeValidEl.textContent = '✗ Outdated';
+    rangeValidEl.className = 'mtf-value invalid';
+  }
+
+  // Update suggested range
+  if (analysis.suggested_range && analysis.suggested_range.bottom > 0) {
+    document.getElementById('mtf-suggested-range').textContent =
+      'Suggested: $' + analysis.suggested_range.bottom.toFixed(2) +
+      ' - $' + analysis.suggested_range.top.toFixed(2);
+  } else {
+    document.getElementById('mtf-suggested-range').textContent = '';
+  }
+
+  // Update timeframe details
+  if (analysis.timeframe_details) {
+    updateTimeframeDetails(analysis.timeframe_details);
+  }
+
+  // Update recommendations
+  updateRecommendations(analysis.recommendations, analysis.warnings);
+}
+
+// Update timeframe detail cards
+function updateTimeframeDetails(details) {
+  const tfMapping = {
+    'trend': { suffix: 'daily' },
+    'config': { suffix: '4h' },
+    'execution': { suffix: '1h' }
+  };
+
+  for (const [key, tf] of Object.entries(details)) {
+    const suffix = tfMapping[key]?.suffix;
+    if (!suffix) continue;
+
+    // Update trend badge
+    const trendBadge = document.getElementById('tf-trend-' + suffix);
+    if (trendBadge) {
+      trendBadge.textContent = tf.trend || '--';
+      trendBadge.className = 'tf-trend-badge ' + (tf.trend || 'neutral');
+    }
+
+    // Update RSI
+    const rsiEl = document.getElementById('tf-rsi-' + suffix);
+    if (rsiEl) {
+      const rsi = tf.rsi || 0;
+      rsiEl.textContent = rsi.toFixed(1);
+      rsiEl.style.color = rsi > 70 ? 'var(--danger-color)' :
+        rsi < 30 ? 'var(--success-color)' : 'var(--text-primary)';
+    }
+
+    // Update ATR %
+    const atrEl = document.getElementById('tf-atr-' + suffix);
+    if (atrEl) {
+      atrEl.textContent = (tf.atr_percent || 0).toFixed(2) + '%';
+    }
+
+    // Update Volatility percentile
+    const volEl = document.getElementById('tf-vol-' + suffix);
+    if (volEl) {
+      const vol = tf.volatility_percentile || 0;
+      volEl.textContent = vol.toFixed(0) + '%';
+      volEl.style.color = vol > 80 ? 'var(--danger-color)' :
+        vol < 20 ? 'var(--success-color)' : 'var(--text-primary)';
+    }
+  }
+}
+
+// Update recommendations list
+function updateRecommendations(recommendations, warnings) {
+  const listEl = document.getElementById('mtf-rec-list');
+  listEl.innerHTML = '';
+
+  // Add warnings first
+  if (warnings && warnings.length > 0) {
+    warnings.forEach(warning => {
+      const item = document.createElement('div');
+      item.className = 'recommendation-item warning';
+      item.textContent = '⚠️ ' + warning;
+      listEl.appendChild(item);
+    });
+  }
+
+  // Add recommendations
+  if (recommendations && recommendations.length > 0) {
+    recommendations.forEach(rec => {
+      const item = document.createElement('div');
+      // Determine item class based on content
+      let itemClass = 'recommendation-item';
+      if (rec.includes('AVOID') || rec.includes('⚠️')) {
+        itemClass += ' danger';
+      } else if (rec.includes('✅') || rec.includes('IDEAL') || rec.includes('FAVORABLE')) {
+        itemClass += ' success';
+      }
+      item.className = itemClass;
+      item.textContent = rec;
+      listEl.appendChild(item);
+    });
+  }
+
+  if (listEl.children.length === 0) {
+    listEl.innerHTML = '<p class="no-data">No recommendations available</p>';
+  }
+}
+
+// Manual MTF analysis trigger
+async function runMTFAnalysis() {
+  const btn = document.querySelector('.mtf-header .btn');
+  const originalText = btn.innerHTML;
+
+  btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Analyzing...</span>';
+  btn.disabled = true;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/mtf/analyze`, {
+      method: 'POST'
+    });
+
+    const data = await response.json();
+
+    if (data.success && data.analysis) {
+      updateMTFDisplay({
+        ...data.analysis,
+        trading_paused: false,
+        timeframe_details: {}
+      });
+      addLog('MTF analysis completed: ' + data.analysis.grid_signal, 'success');
+    } else {
+      addLog('MTF analysis failed: ' + (data.message || 'Unknown error'), 'error');
+    }
+  } catch (error) {
+    console.error('Error running MTF analysis:', error);
+    addLog('MTF analysis error: ' + error.message, 'error');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
+// Initialize MTF on page load
+document.addEventListener('DOMContentLoaded', () => {
+  startMTFRefresh();
+});

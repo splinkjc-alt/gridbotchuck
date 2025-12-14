@@ -1,4 +1,5 @@
 import logging
+import time
 
 import numpy as np
 import pandas as pd
@@ -12,6 +13,11 @@ from core.order_handling.order_manager import OrderManager
 from core.services.exchange_interface import ExchangeInterface
 from strategies.plotter import Plotter
 from strategies.trading_performance_analyzer import TradingPerformanceAnalyzer
+from strategies.multi_timeframe_analyzer import (
+    MultiTimeframeAnalyzer,
+    GridTradingSignal,
+    MarketCondition,
+)
 
 from .trading_strategy_interface import TradingStrategyInterface
 
@@ -45,6 +51,12 @@ class GridTradingStrategy(TradingStrategyInterface):
         self.data = self._initialize_historical_data()
         self.live_trading_metrics = []
         self._running = True
+        
+        # Multi-timeframe analysis
+        self._mtf_analyzer = self._initialize_mtf_analyzer()
+        self._last_mtf_analysis_time = 0
+        self._mtf_analysis_result = None
+        self._trading_paused_by_trend = False
 
     def _initialize_historical_data(self) -> pd.DataFrame | None:
         """
@@ -60,6 +72,118 @@ class GridTradingStrategy(TradingStrategyInterface):
         except Exception as e:
             self.logger.error(f"Failed to initialize data for backtest trading mode: {e}")
             return None
+
+    def _initialize_mtf_analyzer(self) -> MultiTimeframeAnalyzer | None:
+        """
+        Initialize multi-timeframe analyzer if enabled.
+        
+        Returns:
+            MultiTimeframeAnalyzer instance or None if disabled
+        """
+        if self.trading_mode == TradingMode.BACKTEST:
+            return None  # MTF analysis not used in backtest
+        
+        if not self.config_manager.is_multi_timeframe_analysis_enabled():
+            self.logger.info("Multi-timeframe analysis is disabled in config")
+            return None
+        
+        try:
+            timeframes = self.config_manager.get_mtf_timeframes()
+            analyzer = MultiTimeframeAnalyzer(
+                exchange_service=self.exchange_service,
+                config_timeframes=timeframes,
+            )
+            self.logger.info(
+                f"Multi-timeframe analyzer initialized with timeframes: "
+                f"trend={timeframes.get('trend', '1d')}, "
+                f"config={timeframes.get('config', '4h')}, "
+                f"execution={timeframes.get('execution', '1h')}"
+            )
+            return analyzer
+        except Exception as e:
+            self.logger.error(f"Failed to initialize multi-timeframe analyzer: {e}")
+            return None
+
+    async def _run_mtf_analysis(self) -> bool:
+        """
+        Run multi-timeframe analysis if due.
+        
+        Returns:
+            True if trading should continue, False if should pause
+        """
+        if self._mtf_analyzer is None:
+            return True  # No analyzer = continue trading
+        
+        analysis_interval = self.config_manager.get_mtf_analysis_interval_minutes() * 60
+        current_time = time.time()
+        
+        # Check if analysis is due
+        if current_time - self._last_mtf_analysis_time < analysis_interval:
+            # Use cached result
+            if self._trading_paused_by_trend:
+                return False
+            return True
+        
+        try:
+            # Get grid boundaries
+            grid_top = max(self.grid_manager.price_grids)
+            grid_bottom = min(self.grid_manager.price_grids)
+            
+            # Run analysis
+            self.logger.info("Running scheduled multi-timeframe analysis...")
+            result = await self._mtf_analyzer.analyze(
+                self.trading_pair,
+                grid_bottom,
+                grid_top,
+            )
+            
+            self._mtf_analysis_result = result
+            self._last_mtf_analysis_time = current_time
+            
+            # Log recommendations
+            for rec in result.recommendations:
+                self.logger.info(f"[MTF] {rec}")
+            
+            # Check if we should pause trading
+            if self.config_manager.should_pause_on_strong_trend():
+                if result.grid_signal == GridTradingSignal.AVOID:
+                    self.logger.warning(
+                        f"[MTF] PAUSING grid trading - {result.market_condition.value} detected. "
+                        f"Will resume when conditions improve."
+                    )
+                    self._trading_paused_by_trend = True
+                    await self.event_bus.publish(Events.MTF_TRADING_PAUSED, {
+                        "reason": result.market_condition.value,
+                        "recommendations": result.recommendations,
+                    })
+                    return False
+                elif self._trading_paused_by_trend:
+                    # Check if conditions have improved
+                    if result.grid_signal in [GridTradingSignal.IDEAL, GridTradingSignal.FAVORABLE]:
+                        self.logger.info(
+                            f"[MTF] RESUMING grid trading - conditions improved to {result.grid_signal.value}"
+                        )
+                        self._trading_paused_by_trend = False
+                        await self.event_bus.publish(Events.MTF_TRADING_RESUMED, {
+                            "signal": result.grid_signal.value,
+                        })
+            
+            # Publish analysis result for dashboard/monitoring
+            await self.event_bus.publish(Events.MTF_ANALYSIS_COMPLETE, {
+                "primary_trend": result.primary_trend,
+                "market_condition": result.market_condition.value,
+                "grid_signal": result.grid_signal.value,
+                "spacing_multiplier": result.recommended_spacing_multiplier,
+                "recommended_bias": result.recommended_bias,
+                "range_valid": result.range_valid,
+                "confidence": result.confidence,
+            })
+            
+            return not self._trading_paused_by_trend
+            
+        except Exception as e:
+            self.logger.error(f"Multi-timeframe analysis failed: {e}", exc_info=True)
+            return True  # Continue trading on analysis failure
 
     def _extract_config(self) -> tuple[str, str, str]:
         """
@@ -138,6 +262,16 @@ class GridTradingStrategy(TradingStrategyInterface):
         grid_orders_initialized = False
         last_status_log = 0  # Track when we last logged status
         status_log_interval = 300  # Log status every 5 minutes
+        
+        # Run initial multi-timeframe analysis before starting
+        if self._mtf_analyzer:
+            self.logger.info("Running initial multi-timeframe analysis...")
+            should_trade = await self._run_mtf_analysis()
+            if not should_trade:
+                self.logger.warning(
+                    "[MTF] Initial analysis suggests unfavorable conditions. "
+                    "Bot will monitor and start when conditions improve."
+                )
 
         async def on_ticker_update(current_price):
             nonlocal last_price, grid_orders_initialized, last_status_log
@@ -145,21 +279,31 @@ class GridTradingStrategy(TradingStrategyInterface):
                 if not self._running:
                     self.logger.info("Trading stopped; halting price updates.")
                     return
+                
+                # Run multi-timeframe analysis periodically
+                if self._mtf_analyzer:
+                    should_continue = await self._run_mtf_analysis()
+                    if not should_continue and grid_orders_initialized:
+                        # Trading paused by trend filter - just monitor
+                        self.logger.debug("[MTF] Trading paused - monitoring only")
+                        last_price = current_price
+                        return
 
                 account_value = self.balance_tracker.get_total_balance_value(current_price)
                 self.live_trading_metrics.append((pd.Timestamp.now(), account_value, current_price))
 
                 # Periodic status log
-                import time
-
                 current_time = time.time()
                 if current_time - last_status_log >= status_log_interval:
                     fiat_balance = self.balance_tracker.balance
                     crypto_balance = self.balance_tracker.crypto_balance
+                    mtf_status = ""
+                    if self._mtf_analysis_result:
+                        mtf_status = f" | MTF: {self._mtf_analysis_result.grid_signal.value}"
                     self.logger.info(
                         f"[STATUS] {self.trading_pair} @ ${current_price:.4f} | "
                         f"Balance: ${fiat_balance:.2f} + {crypto_balance:.4f} crypto | "
-                        f"Value: ${account_value:.2f}"
+                        f"Value: ${account_value:.2f}{mtf_status}"
                     )
                     last_status_log = current_time
 
@@ -290,7 +434,38 @@ class GridTradingStrategy(TradingStrategyInterface):
                 self.logger.info(
                     f"Current price {current_price} reached trigger price {trigger_price}. Will perform initial purchase",
                 )
-            await self.order_manager.perform_initial_purchase(current_price)
+            initial_purchase_success = await self.order_manager.perform_initial_purchase(current_price)
+            if not initial_purchase_success:
+                self.logger.error(
+                    "Initial purchase failed. Cannot initialize grid orders without crypto balance. "
+                    "Please check your balance or reduce the position size."
+                )
+                return False
+            
+            # Sync balances from exchange after initial purchase to ensure accurate state
+            # This catches cases where orders were placed but parsing failed
+            self.logger.info("Syncing balances from exchange after initial purchase...")
+            sync_success = await self.balance_tracker.sync_balances_from_exchange(self.exchange_service)
+            if not sync_success:
+                self.logger.warning("Balance sync failed, proceeding with tracked balances.")
+            
+            # Verify we have crypto before placing grid orders
+            if self.balance_tracker.crypto_balance <= 0:
+                self.logger.error(
+                    "No crypto balance available after initial purchase. "
+                    "Cannot place sell orders. Check exchange for any executed orders."
+                )
+                return False
+            
+            # Apply volatility-based spacing adjustment if enabled
+            if self._mtf_analysis_result and self.config_manager.is_volatility_spacing_enabled():
+                multiplier = self._mtf_analysis_result.recommended_spacing_multiplier
+                if multiplier != 1.0:
+                    self.grid_manager.set_spacing_multiplier(multiplier)
+                    self.logger.info(
+                        f"[MTF] Applied volatility-based spacing: {multiplier:.2f}x multiplier"
+                    )
+            
             self.logger.info("Initial purchase done, will initialize grid orders")
             await self.order_manager.initialize_grid_orders(current_price)
             return True
@@ -418,3 +593,48 @@ class GridTradingStrategy(TradingStrategyInterface):
             list: A list of formatted orders.
         """
         return self.trading_performance_analyzer.get_formatted_orders()
+
+    def get_mtf_analysis_status(self) -> dict | None:
+        """
+        Get the current multi-timeframe analysis status for dashboard/API.
+        
+        Returns:
+            Dictionary with MTF analysis details, or None if not available
+        """
+        if self._mtf_analysis_result is None:
+            return None
+        
+        result = self._mtf_analysis_result
+        return {
+            "enabled": self._mtf_analyzer is not None,
+            "primary_trend": result.primary_trend,
+            "trend_alignment": result.trend_alignment,
+            "market_condition": result.market_condition.value,
+            "grid_signal": result.grid_signal.value,
+            "spacing_multiplier": result.recommended_spacing_multiplier,
+            "recommended_bias": result.recommended_bias,
+            "range_valid": result.range_valid,
+            "suggested_range": {
+                "bottom": result.suggested_range[0],
+                "top": result.suggested_range[1],
+            } if result.suggested_range[0] > 0 else None,
+            "confidence": result.confidence,
+            "trading_paused": self._trading_paused_by_trend,
+            "last_analysis_time": self._last_mtf_analysis_time,
+            "warnings": result.warnings,
+            "recommendations": result.recommendations,
+            "timeframe_details": {
+                tf_name: {
+                    "timeframe": analysis.timeframe,
+                    "trend": analysis.trend,
+                    "trend_strength": round(analysis.trend_strength, 1),
+                    "rsi": round(analysis.rsi, 1),
+                    "atr_percent": round(analysis.atr_percent, 2),
+                    "volatility_percentile": round(analysis.volatility_percentile, 1),
+                    "is_ranging": analysis.is_ranging,
+                    "support": round(analysis.support_level, 4),
+                    "resistance": round(analysis.resistance_level, 4),
+                }
+                for tf_name, analysis in result.analysis_details.items()
+            } if result.analysis_details else {},
+        }

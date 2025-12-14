@@ -67,6 +67,10 @@ class BotAPIServer:
         self.app.router.add_get("/api/multi-pair/status", self.handle_multi_pair_status)
         self.app.router.add_post("/api/multi-pair/start", self.handle_multi_pair_start)
         self.app.router.add_post("/api/multi-pair/stop", self.handle_multi_pair_stop)
+        
+        # Multi-timeframe analysis
+        self.app.router.add_get("/api/mtf/status", self.handle_mtf_status)
+        self.app.router.add_post("/api/mtf/analyze", self.handle_mtf_analyze)
 
         # Get absolute path to dashboard folder
         dashboard_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "web", "dashboard")
@@ -785,3 +789,102 @@ class BotAPIServer:
             self.logger.info("Bot API Server stopped")
         except Exception as e:
             self.logger.error(f"Error stopping API server: {e}")
+
+    async def handle_mtf_status(self, request):
+        """Get multi-timeframe analysis status."""
+        try:
+            # Check if MTF analysis is enabled
+            if not self.config_manager.is_multi_timeframe_analysis_enabled():
+                return web.json_response({
+                    "enabled": False,
+                    "message": "Multi-timeframe analysis is disabled in config"
+                })
+            
+            # Get status from active trading strategy if available
+            if hasattr(self, 'trading_strategy') and self.trading_strategy:
+                mtf_status = self.trading_strategy.get_mtf_analysis_status()
+                if mtf_status:
+                    return web.json_response({
+                        "enabled": True,
+                        "status": "active",
+                        "analysis": mtf_status
+                    })
+            
+            # Check via grid trading bot
+            if hasattr(self.bot, 'trading_strategy') and self.bot.trading_strategy:
+                strategy = self.bot.trading_strategy
+                if hasattr(strategy, 'get_mtf_analysis_status'):
+                    mtf_status = strategy.get_mtf_analysis_status()
+                    if mtf_status:
+                        return web.json_response({
+                            "enabled": True,
+                            "status": "active",
+                            "analysis": mtf_status
+                        })
+            
+            return web.json_response({
+                "enabled": True,
+                "status": "waiting",
+                "message": "Multi-timeframe analysis enabled but no analysis run yet"
+            })
+            
+        except Exception as e:
+            self.logger.error(f"Error getting MTF status: {e}")
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def handle_mtf_analyze(self, request):
+        """Trigger a manual multi-timeframe analysis."""
+        try:
+            if not self.config_manager.is_multi_timeframe_analysis_enabled():
+                return web.json_response({
+                    "success": False,
+                    "message": "Multi-timeframe analysis is disabled in config"
+                }, status=400)
+            
+            # Get the trading strategy
+            strategy = None
+            if hasattr(self.bot, 'trading_strategy'):
+                strategy = self.bot.trading_strategy
+            
+            if not strategy or not hasattr(strategy, '_mtf_analyzer') or not strategy._mtf_analyzer:
+                return web.json_response({
+                    "success": False,
+                    "message": "Multi-timeframe analyzer not initialized"
+                }, status=400)
+            
+            # Force analysis by resetting the last analysis time
+            strategy._last_mtf_analysis_time = 0
+            
+            # Get grid bounds
+            grid_top = max(strategy.grid_manager.price_grids)
+            grid_bottom = min(strategy.grid_manager.price_grids)
+            
+            # Run analysis
+            result = await strategy._mtf_analyzer.analyze(
+                strategy.trading_pair,
+                grid_bottom,
+                grid_top
+            )
+            
+            # Update cached result
+            strategy._mtf_analysis_result = result
+            strategy._last_mtf_analysis_time = __import__('time').time()
+            
+            return web.json_response({
+                "success": True,
+                "analysis": {
+                    "primary_trend": result.primary_trend,
+                    "market_condition": result.market_condition.value,
+                    "grid_signal": result.grid_signal.value,
+                    "spacing_multiplier": result.recommended_spacing_multiplier,
+                    "recommended_bias": result.recommended_bias,
+                    "range_valid": result.range_valid,
+                    "confidence": result.confidence,
+                    "warnings": result.warnings,
+                    "recommendations": result.recommendations,
+                }
+            })
+            
+        except Exception as e:
+            self.logger.error(f"Error running MTF analysis: {e}")
+            return web.json_response({"error": str(e)}, status=500)

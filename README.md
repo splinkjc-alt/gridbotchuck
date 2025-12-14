@@ -345,8 +345,8 @@ A `docker-compose.yml` file is included to set up centralized logging using Graf
   Navigate to <http://localhost:3000> in your browser to access the Grafana dashboard.
   Use the following default credentials to log in:
 
- - Username: admin
- - Password: YourGrafanaPasswordHere (as defined in the .env file)
+- Username: admin
+- Password: YourGrafanaPasswordHere (as defined in the .env file)
 
 4. **Import Dashboards**
 
