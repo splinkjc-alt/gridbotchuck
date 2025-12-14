@@ -1295,8 +1295,10 @@
   </footer>
 
   <script>
-    // Initialize EmailJS
-    emailjs.init('p4GK58CflmMC4CGJm');
+    // Initialize EmailJS when DOM is ready
+    (function() {
+      emailjs.init('p4GK58CflmMC4CGJm');
+    })();
 
     // FAQ Toggle
     document.querySelectorAll('.faq-question').forEach(question => {
@@ -1355,9 +1357,10 @@
                 reply_to: 'gridbotchuck@gmail.com'
               }
             );
-            console.log('Confirmation email sent!');
+            console.log('✅ Confirmation email sent successfully!');
           } catch (emailError) {
-            console.error('Email failed, but signup recorded:', emailError);
+            console.error('❌ Email sending failed:', emailError);
+            console.error('Error details:', emailError.text || emailError.message);
             // Continue even if email fails - signup is still recorded
           }
 
@@ -1389,6 +1392,8 @@
           throw new Error('Signup failed');
         }
       } catch (error) {
+        console.error('❌ Beta signup error:', error);
+        console.error('Error details:', error.message || error);
         button.innerHTML = '❌ Error - Try Again';
         button.style.background = '#ef4444';
         button.disabled = false;
