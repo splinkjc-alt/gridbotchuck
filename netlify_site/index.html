@@ -1296,8 +1296,7 @@
 
   <script>
     // Initialize EmailJS
-    // IMPORTANT: Replace 'YOUR_PUBLIC_KEY' with your actual EmailJS public key from dashboard
-    emailjs.init('YOUR_PUBLIC_KEY'); // You'll replace this after setting up EmailJS
+    emailjs.init('p4GK58CflmMC4CGJm');
 
     // FAQ Toggle
     document.querySelectorAll('.faq-question').forEach(question => {
@@ -1346,8 +1345,8 @@
           // Send confirmation email via EmailJS
           try {
             await emailjs.send(
-              'YOUR_SERVICE_ID',  // You'll replace this
-              'YOUR_TEMPLATE_ID', // You'll replace this
+              'service_marjv9i',
+              'template_3jab9ur',
               {
                 to_email: email,
                 to_name: email.split('@')[0],
