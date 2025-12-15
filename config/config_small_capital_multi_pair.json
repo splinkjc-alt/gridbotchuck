@@ -15,7 +15,11 @@
   "trading_settings": {
     "timeframe": "15m",
     "initial_balance": 55,
-    "min_order_value": 5.0
+    "min_order_value": 5.0,
+    "period": {
+      "start_date": "2024-12-15T09:00:00Z",
+      "end_date": "2025-01-15T23:00:00Z"
+    }
   },
   "grid_strategy": {
     "type": "simple_grid",
@@ -29,12 +33,12 @@
   },
   "risk_management": {
     "take_profit": {
-      "enabled": true,
-      "threshold_percent": 15
+      "enabled": false,
+      "threshold": 3000
     },
     "stop_loss": {
-      "enabled": true,
-      "threshold_percent": 12
+      "enabled": false,
+      "threshold": 2500
     },
     "circuit_breaker": {
       "enabled": true,
@@ -89,9 +93,8 @@
     }
   },
   "logging": {
-    "level": "INFO",
-    "file": "logs/gridbotchuck.log",
-    "console": true
+    "log_level": "INFO",
+    "log_to_file": true
   },
   "database": {
     "enabled": true,
