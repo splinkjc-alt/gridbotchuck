@@ -1,6 +1,11 @@
 """
 REST API Server for controlling and monitoring the grid trading bot.
 Allows control via web browser and mobile devices.
+
+Security features:
+- Token-based authentication for protected endpoints
+- CORS support for cross-origin requests
+- Rate limiting (via external configuration)
 """
 
 from datetime import UTC, datetime
@@ -11,6 +16,7 @@ from aiohttp import web
 from aiohttp_cors import setup as setup_cors
 
 from core.bot_management.event_bus import Events
+from core.security.api_auth import APIAuthMiddleware, get_api_token_info
 
 
 class BotAPIServer:
@@ -22,15 +28,30 @@ class BotAPIServer:
     - Monitoring bot status
     - Viewing real-time metrics
     - Adjusting settings
+
+    Security:
+    - Protected endpoints require API token authentication
+    - Token can be set via GRIDBOT_API_TOKEN environment variable
+    - Or auto-generated and stored in ~/.gridbot/api_token
     """
 
-    def __init__(self, bot, event_bus, config_manager, port: int = 8080):
+    def __init__(self, bot, event_bus, config_manager, port: int = 8080, enable_auth: bool = True):
         self.bot = bot
         self.event_bus = event_bus
         self.config_manager = config_manager
         self.port = port
+        self.enable_auth = enable_auth
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.app = web.Application()
+
+        # Setup authentication middleware
+        self.auth_middleware = None
+        middlewares = []
+        if self.enable_auth:
+            self.auth_middleware = APIAuthMiddleware()
+            middlewares.append(self.auth_middleware.middleware)
+            self.logger.info("API authentication enabled")
+
+        self.app = web.Application(middlewares=middlewares)
         self.runner = None
         self.site = None
         self.setup_routes()
@@ -67,7 +88,7 @@ class BotAPIServer:
         self.app.router.add_get("/api/multi-pair/status", self.handle_multi_pair_status)
         self.app.router.add_post("/api/multi-pair/start", self.handle_multi_pair_start)
         self.app.router.add_post("/api/multi-pair/stop", self.handle_multi_pair_stop)
-        
+
         # Multi-timeframe analysis
         self.app.router.add_get("/api/mtf/status", self.handle_mtf_status)
         self.app.router.add_post("/api/mtf/analyze", self.handle_mtf_analyze)
@@ -775,6 +796,18 @@ class BotAPIServer:
             self.site = web.TCPSite(self.runner, "127.0.0.1", self.port)
             await self.site.start()
             self.logger.info(f"Bot API Server started on http://127.0.0.1:{self.port}")
+
+            # Display authentication info
+            if self.enable_auth and self.auth_middleware:
+                token_info = get_api_token_info()
+                self.logger.info("=" * 60)
+                self.logger.info("API AUTHENTICATION ENABLED")
+                self.logger.info("=" * 60)
+                self.logger.info(f"API Token: {token_info['token']}")
+                self.logger.info(f"Token file: {token_info['token_file']}")
+                self.logger.info("Add this header to requests: Authorization: Bearer <token>")
+                self.logger.info("=" * 60)
+
         except Exception as e:
             self.logger.error(f"Failed to start API server: {e}")
             raise
@@ -799,9 +832,9 @@ class BotAPIServer:
                     "enabled": False,
                     "message": "Multi-timeframe analysis is disabled in config"
                 })
-            
+
             # Get status from active trading strategy if available
-            if hasattr(self, 'trading_strategy') and self.trading_strategy:
+            if hasattr(self, "trading_strategy") and self.trading_strategy:
                 mtf_status = self.trading_strategy.get_mtf_analysis_status()
                 if mtf_status:
                     return web.json_response({
@@ -809,11 +842,11 @@ class BotAPIServer:
                         "status": "active",
                         "analysis": mtf_status
                     })
-            
+
             # Check via grid trading bot
-            if hasattr(self.bot, 'trading_strategy') and self.bot.trading_strategy:
+            if hasattr(self.bot, "trading_strategy") and self.bot.trading_strategy:
                 strategy = self.bot.trading_strategy
-                if hasattr(strategy, 'get_mtf_analysis_status'):
+                if hasattr(strategy, "get_mtf_analysis_status"):
                     mtf_status = strategy.get_mtf_analysis_status()
                     if mtf_status:
                         return web.json_response({
@@ -821,13 +854,13 @@ class BotAPIServer:
                             "status": "active",
                             "analysis": mtf_status
                         })
-            
+
             return web.json_response({
                 "enabled": True,
                 "status": "waiting",
                 "message": "Multi-timeframe analysis enabled but no analysis run yet"
             })
-            
+
         except Exception as e:
             self.logger.error(f"Error getting MTF status: {e}")
             return web.json_response({"error": str(e)}, status=500)
@@ -840,36 +873,36 @@ class BotAPIServer:
                     "success": False,
                     "message": "Multi-timeframe analysis is disabled in config"
                 }, status=400)
-            
+
             # Get the trading strategy
             strategy = None
-            if hasattr(self.bot, 'trading_strategy'):
+            if hasattr(self.bot, "trading_strategy"):
                 strategy = self.bot.trading_strategy
-            
-            if not strategy or not hasattr(strategy, '_mtf_analyzer') or not strategy._mtf_analyzer:
+
+            if not strategy or not hasattr(strategy, "_mtf_analyzer") or not strategy._mtf_analyzer:
                 return web.json_response({
                     "success": False,
                     "message": "Multi-timeframe analyzer not initialized"
                 }, status=400)
-            
+
             # Force analysis by resetting the last analysis time
             strategy._last_mtf_analysis_time = 0
-            
+
             # Get grid bounds
             grid_top = max(strategy.grid_manager.price_grids)
             grid_bottom = min(strategy.grid_manager.price_grids)
-            
+
             # Run analysis
             result = await strategy._mtf_analyzer.analyze(
                 strategy.trading_pair,
                 grid_bottom,
                 grid_top
             )
-            
+
             # Update cached result
             strategy._mtf_analysis_result = result
-            strategy._last_mtf_analysis_time = __import__('time').time()
-            
+            strategy._last_mtf_analysis_time = __import__("time").time()
+
             return web.json_response({
                 "success": True,
                 "analysis": {
@@ -884,7 +917,7 @@ class BotAPIServer:
                     "recommendations": result.recommendations,
                 }
             })
-            
+
         except Exception as e:
             self.logger.error(f"Error running MTF analysis: {e}")
             return web.json_response({"error": str(e)}, status=500)
