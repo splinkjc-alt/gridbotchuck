@@ -36,12 +36,14 @@ Professional Grid Trading Bot for cryptocurrency markets. Automate your trading 
   - [Reporting Issues](#reporting-issues)
 - [💸 Donations](#-donations)
 - [📜 License](#-license)
+- [🔐 Security](#-security)
 - [🚨 Disclaimer](#-disclaimer)
 
 ## Features
 
 - **Backtesting**: Simulate your grid trading strategy using historical data.
 - **Live Trading**: Execute trades on live markets using real funds, supported by robust configurations and risk management.
+- **API Authentication**: Protected REST API with token-based authentication.
 - **Paper Trading**: Test strategies in a simulated live market environment without risking actual funds.
 - **Multiple Grid Trading Strategies**: Implement different grid trading strategies to match market conditions.
 - **Customizable Configurations**: Use a JSON file to define grid levels, strategies, and risk settings.
@@ -371,6 +373,17 @@ Thank you for your support!
 ## 📜 License
 
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE.txt) file for more details.
+
+## 🔐 Security
+
+This project includes several security features to protect your trading bot:
+
+- **API Authentication**: The REST API requires token-based authentication for protected endpoints
+- **Hardware-bound Licensing**: License keys are bound to specific machines
+- **Secure Credential Storage**: API keys stored in environment variables, never in code
+- **Audit Logging**: Security events are logged for monitoring
+
+For detailed security information, see [SECURITY.md](./SECURITY.md).
 
 ## 🚨 Disclaimer
 
