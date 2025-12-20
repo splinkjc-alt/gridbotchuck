@@ -10,3 +10,7 @@
   for = "/*"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
+
+# Form handling - Netlify will collect submissions
+# You'll get email notifications at your Netlify account email
+# View all submissions at: https://app.netlify.com/sites/YOUR_SITE/forms

@@ -1,26 +1,25 @@
-<!-- FRESH-DEPLOY-2025-12-15-1330-EMAILJS-VERSION -->
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GridBot Chuck - Automated Cryptocurrency Grid Trading Bot</title>
+  <title>GridBot Pro - Automated Cryptocurrency Grid Trading Bot</title>
   <meta name="description"
     content="Professional cryptocurrency grid trading bot. Automate your trading strategy with advanced grid algorithms, multi-pair support, and real-time market scanning.">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="gridboticon.png">
-  <link rel="apple-touch-icon" href="gridboticon.png">
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- EmailJS for automated emails -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <!-- FORCE FRESH DEPLOY -->
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script>
+    (function() {
+      emailjs.init('p4GK58CflmMC4CGJm');
+    })();
+  </script>
 
   <style>
     * {
@@ -81,9 +80,7 @@
     }
 
     .logo-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
+      font-size: 2rem;
     }
 
     .pro-badge {
@@ -125,87 +122,6 @@
     .nav-cta:hover {
       background: var(--primary-dark);
       transform: translateY(-2px);
-    }
-
-    /* Mobile Menu Button */
-    .mobile-menu-btn {
-      display: none;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 0.5rem;
-      z-index: 1001;
-    }
-
-    .mobile-menu-btn span {
-      display: block;
-      width: 25px;
-      height: 3px;
-      background: var(--text);
-      margin: 5px 0;
-      transition: all 0.3s ease;
-      border-radius: 2px;
-    }
-
-    .mobile-menu-btn.active span:nth-child(1) {
-      transform: rotate(45deg) translate(5px, 5px);
-    }
-
-    .mobile-menu-btn.active span:nth-child(2) {
-      opacity: 0;
-    }
-
-    .mobile-menu-btn.active span:nth-child(3) {
-      transform: rotate(-45deg) translate(7px, -6px);
-    }
-
-    /* Mobile Menu Overlay */
-    .mobile-menu {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(10, 10, 15, 0.98);
-      z-index: 1000;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 2rem;
-    }
-
-    .mobile-menu.active {
-      display: flex;
-    }
-
-    .mobile-menu a {
-      color: var(--text);
-      text-decoration: none;
-      font-size: 1.5rem;
-      font-weight: 600;
-      padding: 1rem 2rem;
-      transition: color 0.3s;
-    }
-
-    .mobile-menu a:hover {
-      color: var(--primary);
-    }
-
-    .mobile-menu .mobile-cta {
-      background: var(--primary);
-      border-radius: 12px;
-      margin-top: 1rem;
-    }
-
-    @media (max-width: 767px) {
-      .mobile-menu-btn {
-        display: block;
-      }
-
-      .nav-cta {
-        display: none;
-      }
     }
 
     /* Hero Content */
@@ -713,9 +629,7 @@
       font-size: 0.9rem;
     }
 
-    /* ===== MOBILE RESPONSIVE STYLES ===== */
-
-    /* Tablet (768px - 968px) */
+    /* Responsive */
     @media (max-width: 968px) {
       .hero-content {
         flex-direction: column;
@@ -754,71 +668,15 @@
       .pricing-card.featured {
         transform: none;
       }
-
-      .features-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-      }
-
-      .pricing-grid {
-        grid-template-columns: 1fr;
-        max-width: 400px;
-        margin: 0 auto;
-      }
-
-      .faq-grid {
-        grid-template-columns: 1fr;
-      }
     }
 
-    /* Mobile (481px - 767px) */
-    @media (max-width: 767px) {
-      body {
-        font-size: 16px;
-        /* Prevents zoom on input focus */
-      }
-
-      nav {
-        padding: 1rem;
-      }
-
-      .nav-cta {
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
-      }
-
-      .hero {
-        padding: 1rem;
-        padding-top: 80px;
-      }
-
+    @media (max-width: 480px) {
       .hero h1 {
         font-size: 2rem;
-        line-height: 1.2;
-      }
-
-      .hero-badge {
-        font-size: 0.85rem;
-        padding: 0.5rem 1rem;
-      }
-
-      .hero-description {
-        font-size: 1rem;
       }
 
       .hero-buttons {
         flex-direction: column;
-        gap: 0.75rem;
-        width: 100%;
-      }
-
-      .btn-primary,
-      .btn-secondary {
-        width: 100%;
-        padding: 1rem 1.5rem;
-        font-size: 1rem;
-        min-height: 50px;
-        /* Touch-friendly size */
       }
 
       .hero-stats {
@@ -826,192 +684,26 @@
         gap: 1rem;
       }
 
-      .hero-image {
-        display: none;
-        /* Hide dashboard preview on small screens */
-      }
-
-      .section-title {
-        font-size: 1.75rem;
-      }
-
-      .features-grid {
-        grid-template-columns: 1fr;
-        padding: 0 1rem;
-      }
-
-      .feature-card {
-        padding: 1.5rem;
-      }
-
-      .pricing-section {
-        padding: 3rem 1rem;
-      }
-
-      .pricing-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-        padding: 0 1rem;
-      }
-
-      .pricing-card {
-        padding: 1.5rem;
-      }
-
-      .beta-form {
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-
-      .beta-form input[type="email"] {
-        width: 100%;
-        padding: 1rem;
-        font-size: 16px;
-        /* Prevents iOS zoom */
-        min-height: 50px;
-        border-radius: 12px;
-      }
-
-      .beta-form button {
-        width: 100%;
-        padding: 1rem;
-        min-height: 50px;
-        border-radius: 12px;
-      }
-
-      .faq-section {
-        padding: 3rem 1rem;
-      }
-
-      .faq-item {
-        padding: 1.25rem;
-      }
-
-      footer {
-        padding: 2rem 1rem;
-      }
-    }
-
-    /* Small Mobile (up to 480px) */
-    @media (max-width: 480px) {
-      .hero h1 {
-        font-size: 1.75rem;
-      }
-
-      .hero-badge {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-      }
-
-      .stat-value {
-        font-size: 1.25rem;
-      }
-
-      .stat-label {
-        font-size: 0.8rem;
-      }
-
-      .section-title {
-        font-size: 1.5rem;
-      }
-
-      .feature-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 1.5rem;
-      }
-
-      .feature-card h3 {
-        font-size: 1.1rem;
-      }
-
-      .feature-card p {
-        font-size: 0.9rem;
-      }
-
-      .pricing-card h3 {
-        font-size: 1.25rem;
-      }
-
-      .price {
-        font-size: 2rem;
-      }
-
-      .faq-question {
-        font-size: 1rem;
-      }
-
-      .faq-answer {
-        font-size: 0.9rem;
-      }
-
-      /* Make all interactive elements touch-friendly */
-      a,
-      button,
-      input,
-      select,
-      textarea {
-        min-height: 44px;
-        /* Apple's recommended touch target */
-      }
-
-      /* Better spacing for readability */
-      p {
-        line-height: 1.7;
-      }
-    }
-
-    /* Accessibility improvements for all screen sizes */
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        animation: none !important;
-        transition: none !important;
-      }
-    }
-
-    /* High contrast mode support */
-    @media (prefers-contrast: high) {
-      :root {
-        --primary: #00ff88;
-        --dark: #000000;
-        --card: #1a1a1a;
-        --text: #ffffff;
-        --text-muted: #cccccc;
-      }
-    }
-
-    /* Print styles */
-    @media print {
-
-      .hero-image,
-      nav,
-      .hero-buttons,
-      footer {
-        display: none;
-      }
-
-      body {
-        background: white;
-        color: black;
+      .stat {
+        text-align: center;
       }
     }
   </style>
 </head>
 
 <body>
-  <!-- Hero Section -->
-  <!-- Mobile Menu Overlay -->
-  <div class="mobile-menu" id="mobileMenu">
-    <a href="#features" onclick="closeMobileMenu()">Features</a>
-    <a href="#pricing" onclick="closeMobileMenu()">Pricing</a>
-    <a href="#faq" onclick="closeMobileMenu()">FAQ</a>
-    <a href="#beta" class="mobile-cta" onclick="closeMobileMenu()">🚀 Join Free Beta</a>
+  <!-- Announcement Bar -->
+  <div
+    style="background: linear-gradient(90deg, #f59e0b, #ef4444); color: white; text-align: center; padding: 0.75rem; font-weight: 600; font-size: 0.9rem;">
+    🎉 Beta Tester Special: <strong>2 WEEKS FREE</strong> + 50% off at launch! Limited spots remaining.
+    <a href="#beta" style="color: white; margin-left: 0.5rem; text-decoration: underline;">Join Now →</a>
   </div>
 
+  <!-- Hero Section -->
   <section class="hero">
     <nav>
       <div class="logo">
-        <img src="gridboticon.png" alt="GridBot Pro" class="logo-icon">
+        <span class="logo-icon">📊</span>
         <span>GridBot <span class="pro-badge">PRO</span></span>
       </div>
       <ul class="nav-links">
@@ -1019,18 +711,13 @@
         <li><a href="#pricing">Pricing</a></li>
         <li><a href="#faq">FAQ</a></li>
       </ul>
-      <a href="#pricing" class="nav-cta">Get Started</a>
-      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu" onclick="toggleMobileMenu()">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+      <a href="#beta" class="nav-cta">Try Free</a>
     </nav>
 
     <div class="hero-content">
       <div class="hero-text">
         <div class="hero-badge">
-          🧪 FREE BETA - Try GridBot Pro free for 2 weeks!
+          🔥 LIMITED TIME - 2 Weeks FREE Beta Access!
         </div>
         <h1>Automate Your <span>Crypto Trading</span> with Grid Strategy</h1>
         <p class="hero-description">
@@ -1178,14 +865,15 @@
   <!-- Beta Signup Section -->
   <section class="beta-signup" id="beta">
     <div class="section-header">
-      <h2>🧪 Join the Free Beta</h2>
-      <p>Get 2 weeks of unlimited access. Help us test, shape the product, and get a discount when we launch!</p>
+      <h2>🚀 Join the FREE 2-Week Beta</h2>
+      <p>Get full Pro access for 14 days. No credit card. No strings attached. Help us improve and get 50% off at launch!
+      </p>
     </div>
     <div class="beta-container">
       <div class="beta-benefits">
         <div class="beta-benefit">
           <span class="check">✓</span>
-          <span>Full Pro features for 2 weeks</span>
+          <span>Full Pro features for 14 days</span>
         </div>
         <div class="beta-benefit">
           <span class="check">✓</span>
@@ -1207,8 +895,8 @@
       <form class="beta-form" id="betaForm" name="beta-signup" method="POST" data-netlify="true"
         netlify-honeypot="bot-field">
         <input type="hidden" name="form-name" value="beta-signup">
-        <p hidden><input name="bot-field"></p>
-        <input type="email" id="betaEmail" name="email" placeholder="Enter your email address" required>
+        <input type="hidden" name="bot-field">
+        <input type="email" name="email" id="betaEmail" placeholder="Enter your email address" required>
         <button type="submit" class="btn btn-primary">
           🚀 Get Beta Access
         </button>
@@ -1297,11 +985,6 @@
   </footer>
 
   <script>
-    // Initialize EmailJS when DOM is ready - Deploy 2025-12-15
-    (function() {
-      emailjs.init('p4GK58CflmMC4CGJm');
-    })();
-
     // FAQ Toggle
     document.querySelectorAll('.faq-question').forEach(question => {
       question.addEventListener('click', () => {
@@ -1321,7 +1004,7 @@
       });
     });
 
-    // Beta Signup Handler with Email
+    // Beta Signup Handler
     document.getElementById('betaForm').addEventListener('submit', async function (e) {
       e.preventDefault();
 
@@ -1329,105 +1012,100 @@
       const form = this;
       const button = form.querySelector('button');
 
-      // Generate beta key
-      const betaKey = `BETA-${Date.now().toString(36).toUpperCase()}-${email.split('@')[0].toUpperCase().slice(0, 4)}`;
-
-      // Show loading state
+      // Disable button and show loading
       button.innerHTML = '⏳ Signing up...';
       button.disabled = true;
 
       try {
-        // Submit to Netlify Forms (for your records)
+        // Submit to Netlify Forms
         const formData = new FormData(form);
-        const netlifyResponse = await fetch('/', {
+        const response = await fetch('/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams(formData).toString()
         });
 
-        if (netlifyResponse.ok) {
+        if (response.ok) {
+          // Generate beta key
+          const betaKey = 'BETA-' + Date.now().toString(36).toUpperCase() + '-' + email.split('@')[0].toUpperCase().slice(0, 4);
+          const userName = email.split('@')[0];
+
           // Send confirmation email via EmailJS
           try {
-            await emailjs.send(
-              'service_7i3fq1x',
-              'template_3jab9ur',
-              {
-                to_email: email,
-                to_name: email.split('@')[0],
-                beta_key: betaKey,
-                download_link: 'https://github.com/splinkjc-alt/gridbotchuck/releases/latest',
-                reply_to: 'gridbotchuck@gmail.com'
-              }
-            );
-            console.log('✅ Confirmation email sent successfully!');
+            await emailjs.send('service_7i3fq1x', 'template_3jab9ur', {
+              to_name: userName,
+              to_email: email,
+              beta_key: betaKey,
+              download_link: 'https://github.com/splinkjc-alt/gridbotchuck/releases',
+              reply_to: 'gridbotchuck@gmail.com'
+            });
+            console.log('Confirmation email sent to:', email);
           } catch (emailError) {
-            console.error('❌ Email sending failed:', emailError);
-            console.error('Error details:', emailError.text || emailError.message);
-            // Continue even if email fails - signup is still recorded
+            console.error('EmailJS error:', emailError);
           }
 
           // Show success message
           button.innerHTML = '✅ You\'re on the list!';
           button.style.background = '#10b981';
 
-          // Create download link for beta
           setTimeout(() => {
             form.innerHTML = `
               <div class="beta-success show">
                 <h3>🎉 Welcome to the Beta!</h3>
-                <p style="margin: 1rem 0;">Check your email for confirmation! Here's your beta key:</p>
+                <p style="margin: 1rem 0;">Your 14-day beta access is ready!</p>
                 <code style="display: block; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 1.1rem; word-break: break-all;">${betaKey}</code>
-                <p style="margin-top: 1rem;">
-                  <a href="https://github.com/splinkjc-alt/gridbotchuck/releases/latest"
-                     target="_blank"
-                     style="display: inline-block; background: #3b82f6; color: white; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600;">
-                    📥 Download GridBot Chuck Beta
-                  </a>
-                </p>
-                <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">📧 Confirmation email sent to ${email}</p>
-                <p style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.6;">💾 Save your beta key - you'll need it to activate the bot!</p>
-                <p style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.6;">❓ Questions? Email us at gridbotchuck@gmail.com</p>
+                <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">📧 Check your email for download instructions!</p>
+                <a href="https://github.com/splinkjc-alt/gridbotchuck/releases" class="btn" style="margin-top: 1rem; display: inline-block; background: white; color: #10b981;">📥 Download GridBot Pro</a>
               </div>
             `;
           }, 1000);
+
+          console.log('Beta signup successful:', email);
         } else {
-          throw new Error('Signup failed');
+          throw new Error('Form submission failed');
         }
       } catch (error) {
-        console.error('❌ Beta signup error:', error);
-        console.error('Error details:', error.message || error);
-        button.innerHTML = '❌ Error - Try Again';
-        button.style.background = '#ef4444';
-        button.disabled = false;
+        // Fallback: store locally and still send email
+        console.error('Form error (expected on localhost):', error);
+        const betaSignups = JSON.parse(localStorage.getItem('gridbot_beta_signups') || '[]');
+        if (!betaSignups.includes(email)) {
+          betaSignups.push(email);
+          localStorage.setItem('gridbot_beta_signups', JSON.stringify(betaSignups));
+        }
+
+        // Generate beta key and send email even on fallback
+        const betaKey = 'BETA-' + Date.now().toString(36).toUpperCase() + '-' + email.split('@')[0].toUpperCase().slice(0, 4);
+        const userName = email.split('@')[0];
+
+        // Send confirmation email via EmailJS
+        try {
+          await emailjs.send('service_7i3fq1x', 'template_3jab9ur', {
+            to_name: userName,
+            to_email: email,
+            beta_key: betaKey,
+            download_link: 'https://github.com/splinkjc-alt/gridbotchuck/releases',
+            reply_to: 'gridbotchuck@gmail.com'
+          });
+          console.log('Confirmation email sent to:', email);
+        } catch (emailError) {
+          console.error('EmailJS error:', emailError);
+        }
+
+        button.innerHTML = '✅ You\'re on the list!';
+        button.style.background = '#10b981';
+
         setTimeout(() => {
-          button.innerHTML = '🚀 Get Beta Access';
-          button.style.background = '';
-        }, 3000);
+          form.innerHTML = `
+            <div class="beta-success show">
+              <h3>🎉 Welcome to the Beta!</h3>
+              <p style="margin: 1rem 0;">Your 14-day beta access is ready!</p>
+              <code style="display: block; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 1.1rem; word-break: break-all;">${betaKey}</code>
+              <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">📧 Check your email for download instructions!</p>
+              <a href="https://github.com/splinkjc-alt/gridbotchuck/releases" class="btn" style="margin-top: 1rem; display: inline-block; background: white; color: #10b981;">📥 Download GridBot Pro</a>
+            </div>
+          `;
+        }, 1000);
       }
-
-      console.log('Beta signup:', email);
-    });
-
-    // Mobile Menu Functions
-    function toggleMobileMenu() {
-      const menu = document.getElementById('mobileMenu');
-      const btn = document.getElementById('mobileMenuBtn');
-      menu.classList.toggle('active');
-      btn.classList.toggle('active');
-      document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : '';
-    }
-
-    function closeMobileMenu() {
-      const menu = document.getElementById('mobileMenu');
-      const btn = document.getElementById('mobileMenuBtn');
-      menu.classList.remove('active');
-      btn.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-
-    // Close menu on escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeMobileMenu();
     });
   </script>
 </body>
