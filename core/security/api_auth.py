@@ -142,9 +142,19 @@ class APIAuthMiddleware:
         return await handler(request)
 
 
-def get_api_token_info() -> dict:
+def _mask_token(token: str) -> str:
+    """Mask a token for safe display (shows first/last 4 characters)."""
+    if len(token) <= 12:
+        return "*" * len(token)
+    return f"{token[:4]}...{token[-4:]}"
+
+
+def get_api_token_info(mask_token: bool = False) -> dict:
     """
     Get information about the current API token configuration.
+
+    Args:
+        mask_token: If True, mask the token for safe display.
 
     Returns:
         dict with token info and instructions.
@@ -152,12 +162,15 @@ def get_api_token_info() -> dict:
     token = _get_or_create_api_token()
     token_file = Path.home() / ".gridbot" / "api_token"
 
+    display_token = _mask_token(token) if mask_token else token
+
     return {
         "token": token,
+        "token_masked": _mask_token(token),
         "token_file": str(token_file),
         "env_var": "GRIDBOT_API_TOKEN",
         "usage": {
-            "header": f"Authorization: Bearer {token}",
-            "curl_example": f'curl -H "Authorization: Bearer {token}" http://localhost:8080/api/bot/status',
+            "header": f"Authorization: Bearer {display_token}",
+            "curl_example": f'curl -H "Authorization: Bearer {display_token}" http://localhost:8080/api/bot/status',
         },
     }

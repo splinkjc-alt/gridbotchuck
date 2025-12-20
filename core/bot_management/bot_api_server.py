@@ -799,11 +799,11 @@ class BotAPIServer:
 
             # Display authentication info
             if self.enable_auth and self.auth_middleware:
-                token_info = get_api_token_info()
+                token_info = get_api_token_info(mask_token=True)
                 self.logger.info("=" * 60)
                 self.logger.info("API AUTHENTICATION ENABLED")
                 self.logger.info("=" * 60)
-                self.logger.info(f"API Token: {token_info['token']}")
+                self.logger.info(f"API Token (masked): {token_info['token_masked']}")
                 self.logger.info(f"Token file: {token_info['token_file']}")
                 self.logger.info("Add this header to requests: Authorization: Bearer <token>")
                 self.logger.info("=" * 60)
