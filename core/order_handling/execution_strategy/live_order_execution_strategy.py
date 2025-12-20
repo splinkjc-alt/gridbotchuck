@@ -13,7 +13,7 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
     def __init__(
         self,
         exchange_service: ExchangeInterface,
-        max_retries: int = 3,
+        max_retries: int = 1,  # Changed from 3 - market orders fill immediately
         retry_delay: int = 1,
         max_slippage: float = 0.01,
     ) -> None:
@@ -30,72 +30,75 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
         quantity: float,
         price: float,
     ) -> Order | None:
-        last_order_id = None
-        
-        for attempt in range(self.max_retries):
-            try:
-                # If we have a previous order ID from a failed parse, check its status first
-                if last_order_id:
-                    try:
-                        self.logger.info(f"Checking status of previous order {last_order_id} before retry...")
-                        order_status = await self.exchange_service.fetch_order_status(last_order_id, pair)
-                        if order_status:
-                            parsed_order = await self._parse_order_result(order_status)
-                            if parsed_order.status == OrderStatus.CLOSED:
-                                self.logger.info(f"Previous order {last_order_id} was actually filled. Returning it.")
-                                return parsed_order
-                            elif parsed_order.status == OrderStatus.OPEN:
-                                self.logger.info(f"Previous order {last_order_id} is still open. Waiting for fill...")
-                                await self._handle_partial_fill(parsed_order, pair)
-                                continue
-                    except Exception as status_error:
-                        self.logger.warning(f"Could not check previous order status: {status_error}")
-                
-                raw_order = await self.exchange_service.place_order(
+        """Execute a market order. Market orders typically fill immediately."""
+        try:
+            self.logger.info(f"Placing market {order_side.name} order for {quantity} {pair} at ~${price}")
+
+            raw_order = await self.exchange_service.place_order(
+                pair,
+                OrderType.MARKET.value.lower(),
+                order_side.name.lower(),
+                quantity,
+                price,
+            )
+
+            # Log raw response for debugging
+            order_id = raw_order.get("id") if raw_order else None
+            self.logger.info(
+                f"Exchange response - Order ID: {order_id}, Status: {raw_order.get('status') if raw_order else 'None'}"
+            )
+
+            if not raw_order:
+                self.logger.error("Exchange returned empty response for order")
+                raise OrderExecutionFailedError(
+                    "Exchange returned empty response",
+                    order_side,
+                    OrderType.MARKET,
                     pair,
-                    OrderType.MARKET.value.lower(),
-                    order_side.name.lower(),
                     quantity,
                     price,
                 )
-                
-                # Store order ID in case parsing fails
-                if raw_order and isinstance(raw_order, dict):
-                    last_order_id = raw_order.get("id")
-                
-                order_result = await self._parse_order_result(raw_order)
 
-                if order_result.status == OrderStatus.CLOSED:
-                    return order_result  # Order fully filled
+            order_result = await self._parse_order_result(raw_order)
 
-                elif order_result.status == OrderStatus.OPEN:
-                    await self._handle_partial_fill(order_result, pair)
+            # Market orders should fill immediately
+            if order_result.status == OrderStatus.CLOSED:
+                self.logger.info(
+                    f"Market order {order_result.identifier} filled successfully at ${order_result.average or order_result.price}"
+                )
+                return order_result
 
-                await asyncio.sleep(self.retry_delay)
-                self.logger.info(f"Retrying order. Attempt {attempt + 1}/{self.max_retries}.")
-                price = await self._adjust_price(order_side, price, attempt)
+            # If somehow still open, wait briefly and check again
+            if order_result.status == OrderStatus.OPEN:
+                self.logger.info(f"Order {order_result.identifier} still open, waiting for fill...")
+                await asyncio.sleep(2)
 
-            except Exception as e:
-                self.logger.error(f"Attempt {attempt + 1} failed with error: {e!s}")
-                
-                # If we got an order ID before the error, don't retry placing a new order
-                # Instead, try to check if the order was actually placed
-                if last_order_id:
-                    self.logger.warning(
-                        f"Order may have been placed (ID: {last_order_id}). "
-                        "Will check status before retrying."
-                    )
-                
-                await asyncio.sleep(self.retry_delay)
+                try:
+                    updated_order = await self.exchange_service.fetch_order(order_result.identifier, pair)
+                    if updated_order:
+                        order_result = await self._parse_order_result(updated_order)
+                        if order_result.status == OrderStatus.CLOSED:
+                            self.logger.info(f"Order {order_result.identifier} now filled")
+                            return order_result
+                except Exception as e:
+                    self.logger.warning(f"Could not recheck order status: {e}")
 
-        raise OrderExecutionFailedError(
-            "Failed to execute Market order after maximum retries.",
-            order_side,
-            OrderType.MARKET,
-            pair,
-            quantity,
-            price,
-        )
+            # Return whatever we got - the order was placed
+            self.logger.info(f"Returning order with status: {order_result.status}")
+            return order_result
+
+        except OrderExecutionFailedError:
+            raise
+        except Exception as e:
+            self.logger.error(f"Error executing market order: {e!s}")
+            raise OrderExecutionFailedError(
+                f"Failed to execute market order: {e}",
+                order_side,
+                OrderType.MARKET,
+                pair,
+                quantity,
+                price,
+            ) from e
 
     async def execute_limit_order(
         self,
@@ -170,7 +173,7 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
         status_str = raw_order_result.get("status") or "unknown"
         order_type_str = raw_order_result.get("type") or "unknown"
         side_str = raw_order_result.get("side") or "unknown"
-        
+
         return Order(
             identifier=raw_order_result.get("id") or "",
             status=OrderStatus(status_str.lower()),
