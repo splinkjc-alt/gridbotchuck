@@ -82,21 +82,37 @@ class GridManager:
         self,
         total_balance: float,
         current_price: float,
+        buy_percent: float = None,
     ) -> float:
         """
-        Calculates the order size for a grid level based on the total balance, total grids, and current price.
+        Calculates the order size for a grid level based on the total balance and buy percentage.
 
-        The order size is determined by evenly distributing the total balance across all grid levels and adjusting
-        it to reflect the current price.
+        The order size is determined by the configured buy_percent_of_total (default 20%),
+        or by evenly distributing across grid levels if not configured.
 
         Args:
+            total_balance: Total portfolio value in fiat.
             current_price: The current price of the trading pair.
+            buy_percent: Percentage of total to use per buy (default: from config or grid-based).
 
         Returns:
             The calculated order size as a float.
         """
-        total_grids = len(self.grid_levels)
-        order_size = total_balance / total_grids / current_price
+        # Get buy percent from config or use grid-based calculation
+        if buy_percent is None:
+            position_sizing = self.config_manager.config.get("risk_management", {}).get("position_sizing", {})
+            buy_percent = position_sizing.get("buy_percent_of_total", None)
+        
+        if buy_percent is not None:
+            # Use configured percentage of total portfolio
+            buy_value = total_balance * (buy_percent / 100.0)
+            order_size = buy_value / current_price
+            self.logger.debug(f"Order size: {order_size:.6f} ({buy_percent}% of ${total_balance:.2f})")
+        else:
+            # Fall back to grid-based sizing
+            total_grids = len(self.grid_levels)
+            order_size = total_balance / total_grids / current_price
+        
         return order_size
 
     def get_initial_order_quantity(

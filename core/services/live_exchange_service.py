@@ -47,6 +47,7 @@ class LiveExchangeService(ExchangeInterface):
                     "apiKey": self.api_key,
                     "secret": self.secret_key,
                     "enableRateLimit": True,
+                    "timeout": 30000,  # 30 second timeout for API calls
                 },
             )
 
@@ -368,6 +369,7 @@ class LiveExchangeService(ExchangeInterface):
         """
         # Stablecoins and fiat-pegged tokens to exclude (no meaningful price movement)
         EXCLUDED_BASES = {
+            # USD Stablecoins
             "USDT",
             "USDC",
             "USDD",
@@ -380,17 +382,32 @@ class LiveExchangeService(ExchangeInterface):
             "PYUSD",
             "FDUSD",
             "USDS",
+            "USD1",
+            "USD",
             "CRVUSD",
             "GHO",
             "LUSD",
             "SUSD",
             "MIM",
+            "USDZ",
+            "USDY",
+            "USDQ",
+            "USDK",
+            "HUSD",
+            "CUSD",
+            "ZUSD",
+            "MUSD",
+            "DUSD",
+            "OUSD",
+            # Euro stablecoins
             "EUR",
             "EUROP",
             "EURQ",
             "EURT",
             "EURS",
             "AEUR",
+            "EURC",
+            # Other fiat stablecoins
             "GBP",
             "TGBP",
             "GBPT",
@@ -398,10 +415,15 @@ class LiveExchangeService(ExchangeInterface):
             "CHF",
             "CAD",
             "AUD",
+            # Commodity-backed (stable)
             "PAXG",
-            "XAUT",  # Gold-backed (stable)
+            "XAUT",
+            # Wrapped versions (track underlying)
             "WBTC",
-            "WETH",  # Wrapped versions
+            "WETH",
+            "STETH",
+            "CBETH",
+            "RETH",
         }
 
         try:

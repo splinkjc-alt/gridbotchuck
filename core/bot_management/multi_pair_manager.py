@@ -234,6 +234,7 @@ class MultiPairManager:
             )
 
             order_manager = OrderManager(
+                config_manager=pair_config,
                 exchange_service=self.exchange_service,
                 balance_tracker=balance_tracker,
                 pair=pair,

@@ -90,6 +90,7 @@ class GridTradingBot:
             )
 
             order_manager = OrderManager(
+                self.config_manager,
                 grid_manager,
                 order_validator,
                 self.balance_tracker,
@@ -136,6 +137,8 @@ class GridTradingBot:
                     )
                     # Subscribe to switch events
                     self.event_bus.subscribe(Events.SWITCH_PAIR, self._handle_switch_pair)
+                    # Subscribe to force exit events (stagnation)
+                    self.event_bus.subscribe(Events.FORCE_EXIT_POSITION, self._handle_force_exit)
 
                 # Multi-pair manager
                 multi_pair_config = self.config_manager.config.get("multi_pair", {})
@@ -163,14 +166,129 @@ class GridTradingBot:
             return
 
         self.logger.info("Initializing Grid Trading Bot components...")
+        
+        # Auto-select best pair on startup if enabled
+        await self._auto_select_initial_pair()
+        
         await self.balance_tracker.setup_balances(
             initial_balance=self.config_manager.get_initial_balance(),
-            initial_crypto_balance=0.0,
+            initial_crypto_balance=self.config_manager.get_initial_crypto_balance(),
             exchange_service=self.exchange_service,
         )
         self.strategy.initialize_strategy()
         self._initialized = True
         self.logger.info("Grid Trading Bot initialized.")
+
+    async def _auto_select_initial_pair(self) -> None:
+        """
+        Auto-select the best trading pair on startup using the market scanner.
+        Only runs if auto_select_on_startup is enabled in config.
+        """
+        scanner_config = self.config_manager.config.get("market_scanner", {})
+        if not scanner_config.get("auto_select_on_startup", False):
+            self.logger.info(f"Using configured pair: {self.trading_pair}")
+            return
+        
+        self.logger.info("[AUTO-SELECT] Scanning for best trading pair on startup...")
+        
+        try:
+            from strategies.market_analyzer import MarketAnalyzer
+            
+            analyzer = MarketAnalyzer(self.exchange_service, self.config_manager)
+            
+            # Get scan parameters from config
+            quote_currency = scanner_config.get("quote_currency", "USD")
+            min_price = scanner_config.get("min_price", 1.0)
+            max_price = scanner_config.get("max_price", 20.0)
+            timeframe = scanner_config.get("timeframe", "15m")
+            
+            # First try to get top gainers dynamically
+            pairs = []
+            if hasattr(self.exchange_service, "get_top_gainers"):
+                self.logger.info("[AUTO-SELECT] Fetching top gainers from exchange...")
+                top_gainers = await self.exchange_service.get_top_gainers(
+                    quote_currency=quote_currency,
+                    min_price=min_price,
+                    max_price=max_price,
+                    limit=10,
+                )
+                pairs = [g["pair"] for g in top_gainers]
+            
+            # Fallback to candidate_pairs from config
+            if not pairs:
+                pairs = scanner_config.get("candidate_pairs", [])
+            
+            if not pairs:
+                self.logger.warning("[AUTO-SELECT] No pairs to scan, using configured pair")
+                return
+            
+            self.logger.info(f"[AUTO-SELECT] Analyzing {len(pairs)} pairs: {pairs[:5]}...")
+            
+            # Run analysis
+            results = await analyzer.find_best_trading_pairs(
+                candidate_pairs=pairs,
+                timeframe=timeframe,
+                min_price=min_price,
+                max_price=max_price,
+            )
+            
+            if not results:
+                self.logger.warning("[AUTO-SELECT] No pairs passed analysis, using configured pair")
+                return
+            
+            # Pick the best one
+            best = results[0]
+            
+            if best.pair != self.trading_pair:
+                self.logger.info(
+                    f"[AUTO-SELECT] Best pair: {best.pair} (score: {best.score:.1f}, signal: {best.signal})"
+                )
+                self.logger.info(f"[AUTO-SELECT] Switching from {self.trading_pair} to {best.pair}")
+                
+                # Update trading pair
+                old_pair = self.trading_pair
+                self.trading_pair = best.pair
+                
+                # Update config manager
+                base, quote = best.pair.split("/")
+                self.config_manager.config["pair"]["base_currency"] = base
+                self.config_manager.config["pair"]["quote_currency"] = quote
+                
+                # Calculate new grid range based on current price (10% range)
+                current_price = best.price  # CoinAnalysis uses 'price' not 'current_price'
+                range_percent = self.config_manager.config.get("market_scanner", {}).get("range_percent", 0.10)
+                new_lower = round(current_price * (1 - range_percent / 2), 4)
+                new_upper = round(current_price * (1 + range_percent / 2), 4)
+                
+                # Update grid_strategy range (config uses 'grid_strategy.range.bottom/top')
+                self.config_manager.config["grid_strategy"]["range"]["bottom"] = new_lower
+                self.config_manager.config["grid_strategy"]["range"]["top"] = new_upper
+                self.logger.info(f"[AUTO-SELECT] Grid range: ${new_lower:.4f} - ${new_upper:.4f} (around ${current_price:.4f})")
+                
+                # Reinitialize grid manager with new prices
+                strategy_type = self.config_manager.get_strategy_type()
+                self.grid_manager = GridManager(self.config_manager, strategy_type)
+                self.grid_manager.initialize_grids_and_levels()
+                self.logger.info(f"[AUTO-SELECT] Grid manager reinitialized for {best.pair}")
+                
+                # Update strategy references
+                self.strategy.trading_pair = best.pair
+                self.strategy.order_manager.trading_pair = best.pair
+                self.strategy.grid_manager = self.grid_manager
+                self.strategy.order_manager.grid_manager = self.grid_manager
+                
+                # Update balance tracker base currency for new pair
+                self.balance_tracker.base_currency = base
+                self.strategy.order_manager.balance_tracker.base_currency = base
+                self.logger.info(f"[AUTO-SELECT] Updated balance tracker for {base}/{quote}")
+                
+                self.logger.info(f"[AUTO-SELECT] Successfully selected {best.pair} for trading")
+            else:
+                self.logger.info(f"[AUTO-SELECT] Configured pair {self.trading_pair} is already the best!")
+                
+        except Exception as e:
+            self.logger.error(f"[AUTO-SELECT] Error during auto-selection: {e}")
+            self.logger.info(f"[AUTO-SELECT] Falling back to configured pair: {self.trading_pair}")
 
     async def run(self) -> dict[str, Any] | None:
         try:
@@ -240,6 +358,86 @@ class GridTradingBot:
 
         except Exception as e:
             self.logger.error(f"Error switching pair: {e}", exc_info=True)
+
+    async def _handle_force_exit(self, data: dict) -> None:
+        """
+        Handle force exit of a position due to stagnation.
+        Sells all crypto holdings for the current pair and prepares for switch.
+        """
+        pair = data.get("pair", self.trading_pair)
+        reason = data.get("reason", "stagnation")
+        exit_at_loss = data.get("exit_at_loss", True)
+        max_loss_pct = data.get("max_loss_percent", 2.0)
+
+        self.logger.warning(f"⚠️ FORCE EXIT triggered for {pair} due to {reason}")
+
+        try:
+            # Get current position info
+            base_currency = pair.split("/")[0]
+            quote_currency = pair.split("/")[1]
+            
+            # Get current balances
+            crypto_balance = await self.balance_tracker.get_crypto_balance()
+            current_price = await self._get_current_price(pair)
+            
+            if crypto_balance <= 0:
+                self.logger.info(f"No {base_currency} to sell, skipping force exit")
+                return
+                
+            position_value = crypto_balance * current_price
+            
+            # Calculate P&L if we have entry info
+            entry_price = getattr(self.strategy, 'average_entry_price', None)
+            if entry_price and entry_price > 0:
+                pnl_pct = ((current_price - entry_price) / entry_price) * 100
+                
+                # Check if loss is too high
+                if not exit_at_loss and pnl_pct < 0:
+                    self.logger.info(f"Position at loss ({pnl_pct:.2f}%), exit_at_loss=False, skipping")
+                    return
+                    
+                if pnl_pct < -max_loss_pct:
+                    self.logger.warning(
+                        f"Loss ({pnl_pct:.2f}%) exceeds max ({max_loss_pct}%), "
+                        f"holding position instead of force exit"
+                    )
+                    return
+                    
+                self.logger.info(f"Force exiting position at {pnl_pct:+.2f}% P&L")
+            
+            # Cancel all open orders first
+            self.logger.info("Cancelling all open orders...")
+            await self.order_manager.cancel_all_orders(pair)
+            
+            # Place market sell order
+            self.logger.info(f"Selling {crypto_balance:.6f} {base_currency} at market price ${current_price:.4f}")
+            
+            sell_order = await self.order_manager.create_market_order(
+                pair=pair,
+                side="sell",
+                amount=crypto_balance,
+                reason="stagnation_exit"
+            )
+            
+            if sell_order:
+                self.logger.info(
+                    f"✅ Force exit complete: Sold {crypto_balance:.6f} {base_currency} "
+                    f"for ~${position_value:.2f}"
+                )
+            else:
+                self.logger.error("Failed to execute force exit sell order")
+
+        except Exception as e:
+            self.logger.error(f"Error during force exit: {e}", exc_info=True)
+
+    async def _get_current_price(self, pair: str) -> float:
+        """Get current price for a trading pair."""
+        try:
+            ticker = await self.exchange_service.get_ticker(pair)
+            return ticker.get("last") or ticker.get("close", 0)
+        except Exception as e:
+            self.logger.error(f"Error getting price for {pair}: {e}")
+            return 0
 
     async def _stop(self) -> None:
         if not self.is_running:

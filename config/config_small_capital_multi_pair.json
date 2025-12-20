@@ -9,7 +9,7 @@
     }
   },
   "pair": {
-    "base_currency": "XLM",
+    "base_currency": "MYX",
     "quote_currency": "USD"
   },
   "trading_settings": {
@@ -24,12 +24,12 @@
   "grid_strategy": {
     "type": "simple_grid",
     "spacing": "geometric",
-    "num_grids": 4,
+    "num_grids": 3,
     "range": {
-      "top": 0.15,
-      "bottom": 0.11
+      "top": 3.8,
+      "bottom": 3.1
     },
-    "order_size_percent": 35
+    "order_size_percent": 20
   },
   "risk_management": {
     "take_profit": {
@@ -48,9 +48,34 @@
     },
     "max_position_size_percent": 40
   },
+  "market_scanner": {
+    "enabled": true,
+    "quote_currency": "USD",
+    "min_price": 2.0,
+    "max_price": 22.0,
+    "timeframe": "15m",
+    "candidate_pairs": [
+      "MORPHO/USD",
+      "M/USD",
+      "MYX/USD",
+      "DOT/USD",
+      "LINK/USD",
+      "ATOM/USD",
+      "UNI/USD",
+      "FIL/USD",
+      "AVAX/USD",
+      "NEAR/USD",
+      "APT/USD",
+      "LTC/USD",
+      "BCH/USD",
+      "ETC/USD"
+    ],
+    "auto_scan_enabled": true,
+    "auto_scan_interval_minutes": 15
+  },
   "multi_pair": {
     "enabled": true,
-    "max_pairs": 2,
+    "max_pairs": 1,
     "min_balance_per_pair": 20.0,
     "balance_split": "equal",
     "auto_select": true,
@@ -60,12 +85,20 @@
       "min_stuck_checks_before_switch": 2,
       "switch_cooldown_minutes": 60,
       "candidate_pairs": [
-        "XLM/USD",
-        "XRP/USD",
-        "DOGE/USD",
-        "MATIC/USD",
-        "ADA/USD",
-        "ALGO/USD"
+        "MORPHO/USD",
+        "M/USD",
+        "MYX/USD",
+        "DOT/USD",
+        "LINK/USD",
+        "ATOM/USD",
+        "UNI/USD",
+        "FIL/USD",
+        "AVAX/USD",
+        "NEAR/USD",
+        "APT/USD",
+        "LTC/USD",
+        "BCH/USD",
+        "ETC/USD"
       ]
     }
   },
@@ -79,6 +112,18 @@
     "analysis_interval_minutes": 60,
     "pause_on_strong_trend": true
   },
+  "profit_rotation": {
+    "enabled": true,
+    "profit_target_percent": 5.0,
+    "profit_target_usd": 3.0,
+    "use_percent_target": false,
+    "check_interval_seconds": 60,
+    "top_pairs_to_scan": 4,
+    "min_score_to_enter": 65,
+    "cooldown_minutes": 30,
+    "auto_enter_next": true,
+    "max_rotations_per_day": 10
+  },
   "notifications": {
     "enabled": true,
     "events": {
@@ -89,7 +134,9 @@
       "pair_switched": true,
       "circuit_breaker_opened": true,
       "significant_profit": true,
-      "loss_warning": true
+      "loss_warning": true,
+      "profit_rotation_completed": true,
+      "profit_target_approaching": true
     }
   },
   "logging": {

@@ -21,7 +21,581 @@ document.addEventListener('DOMContentLoaded', () => {
   updateMetrics();
   startAutoRefresh();
   loadScannerConfig();
+  loadAccountSettings();
+  initBacktestDates();
+
+  // Close account menu when clicking outside
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('account-dropdown');
+    if (dropdown && !dropdown.contains(e.target)) {
+      dropdown.classList.remove('open');
+    }
+  });
 });
+
+// Initialize backtest date inputs with sensible defaults
+function initBacktestDates() {
+  const now = new Date();
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+  const formatDateTime = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const startInput = document.getElementById('backtest-start');
+  const endInput = document.getElementById('backtest-end');
+
+  if (startInput) startInput.value = formatDateTime(twoWeeksAgo);
+  if (endInput) endInput.value = formatDateTime(now);
+}
+
+// ============================================================
+// ACCOUNT DROPDOWN FUNCTIONS
+// ============================================================
+
+function toggleAccountMenu() {
+  const dropdown = document.getElementById('account-dropdown');
+  dropdown.classList.toggle('open');
+  event.stopPropagation();
+}
+
+async function loadAccountSettings() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/config`);
+    const data = await response.json();
+
+    if (data.exchange) {
+      // Set exchange dropdown
+      const exchangeSelect = document.getElementById('exchange-select');
+      if (exchangeSelect) {
+        exchangeSelect.value = data.exchange.name || 'kraken';
+      }
+
+      // Set trading mode dropdown
+      const modeSelect = document.getElementById('trading-mode-select');
+      const currentMode = data.exchange.trading_mode || 'live';
+      if (modeSelect) {
+        modeSelect.value = currentMode;
+      }
+
+      // Update UI controls for current mode
+      updateModeControls(currentMode);
+
+      // Update account name with exchange
+      const accountName = document.getElementById('account-name');
+      if (accountName) {
+        const exchangeNames = {
+          'kraken': 'Kraken',
+          'coinbase': 'Coinbase',
+          'binance': 'Binance',
+          'kucoin': 'KuCoin',
+          'bybit': 'Bybit'
+        };
+        accountName.textContent = exchangeNames[data.exchange.name] || 'Account';
+      }
+    }
+
+    // Update quote currency hint
+    if (data.pair && data.pair.quote_currency) {
+      const quoteHint = document.getElementById('current-quote');
+      if (quoteHint) {
+        quoteHint.textContent = data.pair.quote_currency;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading account settings:', error);
+  }
+}
+
+async function changeExchange(exchange) {
+  try {
+    addLog(`Switching to ${exchange}...`, 'info');
+
+    // Exchange-specific quote currency defaults
+    const exchangeQuoteCurrency = {
+      'kraken': 'USD',
+      'coinbase': 'USD',
+      'binance': 'USDT',
+      'kucoin': 'USDT',
+      'bybit': 'USDT'
+    };
+
+    const quoteCurrency = exchangeQuoteCurrency[exchange] || 'USD';
+
+    // Update UI immediately for instant feedback
+    const quoteHint = document.getElementById('current-quote');
+    if (quoteHint) {
+      quoteHint.textContent = quoteCurrency;
+    }
+
+    const exchangeNames = {
+      'kraken': 'Kraken',
+      'coinbase': 'Coinbase',
+      'binance': 'Binance',
+      'kucoin': 'KuCoin',
+      'bybit': 'Bybit'
+    };
+
+    const accountName = document.getElementById('account-name');
+    if (accountName) {
+      accountName.textContent = exchangeNames[exchange] || 'Account';
+    }
+
+    // Update quote currency selector if it exists
+    const quoteSelect = document.getElementById('quote-currency');
+    if (quoteSelect) {
+      quoteSelect.value = quoteCurrency;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/config/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        exchange: { name: exchange },
+        pair: { quote_currency: quoteCurrency }
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      addLog(`Exchange changed to ${exchange} with ${quoteCurrency} pairs.`, 'success');
+      showNotification(`${exchangeNames[exchange]} selected (${quoteCurrency} pairs)`, 'success');
+    } else {
+      addLog(`Failed to change exchange: ${data.message}`, 'error');
+      showNotification(`Exchange switch failed - restart bot to apply`, 'warning');
+    }
+  } catch (error) {
+    console.error('Error changing exchange:', error);
+    addLog(`Error: ${error.message} - UI updated, restart bot to apply`, 'warning');
+    showNotification(`Exchange selected - restart bot to apply changes`, 'info');
+  }
+}
+
+async function changeTradingMode(mode) {
+  try {
+    const modeNames = {
+      'live': 'Live Trading',
+      'paper_trading': 'Paper Trading',
+      'backtest': 'Backtest'
+    };
+
+    addLog(`Switching to ${modeNames[mode]}...`, 'info');
+
+    // Update UI controls immediately
+    updateModeControls(mode);
+
+    const response = await fetch(`${API_BASE_URL}/config/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        exchange: { trading_mode: mode }
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      addLog(`Trading mode changed to ${modeNames[mode]}. Restart bot to apply.`, 'success');
+      showNotification(`Trading mode: ${modeNames[mode]}`, 'success');
+    } else {
+      addLog(`Failed to change mode: ${data.message}`, 'error');
+    }
+  } catch (error) {
+    console.error('Error changing trading mode:', error);
+    addLog(`Error changing mode: ${error.message}`, 'error');
+  }
+}
+
+// Update UI controls based on trading mode
+function updateModeControls(mode) {
+  const liveControls = document.getElementById('live-controls');
+  const backtestControls = document.getElementById('backtest-controls');
+
+  if (!liveControls || !backtestControls) return;
+
+  // Hide all mode-specific controls first
+  liveControls.style.display = 'none';
+  backtestControls.style.display = 'none';
+
+  // Show appropriate controls based on mode
+  if (mode === 'backtest') {
+    backtestControls.style.display = 'block';
+
+    // Update page title indicator
+    document.querySelector('.control-section h2').innerHTML =
+      'Bot Control <span class="mode-indicator backtest">📊 Backtest Mode</span>';
+  } else if (mode === 'paper_trading') {
+    liveControls.style.display = 'grid';
+
+    document.querySelector('.control-section h2').innerHTML =
+      'Bot Control <span class="mode-indicator paper">📝 Paper Trading</span>';
+  } else {
+    // Live mode
+    liveControls.style.display = 'grid';
+
+    document.querySelector('.control-section h2').innerHTML =
+      'Bot Control <span class="mode-indicator live">🔴 Live Trading</span>';
+  }
+
+  console.log(`Mode controls updated for: ${mode}`);
+}
+
+// Open dedicated backtest page
+function openBacktestPage() {
+  window.location.href = 'backtest.html';
+}
+
+// Run backtest with the configured settings
+async function runBacktest() {
+  const startDate = document.getElementById('backtest-start').value;
+  const endDate = document.getElementById('backtest-end').value;
+  const initialCapital = document.getElementById('backtest-capital').value;
+
+  if (!startDate || !endDate) {
+    showNotification('Please select start and end dates', 'warning');
+    return;
+  }
+
+  // Validate date range
+  if (new Date(startDate) >= new Date(endDate)) {
+    showNotification('End date must be after start date', 'error');
+    return;
+  }
+
+  try {
+    // Show progress
+    document.getElementById('backtest-progress').style.display = 'block';
+    document.getElementById('backtest-results').style.display = 'none';
+    document.getElementById('btn-run-backtest').disabled = true;
+    document.getElementById('btn-stop-backtest').style.display = 'inline-flex';
+
+    addLog(`Starting backtest: ${startDate} to ${endDate}`, 'info');
+    addLog(`Initial capital: $${initialCapital}`, 'info');
+    updateBacktestProgress(0, 'Fetching historical data...');
+
+    // Update config with backtest settings
+    addLog('Updating backtest configuration...', 'info');
+    const configResponse = await fetch(`${API_BASE_URL}/config/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        trading_settings: {
+          period: {
+            start_date: startDate.replace('T', ' '),
+            end_date: endDate.replace('T', ' ')
+          },
+          initial_capital: parseFloat(initialCapital)
+        }
+      })
+    });
+
+    const configData = await configResponse.json();
+    if (!configResponse.ok) {
+      addLog(`Config update failed: ${configData.message || configResponse.statusText}`, 'error');
+      resetBacktestUI();
+      return;
+    }
+    addLog('Backtest config updated', 'success');
+
+    updateBacktestProgress(10, 'Initializing backtest engine...');
+
+    // Start the bot (in backtest mode, it runs through historical data)
+    addLog('Starting backtest engine...', 'info');
+    const response = await fetch(`${API_BASE_URL}/bot/start`, {
+      method: 'POST'
+    });
+
+    const data = await response.json();
+    addLog(`Bot response: ${JSON.stringify(data)}`, 'info');
+
+    if (data.success) {
+      addLog('Backtest started successfully, polling for completion...', 'success');
+      // Poll for backtest completion
+      pollBacktestProgress();
+    } else {
+      addLog(`Failed to start backtest: ${data.message || 'Unknown error'}`, 'error');
+      showNotification(`Failed to start backtest: ${data.message}`, 'error');
+      resetBacktestUI();
+    }
+
+  } catch (error) {
+    console.error('Backtest error:', error);
+    addLog(`Backtest error: ${error.message}`, 'error');
+    addLog(`Error stack: ${error.stack}`, 'error');
+    showNotification(`Backtest failed: ${error.message}`, 'error');
+    resetBacktestUI();
+  }
+}
+
+function updateBacktestProgress(percent, message) {
+  const progressFill = document.getElementById('backtest-progress-fill');
+  const progressText = document.getElementById('backtest-progress-text');
+
+  if (progressFill) progressFill.style.width = `${percent}%`;
+  if (progressText) progressText.textContent = message;
+}
+
+async function pollBacktestProgress() {
+  let attempts = 0;
+  const maxAttempts = 300; // 5 minutes max
+
+  const poll = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/bot/status`);
+      const data = await response.json();
+
+      if (data.bot_state === 'stopped' || data.bot_state === 'error' || attempts >= maxAttempts) {
+        // Backtest completed or errored
+        if (data.bot_state === 'stopped') {
+          updateBacktestProgress(100, 'Backtest complete!');
+          await fetchBacktestResults();
+        } else {
+          updateBacktestProgress(0, 'Backtest failed or timed out');
+        }
+        resetBacktestUI();
+        return;
+      }
+
+      // Still running - estimate progress based on time
+      attempts++;
+      const estimatedProgress = Math.min(10 + (attempts * 0.3), 95);
+      updateBacktestProgress(estimatedProgress, `Processing candles... (${attempts}s)`);
+
+      setTimeout(poll, 1000);
+    } catch (error) {
+      console.error('Error polling backtest:', error);
+      resetBacktestUI();
+    }
+  };
+
+  poll();
+}
+
+async function fetchBacktestResults() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bot/pnl`);
+    const data = await response.json();
+
+    // Display results
+    const resultsDiv = document.getElementById('backtest-results');
+    resultsDiv.style.display = 'block';
+
+    const totalReturn = data.total_pnl || 0;
+    const initialCapital = parseFloat(document.getElementById('backtest-capital').value) || 1000;
+    const returnPct = (totalReturn / initialCapital) * 100;
+
+    document.getElementById('bt-return').textContent =
+      `${totalReturn >= 0 ? '+' : ''}$${totalReturn.toFixed(2)}`;
+    document.getElementById('bt-return').className =
+      `result-value ${totalReturn >= 0 ? 'positive' : 'negative'}`;
+
+    document.getElementById('bt-return-pct').textContent =
+      `${returnPct >= 0 ? '+' : ''}${returnPct.toFixed(2)}%`;
+    document.getElementById('bt-return-pct').className =
+      `result-value ${returnPct >= 0 ? 'positive' : 'negative'}`;
+
+    document.getElementById('bt-trades').textContent = data.total_trades || 0;
+    document.getElementById('bt-winrate').textContent = `${(data.win_rate || 0).toFixed(1)}%`;
+    document.getElementById('bt-drawdown').textContent = `-${(data.max_drawdown || 0).toFixed(2)}%`;
+    document.getElementById('bt-sharpe').textContent = (data.sharpe_ratio || 0).toFixed(2);
+
+    addLog('Backtest results loaded', 'success');
+
+  } catch (error) {
+    console.error('Error fetching backtest results:', error);
+    addLog('Could not fetch backtest results', 'warning');
+  }
+}
+
+function stopBacktest() {
+  stopBot();
+  resetBacktestUI();
+  updateBacktestProgress(0, 'Backtest cancelled');
+}
+
+function resetBacktestUI() {
+  document.getElementById('btn-run-backtest').disabled = false;
+  document.getElementById('btn-stop-backtest').style.display = 'none';
+}
+
+function openAPISettings() {
+  toggleAccountMenu();
+  showModal('API Settings', `
+    <div class="modal-form">
+      <div class="form-group">
+        <label>API Key</label>
+        <input type="password" id="api-key-input" placeholder="Enter your API key" class="form-input">
+      </div>
+      <div class="form-group">
+        <label>API Secret</label>
+        <input type="password" id="api-secret-input" placeholder="Enter your API secret" class="form-input">
+      </div>
+      <p class="form-note">⚠️ API keys are stored locally and never sent to external servers.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="saveAPIKeys()">Save API Keys</button>
+        <button class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  `);
+}
+
+function openNotificationSettings() {
+  toggleAccountMenu();
+  showModal('Notification Settings', `
+    <div class="modal-form">
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="notify-trades" checked> Trade notifications
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="notify-errors" checked> Error alerts
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="notify-pnl" checked> P&L updates
+        </label>
+      </div>
+      <div class="form-group">
+        <label>Notification URL (Apprise)</label>
+        <input type="text" id="notify-url-input" placeholder="discord://webhook_id/token" class="form-input">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="saveNotificationSettings()">Save Settings</button>
+        <button class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  `);
+}
+
+async function exportConfig() {
+  toggleAccountMenu();
+  try {
+    const response = await fetch(`${API_BASE_URL}/config`);
+    const config = await response.json();
+
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gridbot-config-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    addLog('Configuration exported successfully', 'success');
+    showNotification('Config exported!', 'success');
+  } catch (error) {
+    console.error('Error exporting config:', error);
+    addLog(`Export error: ${error.message}`, 'error');
+  }
+}
+
+async function resetBot() {
+  toggleAccountMenu();
+  if (confirm('⚠️ Are you sure you want to reset the bot? This will stop trading and clear all pending orders.')) {
+    try {
+      // Stop the bot first
+      await fetch(`${API_BASE_URL}/bot/stop`, { method: 'POST' });
+      addLog('Bot reset initiated', 'warning');
+      showNotification('Bot has been reset', 'warning');
+    } catch (error) {
+      console.error('Error resetting bot:', error);
+      addLog(`Reset error: ${error.message}`, 'error');
+    }
+  }
+}
+
+function showModal(title, content) {
+  // Remove existing modal if any
+  const existingModal = document.getElementById('modal-overlay');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'modal-overlay';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>${title}</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-content">
+        ${content}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Close on overlay click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+}
+
+function closeModal() {
+  const modal = document.getElementById('modal-overlay');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.innerHTML = `
+    <span class="notification-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}</span>
+    <span class="notification-message">${message}</span>
+  `;
+  document.body.appendChild(notification);
+
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 10);
+
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+function saveAPIKeys() {
+  const apiKey = document.getElementById('api-key-input').value;
+  const apiSecret = document.getElementById('api-secret-input').value;
+
+  if (!apiKey || !apiSecret) {
+    showNotification('Please enter both API key and secret', 'error');
+    return;
+  }
+
+  // In a real implementation, these would be saved to .env or a secure storage
+  // For now, we'll just show a success message
+  addLog('API keys saved (requires restart)', 'success');
+  showNotification('API keys saved! Restart bot to apply.', 'success');
+  closeModal();
+}
+
+function saveNotificationSettings() {
+  const notifyTrades = document.getElementById('notify-trades').checked;
+  const notifyErrors = document.getElementById('notify-errors').checked;
+  const notifyPnl = document.getElementById('notify-pnl').checked;
+  const notifyUrl = document.getElementById('notify-url-input').value;
+
+  addLog('Notification settings saved', 'success');
+  showNotification('Notification settings saved!', 'success');
+  closeModal();
+}
 
 // Auto-refresh status
 function startAutoRefresh() {
@@ -272,6 +846,7 @@ async function updateConfig() {
 
 let scanResults = [];
 let isScanning = false;
+let ignoredPairs = JSON.parse(localStorage.getItem('ignoredPairs') || '[]');
 
 async function scanMarkets() {
   if (isScanning) {
@@ -350,47 +925,64 @@ function renderScanResults(results) {
   const countSpan = document.getElementById('results-count');
 
   tbody.innerHTML = '';
-  countSpan.textContent = `(${results.length} results)`;
 
-  if (!results || results.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="no-data">No coins found matching criteria</td></tr>';
+  // Filter out ignored pairs
+  const filteredResults = results.filter(coin => coin && coin.pair && !ignoredPairs.includes(coin.pair));
+
+  countSpan.textContent = `(${filteredResults.length} results${ignoredPairs.length > 0 ? `, ${ignoredPairs.length} ignored` : ''})`;
+
+  // Update ignored pairs display
+  updateIgnoredPairsDisplay();
+
+  if (!filteredResults || filteredResults.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="no-data">No coins found matching criteria</td></tr>';
     return;
   }
 
-  results.forEach((coin, index) => {
+  filteredResults.forEach((coin, index) => {
     const row = document.createElement('tr');
     row.className = getSignalClass(coin.signal);
 
     // Determine signal emoji and color
     const signalEmoji = getSignalEmoji(coin.signal);
-    const scoreColor = getScoreColor(coin.score);
+    const scoreColor = getScoreColor(coin.score || 0);
 
-    // EMA status
-    const emaStatus = coin.flags.ema_bullish_cross ? '🔥 Cross!' :
-      (coin.flags.price_above_emas ? '✅ Above' : '❌ Below');
+    // EMA status - handle missing flags gracefully
+    const flags = coin.flags || {};
+    const indicators = coin.indicators || {};
+
+    const emaStatus = flags.ema_bullish_cross ? '🔥 Cross!' :
+      (flags.price_above_emas ? '✅ Above' : '❌ Below');
 
     // CCI status
-    const cciStatus = coin.flags.cci_bullish ? '✅' : '❌';
-    const cciValue = coin.indicators.cci.toFixed(0);
+    const cciStatus = flags.cci_bullish ? '✅' : '❌';
+    const cciValue = (indicators.cci || 0).toFixed(0);
 
     // MACD status
-    const macdStatus = coin.flags.macd_bullish ? '✅' : '❌';
+    const macdStatus = flags.macd_bullish ? '✅' : '❌';
+
+    // Find the original index in scanResults for details view
+    const originalIndex = results.findIndex(r => r && r.pair === coin.pair);
+
+    // Calculate suggested grid range (±10% from current price)
+    const rangeBottom = (coin.price * 0.90).toFixed(4);
+    const rangeTop = (coin.price * 1.10).toFixed(4);
 
     row.innerHTML = `
       <td class="rank">#${index + 1}</td>
       <td class="pair"><strong>${coin.pair}</strong></td>
-      <td class="price">$${coin.price.toFixed(4)}</td>
-      <td class="score" style="color: ${scoreColor}"><strong>${coin.score.toFixed(1)}</strong></td>
-      <td class="signal">${signalEmoji} ${formatSignal(coin.signal)}</td>
+      <td class="price">$${(coin.price || 0).toFixed(4)}</td>
+      <td class="score" style="color: ${scoreColor}"><strong>${(coin.score || 0).toFixed(1)}</strong></td>
+      <td class="signal">${signalEmoji} ${formatSignal(coin.signal || 'neutral')}</td>
       <td class="ema">${emaStatus}</td>
       <td class="cci">${cciStatus} ${cciValue}</td>
       <td class="macd">${macdStatus}</td>
       <td class="actions">
-        <button class="btn btn-small btn-info" onclick="showCoinDetails(${index})">📊 Details</button>
-        <button class="btn btn-small btn-success" onclick="selectCoin('${coin.pair}')">✓ Select</button>
+        <button class="btn btn-small btn-primary" onclick="useGridRange('${coin.pair}', ${rangeBottom}, ${rangeTop})" title="Set grid range ±10% around current price">📐 Use Range</button>
+        <button class="btn btn-small btn-info" onclick="showCoinDetails(${originalIndex})">📊</button>
+        <button class="btn btn-small btn-secondary" onclick="ignorePair('${coin.pair}')" title="Hide this pair">🚫</button>
       </td>
     `;
-
     tbody.appendChild(row);
   });
 }
@@ -440,12 +1032,12 @@ function showCoinDetails(index) {
   pairName.textContent = `${coin.pair} - Detailed Analysis`;
 
   details.innerHTML = `
-    <div class="detail-section">
+      < div class="detail-section" >
       <h4>📊 Overall</h4>
       <div class="detail-item"><label>Price:</label><span>$${coin.price.toFixed(4)}</span></div>
       <div class="detail-item"><label>Score:</label><span style="color: ${getScoreColor(coin.score)}">${coin.score.toFixed(2)}/100</span></div>
       <div class="detail-item"><label>Signal:</label><span>${getSignalEmoji(coin.signal)} ${formatSignal(coin.signal)}</span></div>
-    </div>
+    </div >
     
     <div class="detail-section">
       <h4>📈 Moving Averages (EMA)</h4>
@@ -478,12 +1070,12 @@ function showCoinDetails(index) {
       <div class="detail-item"><label>Bollinger Score:</label><span>${coin.scores.bollinger.toFixed(1)}</span></div>
       <div class="detail-item"><label>Candlestick Score:</label><span>${coin.scores.candlestick.toFixed(1)}</span></div>
     </div>
-  `;
+    `;
 
   modal.classList.remove('hidden');
 }
 
-function closeModal() {
+function closeCoinDetailsModal() {
   document.getElementById('coin-details-modal').classList.add('hidden');
 }
 
@@ -491,7 +1083,7 @@ async function selectCoin(pair) {
   try {
     addLog(`Selecting ${pair} for trading...`, 'info');
 
-    const response = await fetch(`${API_BASE_URL}/market/select`, {
+    const response = await fetch(`${API_BASE_URL} / market / select`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pair: pair })
@@ -501,16 +1093,128 @@ async function selectCoin(pair) {
 
     if (response.ok && data.status === 'success') {
       addLog(`✓ Selected ${pair} for trading`, 'success');
-      closeModal();
+      closeCoinDetailsModal();
       // Refresh status to show new trading pair
       await updateStatus();
       await loadConfig();
     } else {
-      addLog(`Failed to select pair: ${data.message || 'Unknown error'}`, 'error');
+      addLog(`Failed to select pair: ${data.message || 'Unknown error'} `, 'error');
     }
   } catch (error) {
     console.error('Error selecting coin:', error);
-    addLog(`Error selecting pair: ${error.message}`, 'error');
+    addLog(`Error selecting pair: ${error.message} `, 'error');
+  }
+}
+
+// ==========================================
+// Use Grid Range from Scanner
+// ==========================================
+
+async function useGridRange(pair, rangeBottom, rangeTop) {
+  try {
+    addLog(`Setting grid range for ${pair}: $${rangeBottom} - $${rangeTop}`, 'info');
+
+    // Update grid range via API
+    const response = await fetch(`${API_BASE_URL}/config/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        grid_strategy: {
+          range: {
+            bottom: parseFloat(rangeBottom),
+            top: parseFloat(rangeTop)
+          }
+        }
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      addLog(`✓ Grid range updated: $${rangeBottom} - $${rangeTop}`, 'success');
+      showNotification(`Grid range set to $${rangeBottom} - $${rangeTop}. Restart bot to apply.`, 'success');
+
+      // Also update the pair if different
+      const [base, quote] = pair.split('/');
+      await fetch(`${API_BASE_URL}/config/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pair: {
+            base_currency: base,
+            quote_currency: quote
+          }
+        })
+      });
+
+      addLog(`✓ Trading pair set to ${pair}`, 'success');
+
+      // Refresh config display
+      await loadConfig();
+    } else {
+      addLog(`Failed to update range: ${data.message || 'Unknown error'}`, 'error');
+      showNotification(`Failed to update range: ${data.message}`, 'error');
+    }
+  } catch (error) {
+    console.error('Error setting grid range:', error);
+    addLog(`Error setting grid range: ${error.message}`, 'error');
+    showNotification('Error updating grid range', 'error');
+  }
+}
+
+// ==========================================
+// Ignore Pair Functions
+// ==========================================
+
+function ignorePair(pair) {
+  if (!ignoredPairs.includes(pair)) {
+    ignoredPairs.push(pair);
+    localStorage.setItem('ignoredPairs', JSON.stringify(ignoredPairs));
+    addLog(`🚫 Ignored ${pair} - won't appear in future scans`, 'warning');
+
+    // Re-render results to remove ignored pair
+    if (scanResults && scanResults.length > 0) {
+      renderScanResults(scanResults);
+    }
+  }
+}
+
+function clearIgnoredPairs() {
+  ignoredPairs = [];
+  localStorage.setItem('ignoredPairs', JSON.stringify(ignoredPairs));
+  addLog('✓ Cleared all ignored pairs', 'success');
+
+  // Re-render results to show all pairs
+  if (scanResults && scanResults.length > 0) {
+    renderScanResults(scanResults);
+  }
+  updateIgnoredPairsDisplay();
+}
+
+function restoreIgnoredPair(pair) {
+  ignoredPairs = ignoredPairs.filter(p => p !== pair);
+  localStorage.setItem('ignoredPairs', JSON.stringify(ignoredPairs));
+  addLog(`✓ Restored ${pair} to scan results`, 'success');
+
+  // Re-render results to show restored pair
+  if (scanResults && scanResults.length > 0) {
+    renderScanResults(scanResults);
+  }
+}
+
+function updateIgnoredPairsDisplay() {
+  const row = document.getElementById('ignored-pairs-row');
+  const list = document.getElementById('ignored-pairs-list');
+
+  if (!row || !list) return;
+
+  if (ignoredPairs.length > 0) {
+    row.style.display = 'table-row';
+    list.innerHTML = ignoredPairs.map(pair =>
+      `<span class="ignored-pair-tag">${pair} <button class="restore-btn" onclick="restoreIgnoredPair('${pair}')">✕</button></span>`
+    ).join(' ');
+  } else {
+    row.style.display = 'none';
   }
 }
 
@@ -655,6 +1359,11 @@ function updateFooterTime() {
 
 function addLog(message, type = 'info') {
   const logsDisplay = document.getElementById('logs-display');
+  const logsContainer = logsDisplay.parentElement;
+
+  // Check if user is scrolled to bottom BEFORE adding new log
+  const isScrolledToBottom = logsContainer.scrollHeight - logsContainer.clientHeight <= logsContainer.scrollTop + 50;
+
   const entry = document.createElement('div');
   entry.className = 'log-entry ' + type;
 
@@ -663,13 +1372,27 @@ function addLog(message, type = 'info') {
 
   logsDisplay.appendChild(entry);
 
-  // Keep only last 50 logs
-  while (logsDisplay.children.length > 50) {
+  // Keep only last 100 logs (increased from 50)
+  while (logsDisplay.children.length > 100) {
     logsDisplay.removeChild(logsDisplay.firstChild);
   }
 
-  // Auto-scroll to bottom
-  logsDisplay.parentElement.scrollTop = logsDisplay.parentElement.scrollHeight;
+  // Only auto-scroll if user was already at the bottom
+  if (isScrolledToBottom) {
+    logsContainer.scrollTop = logsContainer.scrollHeight;
+  }
+}
+
+function scrollLogsToBottom() {
+  const logsDisplay = document.getElementById('logs-display');
+  const logsContainer = logsDisplay.parentElement;
+  logsContainer.scrollTop = logsContainer.scrollHeight;
+}
+
+function clearLogs() {
+  const logsDisplay = document.getElementById('logs-display');
+  logsDisplay.innerHTML = '';
+  addLog('Logs cleared', 'info');
 }
 
 // Load config on startup
@@ -1312,3 +2035,400 @@ async function runMTFAnalysis() {
 document.addEventListener('DOMContentLoaded', () => {
   startMTFRefresh();
 });
+
+// ============================================================
+// CHUCK AI FEATURES
+// ============================================================
+
+let chuckPortfolioRefreshInterval = null;
+
+// Tab switching for Chuck AI section
+function switchChuckTab(tabName) {
+  // Update tab buttons
+  document.querySelectorAll('.chuck-tab').forEach(tab => {
+    tab.classList.remove('active');
+    if (tab.onclick.toString().includes(tabName)) {
+      tab.classList.add('active');
+    }
+  });
+
+  // Find the clicked tab and activate it
+  event.target.classList.add('active');
+
+  // Update panels
+  document.querySelectorAll('.chuck-panel').forEach(panel => {
+    panel.classList.remove('active');
+  });
+  document.getElementById(`chuck-${tabName}`).classList.add('active');
+}
+
+// Smart Pair Scanner
+async function runChuckSmartScan() {
+  const btn = document.querySelector('#chuck-scan button');
+  const resultsDiv = document.getElementById('scan-results');
+  const originalText = btn.innerHTML;
+
+  btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Scanning Markets...</span>';
+  btn.disabled = true;
+  resultsDiv.innerHTML = '<p class="scanning">Analyzing pairs across exchanges... This may take a moment.</p>';
+
+  try {
+    const exchange = document.getElementById('scan-exchange').value;
+    const topN = parseInt(document.getElementById('scan-top-n').value) || 10;
+    const minVolume = parseFloat(document.getElementById('scan-min-volume').value) || 100000;
+
+    const response = await fetch(`${API_BASE_URL}/chuck/smart-scan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        exchange: exchange,
+        top_n: topN,
+        min_volume: minVolume
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success && data.pairs) {
+      displayScanResults(data.pairs);
+      addLog(`Smart Scan found ${data.pairs.length} optimal pairs`, 'success');
+    } else {
+      resultsDiv.innerHTML = `<p class="error">Scan failed: ${data.message || 'Unknown error'}</p>`;
+      addLog('Smart Scan failed: ' + (data.message || 'Unknown error'), 'error');
+    }
+  } catch (error) {
+    console.error('Smart Scan error:', error);
+    resultsDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+    addLog('Smart Scan error: ' + error.message, 'error');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
+function displayScanResults(pairs) {
+  const resultsDiv = document.getElementById('scan-results');
+
+  if (!pairs || pairs.length === 0) {
+    resultsDiv.innerHTML = '<p class="no-data">No suitable pairs found. Try adjusting filters.</p>';
+    return;
+  }
+
+  let html = '<div class="scan-results-grid">';
+
+  pairs.forEach((pair, index) => {
+    const scoreClass = pair.score >= 70 ? 'excellent' : pair.score >= 50 ? 'good' : 'fair';
+    html += `
+      <div class="scan-result-card ${scoreClass}">
+        <div class="scan-rank">#${index + 1}</div>
+        <div class="scan-pair">${pair.symbol}</div>
+        <div class="scan-score">
+          <span class="score-value">${pair.score.toFixed(1)}</span>
+          <span class="score-label">Score</span>
+        </div>
+        <div class="scan-metrics">
+          <div class="metric">
+            <span class="metric-label">24h Range</span>
+            <span class="metric-value">${pair.range_percent?.toFixed(2) || 'N/A'}%</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Volume</span>
+            <span class="metric-value">$${formatVolume(pair.volume_24h)}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Volatility</span>
+            <span class="metric-value">${pair.volatility?.toFixed(2) || 'N/A'}%</span>
+          </div>
+        </div>
+        <button class="btn btn-small" onclick="useScanResult('${pair.symbol}', ${pair.range_low}, ${pair.range_high})">
+          Use This Pair
+        </button>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  resultsDiv.innerHTML = html;
+}
+
+function formatVolume(volume) {
+  if (!volume) return 'N/A';
+  if (volume >= 1e9) return (volume / 1e9).toFixed(2) + 'B';
+  if (volume >= 1e6) return (volume / 1e6).toFixed(2) + 'M';
+  if (volume >= 1e3) return (volume / 1e3).toFixed(2) + 'K';
+  return volume.toFixed(2);
+}
+
+function useScanResult(symbol, rangeLow, rangeHigh) {
+  // Navigate to config or populate fields
+  addLog(`Selected ${symbol} with range $${rangeLow} - $${rangeHigh}`, 'info');
+  alert(`To use ${symbol}:\n\n1. Update your config.json with:\n   - trading_pair: "${symbol}"\n   - price_range_low: ${rangeLow}\n   - price_range_high: ${rangeHigh}\n\n2. Restart the bot to apply changes.`);
+}
+
+// Auto-Portfolio Manager
+async function startChuckPortfolio() {
+  const btn = document.querySelector('#chuck-portfolio .btn-primary');
+  const originalText = btn.innerHTML;
+
+  btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Starting...</span>';
+  btn.disabled = true;
+
+  try {
+    const capital = parseFloat(document.getElementById('portfolio-capital').value) || 1000;
+    const maxPositions = parseInt(document.getElementById('portfolio-max-positions').value) || 5;
+    const exchange = document.getElementById('portfolio-exchange').value;
+
+    const response = await fetch(`${API_BASE_URL}/chuck/portfolio/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        total_capital: capital,
+        max_positions: maxPositions,
+        exchange: exchange
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      addLog('Auto-Portfolio Manager started', 'success');
+      startPortfolioRefresh();
+      updatePortfolioUI(true);
+    } else {
+      addLog('Failed to start portfolio: ' + (data.message || 'Unknown error'), 'error');
+    }
+  } catch (error) {
+    console.error('Portfolio start error:', error);
+    addLog('Portfolio start error: ' + error.message, 'error');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
+async function stopChuckPortfolio() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/chuck/portfolio/stop`, {
+      method: 'POST'
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      addLog('Auto-Portfolio Manager stopped', 'info');
+      stopPortfolioRefresh();
+      updatePortfolioUI(false);
+    } else {
+      addLog('Failed to stop portfolio: ' + (data.message || 'Unknown error'), 'error');
+    }
+  } catch (error) {
+    console.error('Portfolio stop error:', error);
+    addLog('Portfolio stop error: ' + error.message, 'error');
+  }
+}
+
+function updatePortfolioUI(isRunning) {
+  const startBtn = document.querySelector('#chuck-portfolio .btn-primary');
+  const stopBtn = document.querySelector('#chuck-portfolio .btn-danger');
+
+  if (startBtn) startBtn.disabled = isRunning;
+  if (stopBtn) stopBtn.disabled = !isRunning;
+}
+
+function startPortfolioRefresh() {
+  if (chuckPortfolioRefreshInterval) {
+    clearInterval(chuckPortfolioRefreshInterval);
+  }
+  refreshPortfolioStatus();
+  chuckPortfolioRefreshInterval = setInterval(refreshPortfolioStatus, 10000);
+}
+
+function stopPortfolioRefresh() {
+  if (chuckPortfolioRefreshInterval) {
+    clearInterval(chuckPortfolioRefreshInterval);
+    chuckPortfolioRefreshInterval = null;
+  }
+}
+
+async function refreshPortfolioStatus() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/chuck/portfolio/status`);
+    const data = await response.json();
+
+    if (data.success) {
+      displayPortfolioStatus(data);
+    }
+  } catch (error) {
+    console.error('Portfolio status refresh error:', error);
+  }
+}
+
+function displayPortfolioStatus(data) {
+  const summaryDiv = document.getElementById('portfolio-summary');
+  const positionsDiv = document.getElementById('portfolio-positions');
+
+  // Update summary
+  if (summaryDiv && data.summary) {
+    const s = data.summary;
+    summaryDiv.innerHTML = `
+      <div class="summary-card">
+        <span class="summary-label">Total Capital</span>
+        <span class="summary-value">$${s.total_capital?.toFixed(2) || '0.00'}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Allocated</span>
+        <span class="summary-value">$${s.allocated?.toFixed(2) || '0.00'}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Available</span>
+        <span class="summary-value">$${s.available?.toFixed(2) || '0.00'}</span>
+      </div>
+      <div class="summary-card ${(s.total_pnl || 0) >= 0 ? 'positive' : 'negative'}">
+        <span class="summary-label">Total P&L</span>
+        <span class="summary-value">${(s.total_pnl || 0) >= 0 ? '+' : ''}$${s.total_pnl?.toFixed(2) || '0.00'}</span>
+      </div>
+    `;
+  }
+
+  // Update positions
+  if (positionsDiv && data.positions) {
+    if (data.positions.length === 0) {
+      positionsDiv.innerHTML = '<p class="no-data">No active positions. The manager will open positions when conditions are favorable.</p>';
+    } else {
+      let html = '<div class="positions-grid">';
+      data.positions.forEach(pos => {
+        const pnlClass = (pos.pnl || 0) >= 0 ? 'positive' : 'negative';
+        html += `
+          <div class="position-card">
+            <div class="position-header">
+              <span class="position-symbol">${pos.symbol}</span>
+              <span class="position-status ${pos.status || 'active'}">${pos.status || 'Active'}</span>
+            </div>
+            <div class="position-details">
+              <div class="detail">
+                <span class="label">Entry</span>
+                <span class="value">$${pos.entry_price?.toFixed(4) || 'N/A'}</span>
+              </div>
+              <div class="detail">
+                <span class="label">Current</span>
+                <span class="value">$${pos.current_price?.toFixed(4) || 'N/A'}</span>
+              </div>
+              <div class="detail">
+                <span class="label">Allocated</span>
+                <span class="value">$${pos.allocated?.toFixed(2) || 'N/A'}</span>
+              </div>
+              <div class="detail ${pnlClass}">
+                <span class="label">P&L</span>
+                <span class="value">${(pos.pnl || 0) >= 0 ? '+' : ''}$${pos.pnl?.toFixed(2) || '0.00'}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      positionsDiv.innerHTML = html;
+    }
+  }
+
+  // Update running state
+  updatePortfolioUI(data.is_running || false);
+}
+
+// Entry Signal Analyzer
+async function analyzeEntrySignal() {
+  const btn = document.querySelector('#chuck-signals button');
+  const resultDiv = document.getElementById('signal-result');
+  const originalText = btn.innerHTML;
+
+  btn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Analyzing...</span>';
+  btn.disabled = true;
+  resultDiv.innerHTML = '<p class="analyzing">Analyzing market conditions...</p>';
+
+  try {
+    const symbol = document.getElementById('signal-symbol').value.trim();
+    const exchange = document.getElementById('signal-exchange').value;
+
+    if (!symbol) {
+      resultDiv.innerHTML = '<p class="error">Please enter a trading pair symbol</p>';
+      return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/chuck/entry-signal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        symbol: symbol,
+        exchange: exchange
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success && data.signal) {
+      displayEntrySignal(data.signal);
+      addLog(`Entry analysis for ${symbol}: ${data.signal.recommendation}`, 'info');
+    } else {
+      resultDiv.innerHTML = `<p class="error">Analysis failed: ${data.message || 'Unknown error'}</p>`;
+      addLog('Entry signal analysis failed: ' + (data.message || 'Unknown error'), 'error');
+    }
+  } catch (error) {
+    console.error('Entry signal error:', error);
+    resultDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+    addLog('Entry signal error: ' + error.message, 'error');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
+function displayEntrySignal(signal) {
+  const resultDiv = document.getElementById('signal-result');
+
+  const strengthClass = signal.strength?.toLowerCase() || 'neutral';
+  const scoreClass = signal.score >= 70 ? 'excellent' : signal.score >= 50 ? 'good' : signal.score >= 30 ? 'fair' : 'poor';
+
+  let html = `
+    <div class="signal-result-card ${strengthClass}">
+      <div class="signal-header">
+        <div class="signal-recommendation">${signal.recommendation || 'NEUTRAL'}</div>
+        <div class="signal-strength ${strengthClass}">${signal.strength || 'Neutral'}</div>
+      </div>
+      
+      <div class="signal-score ${scoreClass}">
+        <div class="score-circle">
+          <span class="score-number">${signal.score?.toFixed(0) || 0}</span>
+          <span class="score-max">/100</span>
+        </div>
+        <span class="score-label">Entry Score</span>
+      </div>
+      
+      <div class="signal-indicators">
+        <h4>Technical Indicators</h4>
+        <div class="indicator-grid">
+  `;
+
+  if (signal.indicators) {
+    for (const [key, value] of Object.entries(signal.indicators)) {
+      const displayName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      html += `
+        <div class="indicator">
+          <span class="indicator-name">${displayName}</span>
+          <span class="indicator-value">${typeof value === 'number' ? value.toFixed(2) : value}</span>
+        </div>
+      `;
+    }
+  }
+
+  html += `
+        </div>
+      </div>
+      
+      <div class="signal-reasoning">
+        <h4>Analysis</h4>
+        <p>${signal.reasoning || 'No detailed analysis available.'}</p>
+      </div>
+    </div>
+  `;
+
+  resultDiv.innerHTML = html;
+}

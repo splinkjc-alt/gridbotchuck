@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backtest - GridBot Chuck</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="backtest.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="backtest-container">
+    <!-- Header -->
+    <header class="backtest-header">
+      <div class="header-left">
+        <a href="index.html" class="back-link">← Back to Dashboard</a>
+        <h1>📊 Backtest Mode</h1>
+      </div>
+      <div class="header-right">
+        <span class="status-badge" id="backtest-status">Ready</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="backtest-main">
+      <!-- Left Panel: Configuration -->
+      <aside class="config-panel">
+        <h2>⚙️ Configuration</h2>
+
+        <!-- Trading Pair -->
+        <div class="config-group">
+          <label>Trading Pair</label>
+          <div class="pair-selector">
+            <input type="text" id="base-currency" value="HNT" placeholder="Base">
+            <span class="pair-separator">/</span>
+            <input type="text" id="quote-currency" value="USD" placeholder="Quote">
+          </div>
+        </div>
+
+        <!-- Date Range -->
+        <div class="config-group">
+          <label>📅 Date Range</label>
+          <div class="date-inputs">
+            <div class="date-field">
+              <span>Start</span>
+              <input type="datetime-local" id="bt-start-date">
+            </div>
+            <div class="date-field">
+              <span>End</span>
+              <input type="datetime-local" id="bt-end-date">
+            </div>
+          </div>
+          <div class="quick-dates">
+            <button onclick="setDateRange(7)">7D</button>
+            <button onclick="setDateRange(14)">14D</button>
+            <button onclick="setDateRange(30)">30D</button>
+            <button onclick="setDateRange(90)">90D</button>
+          </div>
+        </div>
+
+        <!-- Capital -->
+        <div class="config-group">
+          <label>💰 Initial Capital</label>
+          <div class="capital-input">
+            <span class="currency-symbol">$</span>
+            <input type="number" id="bt-capital" value="1000" min="100" step="100">
+          </div>
+        </div>
+
+        <!-- Grid Settings -->
+        <div class="config-group">
+          <label>📏 Grid Settings</label>
+          <div class="grid-inputs">
+            <div class="grid-field">
+              <span>Levels</span>
+              <input type="number" id="bt-grid-levels" value="10" min="3" max="50">
+            </div>
+            <div class="grid-field">
+              <span>Spacing %</span>
+              <input type="number" id="bt-grid-spacing" value="2" min="0.5" max="10" step="0.5">
+            </div>
+          </div>
+        </div>
+
+        <!-- Strategy -->
+        <div class="config-group">
+          <label>🎯 Strategy</label>
+          <select id="bt-strategy">
+            <option value="BASIC_GRID">Basic Grid</option>
+            <option value="HEDGED_GRID">Hedged Grid</option>
+            <option value="TRAILING_GRID">Trailing Grid</option>
+          </select>
+        </div>
+
+        <!-- Run Button -->
+        <div class="config-actions">
+          <button id="btn-run" class="btn-run" onclick="runBacktest()">
+            🚀 Run Backtest
+          </button>
+          <button id="btn-stop" class="btn-stop" onclick="stopBacktest()" style="display: none;">
+            ⏹ Stop
+          </button>
+        </div>
+      </aside>
+
+      <!-- Center: Results -->
+      <section class="results-panel">
+        <!-- Progress Bar -->
+        <div class="progress-section" id="progress-section" style="display: none;">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <div class="progress-info">
+            <span id="progress-text">Initializing...</span>
+            <span id="progress-percent">0%</span>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards" id="summary-cards">
+          <div class="summary-card">
+            <span class="card-icon">💵</span>
+            <div class="card-content">
+              <span class="card-label">Total P&L</span>
+              <span class="card-value" id="total-pnl">$0.00</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <span class="card-icon">📈</span>
+            <div class="card-content">
+              <span class="card-label">Return</span>
+              <span class="card-value" id="total-return">0.00%</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <span class="card-icon">🎯</span>
+            <div class="card-content">
+              <span class="card-label">Win Rate</span>
+              <span class="card-value" id="win-rate">0%</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <span class="card-icon">📊</span>
+            <div class="card-content">
+              <span class="card-label">Total Trades</span>
+              <span class="card-value" id="total-trades">0</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <span class="card-icon">📉</span>
+            <div class="card-content">
+              <span class="card-label">Max Drawdown</span>
+              <span class="card-value negative" id="max-drawdown">0.00%</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <span class="card-icon">⚡</span>
+            <div class="card-content">
+              <span class="card-label">Sharpe Ratio</span>
+              <span class="card-value" id="sharpe-ratio">0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Equity Curve Chart -->
+        <div class="chart-section">
+          <h3>📈 Equity Curve</h3>
+          <div class="chart-container">
+            <canvas id="equity-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Price + Trades Chart -->
+        <div class="chart-section">
+          <h3>💹 Price Action & Trades</h3>
+          <div class="chart-container">
+            <canvas id="price-chart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Trade Log -->
+      <aside class="trades-panel">
+        <h2>📋 Trade Log</h2>
+        <div class="trade-filters">
+          <button class="filter-btn active" onclick="filterTrades('all')">All</button>
+          <button class="filter-btn" onclick="filterTrades('buy')">Buys</button>
+          <button class="filter-btn" onclick="filterTrades('sell')">Sells</button>
+        </div>
+        <div class="trades-list" id="trades-list">
+          <div class="empty-state">
+            <span>🔍</span>
+            <p>Run a backtest to see trades</p>
+          </div>
+        </div>
+        <div class="trades-summary" id="trades-summary">
+          <div class="summary-row">
+            <span>Winning Trades</span>
+            <span class="positive" id="winning-trades">0</span>
+          </div>
+          <div class="summary-row">
+            <span>Losing Trades</span>
+            <span class="negative" id="losing-trades">0</span>
+          </div>
+          <div class="summary-row">
+            <span>Avg Win</span>
+            <span class="positive" id="avg-win">$0.00</span>
+          </div>
+          <div class="summary-row">
+            <span>Avg Loss</span>
+            <span class="negative" id="avg-loss">$0.00</span>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Console Log -->
+    <footer class="console-panel">
+      <div class="console-header">
+        <h3>🖥️ Console</h3>
+        <div class="console-controls">
+          <button onclick="clearConsole()">Clear</button>
+          <button onclick="toggleConsole()">Toggle</button>
+        </div>
+      </div>
+      <div class="console-log" id="console-log">
+        <div class="log-entry info">[System] Backtest module ready</div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="backtest.js"></script>
+</body>
+
+</html>

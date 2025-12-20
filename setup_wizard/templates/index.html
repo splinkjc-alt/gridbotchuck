@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GridBot Chuck - Setup Wizard</title>
+    <link rel="stylesheet" href="../static/css/wizard.css">
+</head>
+<body>
+    <div class="wizard-container">
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-step active" data-step="1">
+                <div class="step-number">1</div>
+                <div class="step-label">Welcome</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="2">
+                <div class="step-number">2</div>
+                <div class="step-label">Exchange</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="3">
+                <div class="step-number">3</div>
+                <div class="step-label">Trading</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="4">
+                <div class="step-number">4</div>
+                <div class="step-label">Review</div>
+            </div>
+        </div>
+
+        <!-- Step 1: Welcome -->
+        <div class="wizard-step active" id="step-1">
+            <div class="step-content">
+                <div class="logo">
+                    <img src="../static/images/logo.svg" alt="GridBot Chuck" style="max-width: 180px; margin: 0 auto;">
+                    <h1>Welcome to GridBot Chuck!</h1>
+                </div>
+                <p class="intro-text">
+                    Let's get you set up in less than 5 minutes. This wizard will help you configure your trading bot.
+                </p>
+                <div class="feature-list">
+                    <div class="feature">
+                        <span class="feature-icon">💰</span>
+                        <h3>Automatic Profit Taking</h3>
+                        <p>Captures profits and rotates to top opportunities</p>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">🔄</span>
+                        <h3>Smart Pair Rotation</h3>
+                        <p>Always trading the most volatile pairs</p>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">🛡️</span>
+                        <h3>Risk Management</h3>
+                        <p>Built-in circuit breakers and safety features</p>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="nextStep()">Get Started</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Exchange Setup -->
+        <div class="wizard-step" id="step-2">
+            <div class="step-content">
+                <h2>Exchange Configuration</h2>
+                <p>Connect your exchange account. Don't worry, we only need read and trade permissions.</p>
+
+                <div class="form-group">
+                    <label for="exchange">Select Exchange</label>
+                    <select id="exchange" class="form-control">
+                        <option value="kraken">Kraken (Recommended)</option>
+                        <option value="binance">Binance</option>
+                        <option value="coinbase">Coinbase Pro</option>
+                    </select>
+                    <small class="form-help">
+                        <a href="#" onclick="openExchangeGuide()">How to get API keys →</a>
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="apiKey">API Key</label>
+                    <input type="text" id="apiKey" class="form-control" placeholder="Your API key">
+                    <small class="form-help">Your API keys are encrypted and stored securely</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="apiSecret">API Secret</label>
+                    <input type="password" id="apiSecret" class="form-control" placeholder="Your API secret">
+                    <div class="toggle-password" onclick="togglePassword('apiSecret')">👁️</div>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-secondary" onclick="testConnection()" id="testBtn">
+                        <span class="btn-text">Test Connection</span>
+                        <span class="spinner" style="display:none;">⏳</span>
+                    </button>
+                    <div id="connectionResult" class="connection-result"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-ghost" onclick="prevStep()">Back</button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="nextBtn2" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Trading Configuration -->
+        <div class="wizard-step" id="step-3">
+            <div class="step-content">
+                <h2>Trading Configuration</h2>
+                <p>Configure your trading parameters based on your capital and risk tolerance.</p>
+
+                <div class="form-group">
+                    <label for="capital">Initial Capital (USD)</label>
+                    <input type="number" id="capital" class="form-control" value="55" min="20" step="1">
+                    <small class="form-help">Recommended minimum: $50</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="tradingMode">Trading Mode</label>
+                    <select id="tradingMode" class="form-control">
+                        <option value="paper">Paper Trading (Practice Mode) ⭐ Recommended</option>
+                        <option value="live">Live Trading (Real Money)</option>
+                    </select>
+                    <small class="form-help warning">⚠️ Start with paper trading to learn the system</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Risk Profile</label>
+                    <div class="risk-selector">
+                        <div class="risk-option" data-risk="conservative">
+                            <input type="radio" name="risk" value="conservative" id="risk-conservative">
+                            <label for="risk-conservative">
+                                <div class="risk-icon">🐢</div>
+                                <h4>Conservative</h4>
+                                <p>$5 profit target</p>
+                                <p>3 rotations/day max</p>
+                            </label>
+                        </div>
+                        <div class="risk-option active" data-risk="balanced">
+                            <input type="radio" name="risk" value="balanced" id="risk-balanced" checked>
+                            <label for="risk-balanced">
+                                <div class="risk-icon">⚖️</div>
+                                <h4>Balanced</h4>
+                                <p>$3 profit target</p>
+                                <p>10 rotations/day max</p>
+                                <small>(Recommended)</small>
+                            </label>
+                        </div>
+                        <div class="risk-option" data-risk="aggressive">
+                            <input type="radio" name="risk" value="aggressive" id="risk-aggressive">
+                            <label for="risk-aggressive">
+                                <div class="risk-icon">🚀</div>
+                                <h4>Aggressive</h4>
+                                <p>$2 profit target</p>
+                                <p>15 rotations/day max</p>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="autoStart" checked>
+                        <span>Auto-start bot when app launches</span>
+                    </label>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-ghost" onclick="prevStep()">Back</button>
+                    <button class="btn btn-primary" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Review & Start -->
+        <div class="wizard-step" id="step-4">
+            <div class="step-content">
+                <h2>Review Your Configuration</h2>
+                <p>Everything looks good! Review your settings below and start trading.</p>
+
+                <div class="config-summary">
+                    <div class="summary-card">
+                        <h3>Exchange</h3>
+                        <div class="summary-item">
+                            <span class="label">Exchange:</span>
+                            <span class="value" id="summary-exchange">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">API Key:</span>
+                            <span class="value" id="summary-apikey">-</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <h3>Trading</h3>
+                        <div class="summary-item">
+                            <span class="label">Capital:</span>
+                            <span class="value" id="summary-capital">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Mode:</span>
+                            <span class="value" id="summary-mode">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Risk Profile:</span>
+                            <span class="value" id="summary-risk">-</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <h3>Profit Rotation</h3>
+                        <div class="summary-item">
+                            <span class="label">Profit Target:</span>
+                            <span class="value" id="summary-target">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Max Rotations:</span>
+                            <span class="value" id="summary-rotations">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="final-notes">
+                    <h4>📚 Next Steps:</h4>
+                    <ul>
+                        <li>Bot will start automatically and scan for opportunities</li>
+                        <li>Dashboard will show live status and P&L</li>
+                        <li>You'll get notified when rotations occur</li>
+                        <li>Check logs anytime from the View menu</li>
+                    </ul>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-ghost" onclick="prevStep()">Back</button>
+                    <button class="btn btn-success btn-large" onclick="completeSetup()" id="finishBtn">
+                        <span class="btn-text">🚀 Start Trading</span>
+                        <span class="spinner" style="display:none;">⏳</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../static/js/wizard.js"></script>
+</body>
+</html>

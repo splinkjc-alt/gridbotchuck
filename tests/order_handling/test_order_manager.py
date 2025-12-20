@@ -14,6 +14,8 @@ from strategies.strategy_type import StrategyType
 class TestOrderManager:
     @pytest.fixture
     def setup_order_manager(self):
+        config_manager = Mock()
+        config_manager.config = {"risk_management": {"position_sizing": {"min_reserve_percent": 10}}}
         grid_manager = Mock()
         order_validator = Mock()
         balance_tracker = Mock()
@@ -24,6 +26,7 @@ class TestOrderManager:
         notification_handler.async_send_notification = AsyncMock()
 
         manager = OrderManager(
+            config_manager=config_manager,
             grid_manager=grid_manager,
             order_validator=order_validator,
             balance_tracker=balance_tracker,

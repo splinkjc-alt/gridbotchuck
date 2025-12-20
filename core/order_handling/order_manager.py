@@ -3,6 +3,7 @@ import logging
 
 import pandas as pd
 
+from config.config_manager import ConfigManager
 from config.trading_mode import TradingMode
 from core.bot_management.event_bus import EventBus, Events
 from core.bot_management.notification.notification_content import NotificationType
@@ -24,6 +25,7 @@ from .order import Order, OrderSide, OrderStatus
 class OrderManager:
     def __init__(
         self,
+        config_manager: ConfigManager,
         grid_manager: GridManager,
         order_validator: OrderValidator,
         balance_tracker: BalanceTracker,
@@ -36,6 +38,7 @@ class OrderManager:
         strategy_type: StrategyType,
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.config_manager = config_manager
         self.grid_manager = grid_manager
         self.order_validator = order_validator
         self.balance_tracker = balance_tracker
@@ -49,6 +52,32 @@ class OrderManager:
         self.event_bus.subscribe(Events.ORDER_FILLED, self._on_order_filled)
         self.event_bus.subscribe(Events.ORDER_CANCELLED, self._on_order_cancelled)
 
+    def _is_below_min_reserve(self, current_price: float) -> bool:
+        """
+        Check if fiat balance is below the minimum reserve threshold.
+        
+        Returns True if buying should be blocked (reserve too low).
+        """
+        position_sizing = self.config_manager.config.get("risk_management", {}).get("position_sizing", {})
+        min_reserve_percent = position_sizing.get("min_reserve_percent", 0)
+        
+        if min_reserve_percent <= 0:
+            return False  # No reserve check configured
+        
+        total_value = self.balance_tracker.get_total_balance_value(current_price)
+        fiat_balance = self.balance_tracker.balance
+        reserve_ratio = (fiat_balance / total_value * 100) if total_value > 0 else 0
+        
+        if reserve_ratio < min_reserve_percent:
+            self.logger.warning(
+                f"⚠️ USD reserve at {reserve_ratio:.1f}% (${fiat_balance:.2f}/${total_value:.2f}) - "
+                f"below {min_reserve_percent}% minimum. Skipping buy."
+            )
+            return True
+        
+        self.logger.debug(f"Reserve check: {reserve_ratio:.1f}% >= {min_reserve_percent}% - OK to buy")
+        return False
+
     async def initialize_grid_orders(
         self,
         current_price: float,
@@ -60,6 +89,11 @@ class OrderManager:
             if price >= current_price:
                 self.logger.info(f"Skipping grid level at price: {price} for BUY order: Above current price.")
                 continue
+
+            # Check minimum reserve before placing buy orders
+            if self._is_below_min_reserve(current_price):
+                self.logger.info("Stopping buy order placement - USD reserve at minimum threshold.")
+                break
 
             grid_level = self.grid_manager.grid_levels[price]
             total_balance_value = self.balance_tracker.get_total_balance_value(current_price)
@@ -306,6 +340,7 @@ class OrderManager:
         sell_grid_level: GridLevel,
         buy_grid_level: GridLevel,
         quantity: float,
+        current_price: float = None,
     ) -> None:
         """
         Places a buy order at the specified grid level.
@@ -313,7 +348,14 @@ class OrderManager:
         Args:
             grid_level: The grid level to place the buy order on.
             quantity: The quantity of the buy order.
+            current_price: Current market price for reserve check.
         """
+        # Check minimum reserve before placing buy order
+        check_price = current_price if current_price else buy_grid_level.price
+        if self._is_below_min_reserve(check_price):
+            self.logger.info(f"Skipping buy at {buy_grid_level.price} - USD reserve at minimum threshold.")
+            return
+
         adjusted_quantity = self.order_validator.adjust_and_validate_buy_quantity(
             self.balance_tracker.balance,
             quantity,

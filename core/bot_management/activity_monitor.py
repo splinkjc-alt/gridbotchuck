@@ -18,6 +18,12 @@ class ActivityMonitor:
     """
     Monitors the current trading pair for activity.
     If volume/volatility drops below thresholds, triggers a rescan and switch.
+    
+    Features:
+    - Stagnation detection based on price movement and volume
+    - Automatic pair switching when market goes stale
+    - Force exit option to immediately sell positions when stagnant
+    - Configurable thresholds and timing
     """
 
     def __init__(
@@ -39,6 +45,14 @@ class ActivityMonitor:
         self.min_price_change_pct = config.get("min_price_change_pct", 0.5)  # Minimum % movement
         self.stale_periods_before_switch = config.get("stale_periods_before_switch", 3)
         self.cooldown_minutes = config.get("cooldown_after_switch_minutes", 60)
+        
+        # Stagnation Exit Configuration (NEW)
+        stagnation_config = config.get("stagnation_exit", {})
+        self.stagnation_exit_enabled = stagnation_config.get("enabled", False)
+        self.force_exit_after_minutes = stagnation_config.get("force_exit_after_minutes", 60)
+        self.min_movement_for_active = stagnation_config.get("min_movement_percent", 0.3)
+        self.exit_at_loss = stagnation_config.get("exit_at_loss", True)  # Exit even if at small loss
+        self.max_loss_to_exit_pct = stagnation_config.get("max_loss_percent", 2.0)  # Max loss to accept when force exiting
 
         # State
         self.current_pair = None
@@ -47,6 +61,8 @@ class ActivityMonitor:
         self.running = False
         self._task = None
         self.price_history = []  # Track recent prices
+        self.stagnation_start_time = None  # Track when stagnation started
+        self.last_significant_movement_time = None  # Track last time price moved significantly
 
     async def start(self, trading_pair: str):
         """Start monitoring the given trading pair."""
@@ -58,12 +74,20 @@ class ActivityMonitor:
         self.running = True
         self.stale_count = 0
         self.price_history = []
+        self.stagnation_start_time = None
+        self.last_significant_movement_time = datetime.now(UTC)
 
         self.logger.info(
             f"Activity monitor started for {trading_pair} "
             f"(check every {self.check_interval_minutes}min, "
             f"switch after {self.stale_periods_before_switch} stale periods)"
         )
+        
+        if self.stagnation_exit_enabled:
+            self.logger.info(
+                f"[STAGNATION EXIT] ENABLED: force exit after {self.force_exit_after_minutes}min "
+                f"of <{self.min_movement_for_active}% movement"
+            )
 
         self._task = asyncio.create_task(self._monitor_loop())
 
@@ -100,12 +124,28 @@ class ActivityMonitor:
 
                 if is_active:
                     self.stale_count = 0
+                    self.stagnation_start_time = None
+                    self.last_significant_movement_time = datetime.now(UTC)
                     self.logger.info(f"[STATUS] {self.current_pair} is ACTIVE - Continuing to trade")
                 else:
                     self.stale_count += 1
+                    
+                    # Track stagnation start time
+                    if self.stagnation_start_time is None:
+                        self.stagnation_start_time = datetime.now(UTC)
+                    
+                    stagnation_minutes = (datetime.now(UTC) - self.stagnation_start_time).total_seconds() / 60
+                    
                     self.logger.warning(
-                        f"[STATUS] {self.current_pair} is STALE ({self.stale_count}/{self.stale_periods_before_switch} before switch)"
+                        f"[STATUS] {self.current_pair} is STALE "
+                        f"({self.stale_count}/{self.stale_periods_before_switch} before switch, "
+                        f"stagnant for {stagnation_minutes:.0f}min)"
                     )
+                    
+                    # Check for force exit due to stagnation
+                    if self.stagnation_exit_enabled and stagnation_minutes >= self.force_exit_after_minutes:
+                        await self._force_exit_stagnant_position()
+                        continue
 
                     if self.stale_count >= self.stale_periods_before_switch:
                         await self._trigger_switch()
@@ -115,6 +155,42 @@ class ActivityMonitor:
             except Exception as e:
                 self.logger.error(f"Error in activity monitor: {e}")
                 await asyncio.sleep(60)  # Wait before retrying
+
+    async def _force_exit_stagnant_position(self):
+        """
+        Force exit the current position when market is stagnant.
+        Sells all held crypto and triggers switch to a new pair.
+        """
+        self.logger.warning(
+            f"⚠️ STAGNATION EXIT: {self.current_pair} hasn't moved for "
+            f"{self.force_exit_after_minutes}+ minutes. Forcing exit..."
+        )
+        
+        try:
+            # Publish force exit event - this will be handled by the bot
+            self.event_bus.publish(
+                Events.FORCE_EXIT_POSITION,
+                {
+                    "pair": self.current_pair,
+                    "reason": "stagnation",
+                    "stagnation_minutes": self.force_exit_after_minutes,
+                    "exit_at_loss": self.exit_at_loss,
+                    "max_loss_percent": self.max_loss_to_exit_pct,
+                    "timestamp": datetime.now(UTC).isoformat(),
+                }
+            )
+            
+            self.logger.info(f"🔔 Force exit event published for {self.current_pair}")
+            
+            # Reset stagnation tracking
+            self.stagnation_start_time = None
+            self.stale_count = 0
+            
+            # Trigger switch to find a better pair
+            await self._trigger_switch()
+            
+        except Exception as e:
+            self.logger.error(f"Error forcing exit: {e}")
 
     async def _check_activity(self) -> bool:
         """

@@ -207,7 +207,7 @@ dashboard_launcher.bat
 python dashboard_launcher.py
 
 # Option C: PowerShell
-.\dashboard_launcher.ps1
+
 ```
 
 ### Step 5: Dashboard Opens Automatically! 🎉

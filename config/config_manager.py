@@ -93,6 +93,10 @@ class ConfigManager:
         trading_settings = self.get_trading_settings()
         return trading_settings.get("initial_balance", 10000)
 
+    def get_initial_crypto_balance(self):
+        trading_settings = self.get_trading_settings()
+        return trading_settings.get("initial_crypto_balance", 0.0)
+
     def get_historical_data_file(self):
         trading_settings = self.get_trading_settings()
         return trading_settings.get("historical_data_file", None)
@@ -184,22 +188,21 @@ class ConfigManager:
     def get_mtf_timeframes(self) -> dict[str, str]:
         """Get configured timeframes for multi-timeframe analysis."""
         mtf = self.get_multi_timeframe_analysis()
-        return mtf.get("timeframes", {
-            "trend": "1d",
-            "config": "4h",
-            "execution": "1h"
-        })
+        return mtf.get("timeframes", {"trend": "1d", "config": "4h", "execution": "1h"})
 
     def get_mtf_trend_filter(self) -> dict:
         """Get trend filter settings."""
         mtf = self.get_multi_timeframe_analysis()
-        return mtf.get("trend_filter", {
-            "enabled": True,
-            "pause_on_strong_trend": True,
-            "strong_trend_threshold": 75,
-            "warn_on_moderate_trend": True,
-            "moderate_trend_threshold": 40
-        })
+        return mtf.get(
+            "trend_filter",
+            {
+                "enabled": True,
+                "pause_on_strong_trend": True,
+                "strong_trend_threshold": 75,
+                "warn_on_moderate_trend": True,
+                "moderate_trend_threshold": 40,
+            },
+        )
 
     def is_trend_filter_enabled(self) -> bool:
         """Check if trend filter is enabled."""
@@ -224,13 +227,16 @@ class ConfigManager:
     def get_mtf_volatility_spacing(self) -> dict:
         """Get volatility-based spacing settings."""
         mtf = self.get_multi_timeframe_analysis()
-        return mtf.get("volatility_spacing", {
-            "enabled": True,
-            "high_volatility_multiplier": 1.5,
-            "low_volatility_multiplier": 0.75,
-            "high_volatility_percentile": 80,
-            "low_volatility_percentile": 20
-        })
+        return mtf.get(
+            "volatility_spacing",
+            {
+                "enabled": True,
+                "high_volatility_multiplier": 1.5,
+                "low_volatility_multiplier": 0.75,
+                "high_volatility_percentile": 80,
+                "low_volatility_percentile": 20,
+            },
+        )
 
     def is_volatility_spacing_enabled(self) -> bool:
         """Check if volatility-based spacing adjustment is enabled."""
@@ -240,11 +246,9 @@ class ConfigManager:
     def get_mtf_range_validation(self) -> dict:
         """Get range validation settings."""
         mtf = self.get_multi_timeframe_analysis()
-        return mtf.get("range_validation", {
-            "enabled": True,
-            "auto_suggest_range": True,
-            "warn_if_price_outside_range": True
-        })
+        return mtf.get(
+            "range_validation", {"enabled": True, "auto_suggest_range": True, "warn_if_price_outside_range": True}
+        )
 
     def is_range_validation_enabled(self) -> bool:
         """Check if range validation is enabled."""

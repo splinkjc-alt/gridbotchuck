@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GridBot Pro - Automated Grid Trading</title>
+  <title>GridBot Chuck - Automated Grid Trading</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" type="image/svg+xml"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
@@ -17,6 +17,14 @@
 </head>
 
 <body>
+  <!-- Risk Disclaimer Banner -->
+  <div class="risk-disclaimer">
+    <span class="risk-icon">⚠️</span>
+    <span class="risk-text"><strong>RISK WARNING:</strong> Trading cryptocurrencies involves significant risk of loss.
+      Only trade with funds you can afford to lose. Past performance is not indicative of future results.</span>
+    <button class="risk-close" onclick="this.parentElement.style.display='none'" aria-label="Close">×</button>
+  </div>
+
   <div class="container">
     <!-- Header -->
     <header class="header">
@@ -24,17 +32,81 @@
         <div class="brand">
           <span class="brand-logo">📊</span>
           <div class="brand-text">
-            <h1>GridBot <span class="pro-badge">PRO</span></h1>
+            <h1>GridBot <span class="pro-badge">CHUCK</span></h1>
             <span class="brand-tagline">Automated Grid Trading</span>
           </div>
         </div>
         <div class="header-right">
-          <div class="live-price" id="live-price-display">
+          <div class="live-price" id="live-price-display" data-tooltip="Real-time price of the selected trading pair"
+            data-tooltip-pos="bottom">
             <span class="price-label">Live Price</span>
             <span class="price-value" id="header-price">$--</span>
             <span class="price-change positive" id="header-change">+0.00%</span>
           </div>
-          <div class="connection-status">
+
+          <!-- Account Dropdown -->
+          <div class="account-dropdown" id="account-dropdown">
+            <button class="account-trigger" onclick="toggleAccountMenu()">
+              <span class="account-icon">👤</span>
+              <span class="account-name" id="account-name">Account</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="account-menu" id="account-menu">
+              <div class="account-header">
+                <div class="account-info">
+                  <span class="account-email" id="account-email">user@example.com</span>
+                  <span class="account-plan" id="account-plan">Pro Plan</span>
+                </div>
+              </div>
+              <div class="menu-divider"></div>
+              <div class="menu-section">
+                <label class="menu-label">Exchange Provider</label>
+                <select id="exchange-select" class="exchange-select" onchange="changeExchange(this.value)"
+                  data-tooltip="Select your cryptocurrency exchange">
+                  <option value="kraken">🦑 Kraken (USD)</option>
+                  <option value="coinbase">🪙 Coinbase (USD)</option>
+                  <option value="binance">🔶 Binance (USDT)</option>
+                  <option value="kucoin">🟢 KuCoin (USDT)</option>
+                  <option value="bybit">⬛ Bybit (USDT)</option>
+                </select>
+                <span class="menu-hint" id="quote-currency-hint">Quote: <strong id="current-quote">USD</strong></span>
+              </div>
+              <div class="menu-section">
+                <label class="menu-label">Trading Mode</label>
+                <select id="trading-mode-select" class="exchange-select" onchange="changeTradingMode(this.value)"
+                  data-tooltip="Live = real trades, Paper = simulated, Backtest = historical testing">
+                  <option value="live">🔴 Live Trading</option>
+                  <option value="paper_trading">📝 Paper Trading</option>
+                  <option value="backtest">📊 Backtest</option>
+                </select>
+              </div>
+              <div class="menu-divider"></div>
+              <a href="settings.html" class="menu-item">
+                <span class="menu-icon">⚙️</span>
+                <span>Settings</span>
+              </a>
+              <div class="menu-item" onclick="openAPISettings()">
+                <span class="menu-icon">🔑</span>
+                <span>API Settings</span>
+              </div>
+              <div class="menu-item" onclick="openNotificationSettings()">
+                <span class="menu-icon">🔔</span>
+                <span>Notifications</span>
+              </div>
+              <div class="menu-item" onclick="exportConfig()">
+                <span class="menu-icon">📥</span>
+                <span>Export Config</span>
+              </div>
+              <div class="menu-divider"></div>
+              <div class="menu-item danger" onclick="resetBot()">
+                <span class="menu-icon">⚠️</span>
+                <span>Reset Bot</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="connection-status" data-tooltip="WebSocket connection status to bot backend"
+            data-tooltip-pos="left">
             <span id="status-indicator" class="status-dot"></span>
             <span id="connection-text">Connecting...</span>
           </div>
@@ -47,37 +119,133 @@
       <!-- Bot Control Section -->
       <section class="control-section">
         <h2>Bot Control</h2>
-        <div class="control-buttons">
-          <button id="btn-start" class="btn btn-success" onclick="startBot()">
+
+        <!-- Live/Paper Trading Controls -->
+        <div class="control-buttons mode-live mode-paper_trading" id="live-controls">
+          <button id="btn-start" class="btn btn-success" onclick="startBot()" data-tooltip="Start bot">
             <span class="btn-icon">▶</span>
             <span class="btn-text">Start Bot</span>
           </button>
-          <button id="btn-pause" class="btn btn-warning" onclick="pauseBot()">
+          <button id="btn-pause" class="btn btn-warning" onclick="pauseBot()" data-tooltip="Pause - keeps orders active"
+            data-tooltip-pos="left">
             <span class="btn-icon">⏸</span>
             <span class="btn-text">Pause</span>
           </button>
-          <button id="btn-resume" class="btn btn-info" onclick="resumeBot()">
+          <button id="btn-resume" class="btn btn-info" onclick="resumeBot()" data-tooltip="Resume from pause"
+            data-tooltip-pos="left">
             <span class="btn-icon">⏩</span>
             <span class="btn-text">Resume</span>
           </button>
-          <button id="btn-stop" class="btn btn-danger" onclick="stopBot()">
+          <button id="btn-stop" class="btn btn-danger" onclick="stopBot()" data-tooltip="Stop and cancel orders"
+            data-tooltip-pos="left">
             <span class="btn-icon">⏹</span>
             <span class="btn-text">Stop Bot</span>
           </button>
+        </div>
+
+        <!-- Backtest Controls -->
+        <div class="backtest-controls mode-backtest" id="backtest-controls" style="display: none;">
+          <div class="backtest-config">
+            <!-- Quick Backtest Option -->
+            <div class="backtest-quick-start">
+              <p>📊 Run detailed backtests with charts and trade analysis</p>
+              <button class="btn btn-primary btn-large" onclick="openBacktestPage()">
+                <span class="btn-icon">🚀</span>
+                <span class="btn-text">Open Backtest Lab</span>
+              </button>
+            </div>
+
+            <div class="backtest-divider">
+              <span>or quick backtest below</span>
+            </div>
+
+            <div class="backtest-dates">
+              <div class="date-input-group" data-tooltip="When to start the backtest simulation"
+                data-tooltip-pos="bottom">
+                <label for="backtest-start">📅 Start Date</label>
+                <input type="datetime-local" id="backtest-start" value="2024-12-01T00:00">
+              </div>
+              <div class="date-input-group" data-tooltip="When to end the backtest simulation"
+                data-tooltip-pos="bottom">
+                <label for="backtest-end">📅 End Date</label>
+                <input type="datetime-local" id="backtest-end" value="2024-12-15T23:59">
+              </div>
+              <div class="date-input-group" data-tooltip="Simulated starting capital for the backtest"
+                data-tooltip-pos="bottom">
+                <label for="backtest-capital">💰 Initial Capital</label>
+                <input type="number" id="backtest-capital" value="1000" min="10" step="100">
+              </div>
+            </div>
+            <div class="backtest-actions">
+              <button id="btn-run-backtest" class="btn btn-success" onclick="runBacktest()">
+                <span class="btn-icon">▶</span>
+                <span class="btn-text">Quick Run</span>
+              </button>
+              <button id="btn-stop-backtest" class="btn btn-danger" onclick="stopBacktest()" style="display: none;">
+                <span class="btn-icon">⏹</span>
+                <span class="btn-text">Stop</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Backtest Progress -->
+          <div class="backtest-progress" id="backtest-progress" style="display: none;">
+            <div class="progress-bar">
+              <div class="progress-fill" id="backtest-progress-fill" style="width: 0%"></div>
+            </div>
+            <span class="progress-text" id="backtest-progress-text">Initializing...</span>
+          </div>
+
+          <!-- Backtest Results -->
+          <div class="backtest-results" id="backtest-results" style="display: none;">
+            <h3>📊 Backtest Results</h3>
+            <div class="results-grid">
+              <div class="result-card" data-tooltip="Total profit or loss in dollars" data-tooltip-pos="bottom">
+                <span class="result-label">Total Return</span>
+                <span class="result-value positive" id="bt-return">+$0.00</span>
+              </div>
+              <div class="result-card" data-tooltip="Return as percentage of initial capital" data-tooltip-pos="bottom">
+                <span class="result-label">Return %</span>
+                <span class="result-value positive" id="bt-return-pct">+0.00%</span>
+              </div>
+              <div class="result-card" data-tooltip="Total number of buy/sell trades executed"
+                data-tooltip-pos="bottom">
+                <span class="result-label">Total Trades</span>
+                <span class="result-value" id="bt-trades">0</span>
+              </div>
+              <div class="result-card" data-tooltip="Percentage of trades that were profitable"
+                data-tooltip-pos="bottom">
+                <span class="result-label">Win Rate</span>
+                <span class="result-value" id="bt-winrate">0%</span>
+              </div>
+              <div class="result-card" data-tooltip="Largest peak-to-trough portfolio decline"
+                data-tooltip-pos="bottom">
+                <span class="result-label">Max Drawdown</span>
+                <span class="result-value negative" id="bt-drawdown">-0.00%</span>
+              </div>
+              <div class="result-card" data-tooltip="Risk-adjusted return metric (higher = better)"
+                data-tooltip-pos="bottom">
+                <span class="result-label">Sharpe Ratio</span>
+                <span class="result-value" id="bt-sharpe">0.00</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- P&L Summary Dashboard -->
       <section class="pnl-dashboard">
         <div class="pnl-cards">
-          <div class="pnl-card total-value">
+          <div class="pnl-card total-value" data-tooltip="Total value of your portfolio including all assets and cash"
+            data-tooltip-pos="bottom">
             <div class="pnl-icon">💰</div>
             <div class="pnl-info">
               <span class="pnl-label">Total Portfolio</span>
               <span class="pnl-value" id="pnl-total">$0.00</span>
             </div>
           </div>
-          <div class="pnl-card profit">
+          <div class="pnl-card profit" data-tooltip="Profit or loss since this trading session started"
+            data-tooltip-pos="bottom">
             <div class="pnl-icon">📈</div>
             <div class="pnl-info">
               <span class="pnl-label">Session P&L</span>
@@ -85,14 +253,16 @@
               <span class="pnl-percent" id="pnl-percent">(0.00%)</span>
             </div>
           </div>
-          <div class="pnl-card trades">
+          <div class="pnl-card trades" data-tooltip="Number of completed buy/sell trades executed today"
+            data-tooltip-pos="bottom">
             <div class="pnl-icon">🔄</div>
             <div class="pnl-info">
               <span class="pnl-label">Trades Today</span>
               <span class="pnl-value" id="pnl-trades">0</span>
             </div>
           </div>
-          <div class="pnl-card uptime">
+          <div class="pnl-card uptime" data-tooltip="How long the bot has been running continuously"
+            data-tooltip-pos="bottom">
             <div class="pnl-icon">⏱️</div>
             <div class="pnl-info">
               <span class="pnl-label">Bot Uptime</span>
@@ -107,9 +277,9 @@
         <div class="chart-header">
           <h2>📈 Live Price Chart</h2>
           <div class="chart-controls">
-            <button class="chart-btn active" data-range="1h">1H</button>
-            <button class="chart-btn" data-range="4h">4H</button>
-            <button class="chart-btn" data-range="1d">1D</button>
+            <button class="chart-btn active" data-range="1h" data-tooltip="View 1-hour price history">1H</button>
+            <button class="chart-btn" data-range="4h" data-tooltip="View 4-hour price history">4H</button>
+            <button class="chart-btn" data-range="1d" data-tooltip="View 24-hour price history">1D</button>
           </div>
         </div>
         <div class="chart-container">
@@ -125,15 +295,20 @@
         <h2>🔍 Market Scanner - Top Coin Finder</h2>
         <div class="scanner-controls">
           <div class="scanner-filters">
-            <div class="filter-group">
+            <div class="filter-group" data-tooltip="Only show coins above this price - helps filter out micro-caps"
+              data-tooltip-pos="bottom">
               <label for="min-price">Min Price ($)</label>
               <input type="number" id="min-price" value="1.00" min="0" step="0.5">
             </div>
-            <div class="filter-group">
+            <div class="filter-group"
+              data-tooltip="Only show coins below this price - ideal for grid trading sweet spot"
+              data-tooltip-pos="bottom">
               <label for="max-price">Max Price ($)</label>
               <input type="number" id="max-price" value="20.00" min="0" step="1">
             </div>
-            <div class="filter-group">
+            <div class="filter-group"
+              data-tooltip="Candle timeframe for technical analysis - shorter = more signals, longer = more reliable"
+              data-tooltip-pos="bottom">
               <label for="scan-timeframe">Timeframe</label>
               <select id="scan-timeframe">
                 <option value="5m">5 min</option>
@@ -142,26 +317,30 @@
                 <option value="4h">4 hour</option>
               </select>
             </div>
-            <div class="filter-group">
+            <div class="filter-group" data-tooltip="Fast EMA period for crossover signals - lower = more responsive"
+              data-tooltip-pos="bottom">
               <label for="ema-fast-period">EMA Fast</label>
               <input type="number" id="ema-fast-period" value="9" min="2" max="50" step="1">
             </div>
-            <div class="filter-group">
+            <div class="filter-group" data-tooltip="Slow EMA period for trend confirmation - higher = smoother trend"
+              data-tooltip-pos="bottom">
               <label for="ema-slow-period">EMA Slow</label>
               <input type="number" id="ema-slow-period" value="21" min="5" max="200" step="1">
             </div>
-            <button id="btn-scan" class="btn btn-primary" onclick="scanMarkets()">
+            <button id="btn-scan" class="btn btn-primary" onclick="scanMarkets()"
+              data-tooltip="Scan all markets and rank by trading opportunity score">
               <span class="btn-icon">🔍</span>
               <span class="btn-text">Scan Markets</span>
             </button>
           </div>
 
           <div class="auto-scan-controls">
-            <div class="filter-group">
+            <div class="filter-group" data-tooltip="Minutes between automatic market scans" data-tooltip-pos="bottom">
               <label for="auto-scan-interval">Auto-Scan (min)</label>
               <input type="number" id="auto-scan-interval" value="5" min="1" max="60" step="1">
             </div>
-            <button class="btn btn-secondary" onclick="toggleAutoScan()">
+            <button class="btn btn-secondary" onclick="toggleAutoScan()"
+              data-tooltip="Enable/disable automatic periodic market scanning">
               <span class="btn-icon">⏱️</span>
               <span class="btn-text">Toggle Auto-Scan</span>
             </button>
@@ -178,23 +357,31 @@
             <table class="scanner-table">
               <thead>
                 <tr>
-                  <th>Rank</th>
-                  <th>Pair</th>
-                  <th>Price</th>
-                  <th>24h %</th>
-                  <th>Score</th>
-                  <th>Signal</th>
-                  <th>EMA</th>
-                  <th>CCI</th>
-                  <th>MACD</th>
+                  <th data-tooltip="Overall ranking by trading opportunity score">Rank</th>
+                  <th data-tooltip="Trading pair (Base/Quote)">Pair</th>
+                  <th data-tooltip="Current market price">Price</th>
+                  <th data-tooltip="Price change over the last 24 hours">24h %</th>
+                  <th data-tooltip="AI-calculated opportunity score (0-100)">Score</th>
+                  <th data-tooltip="Current trading signal direction">Signal</th>
+                  <th data-tooltip="Exponential Moving Average crossover status">EMA</th>
+                  <th data-tooltip="Commodity Channel Index - momentum indicator">CCI</th>
+                  <th data-tooltip="Moving Average Convergence Divergence">MACD</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="scanner-tbody">
                 <tr>
-                  <td colspan="10" class="no-data">Click "Scan Markets" to find top coins</td>
+                  <td colspan="9" class="no-data">Click "Scan Markets" to find top coins</td>
                 </tr>
               </tbody>
+              <tfoot>
+                <tr id="ignored-pairs-row" style="display: none;">
+                  <td colspan="9" class="ignored-pairs-info">
+                    <span>🚫 Ignored pairs: <span id="ignored-pairs-list"></span></span>
+                    <button class="btn btn-small btn-secondary" onclick="clearIgnoredPairs()">Clear All</button>
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
@@ -202,7 +389,7 @@
         <!-- Coin Details Modal -->
         <div id="coin-details-modal" class="modal hidden">
           <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <span class="close-btn" onclick="closeCoinDetailsModal()">&times;</span>
             <h3 id="modal-pair-name">Coin Details</h3>
             <div class="modal-body">
               <div class="indicator-grid" id="indicator-details"></div>
@@ -216,19 +403,23 @@
         <h2>📊 Multi-Pair Trading</h2>
         <div class="multi-pair-controls">
           <div class="multi-pair-config">
-            <div class="filter-group">
+            <div class="filter-group" data-tooltip="Maximum number of trading pairs to run simultaneously"
+              data-tooltip-pos="bottom">
               <label for="max-pairs">Max Pairs</label>
               <input type="number" id="max-pairs" value="2" min="1" max="5" step="1">
             </div>
-            <div class="filter-group">
+            <div class="filter-group" data-tooltip="Minimum capital allocated per trading pair"
+              data-tooltip-pos="bottom">
               <label for="min-balance-per-pair">Min $ Per Pair</label>
               <input type="number" id="min-balance-per-pair" value="15" min="5" max="100" step="5">
             </div>
-            <button id="btn-start-multi" class="btn btn-success" onclick="startMultiPair()">
+            <button id="btn-start-multi" class="btn btn-success" onclick="startMultiPair()"
+              data-tooltip="Start trading multiple pairs based on scanner results">
               <span class="btn-icon">▶</span>
               <span class="btn-text">Start Multi-Pair</span>
             </button>
-            <button id="btn-stop-multi" class="btn btn-danger" onclick="stopMultiPair()">
+            <button id="btn-stop-multi" class="btn btn-danger" onclick="stopMultiPair()"
+              data-tooltip="Stop all active multi-pair trading bots">
               <span class="btn-icon">⏹</span>
               <span class="btn-text">Stop All</span>
             </button>
@@ -393,6 +584,175 @@
         </div>
       </section>
 
+      <!-- Chuck AI Section - Smart Scan & Auto-Portfolio -->
+      <section class="chuck-ai-section">
+        <h2>🤖 Chuck AI - Autonomous Trading</h2>
+
+        <!-- Smart Scan Tab -->
+        <div class="chuck-tabs">
+          <button class="chuck-tab active" onclick="switchChuckTab('scan')">⭐ Smart Scan</button>
+          <button class="chuck-tab" onclick="switchChuckTab('portfolio')">📊 Auto-Portfolio</button>
+          <button class="chuck-tab" onclick="switchChuckTab('signals')">📈 Entry Signals</button>
+        </div>
+
+        <!-- Smart Scan Panel -->
+        <div id="chuck-scan-panel" class="chuck-panel active">
+          <div class="chuck-description">
+            <p>🔍 Smart Scan analyzes pairs for grid trading suitability based on range-bound behavior, volatility, and
+              volume.</p>
+          </div>
+          <div class="chuck-controls">
+            <div class="filter-group" data-tooltip="Base currency for trading pairs" data-tooltip-pos="bottom">
+              <label for="chuck-quote">Quote Currency</label>
+              <select id="chuck-quote">
+                <option value="USD">USD</option>
+                <option value="USDT">USDT</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+            <div class="filter-group" data-tooltip="Number of top pairs to analyze" data-tooltip-pos="bottom">
+              <label for="chuck-num-pairs">Pairs to Scan</label>
+              <input type="number" id="chuck-num-pairs" value="10" min="5" max="30">
+            </div>
+            <div class="filter-group" data-tooltip="Minimum price filter for coins" data-tooltip-pos="bottom">
+              <label for="chuck-min-price">Min Price ($)</label>
+              <input type="number" id="chuck-min-price" value="0.01" min="0" step="0.01">
+            </div>
+            <div class="filter-group" data-tooltip="Maximum price filter for coins" data-tooltip-pos="bottom">
+              <label for="chuck-max-price">Max Price ($)</label>
+              <input type="number" id="chuck-max-price" value="100" min="0" step="1">
+            </div>
+            <div class="filter-group" data-tooltip="Minimum 24h trading volume to ensure liquidity"
+              data-tooltip-pos="bottom">
+              <label for="chuck-min-volume">Min Volume ($)</label>
+              <input type="number" id="chuck-min-volume" value="100000" min="0" step="10000">
+            </div>
+            <button class="btn btn-primary" onclick="runChuckSmartScan()"
+              data-tooltip="Run AI-powered analysis to find best grid trading opportunities">
+              <span class="btn-icon">🚀</span>
+              <span class="btn-text">Run Smart Scan</span>
+            </button>
+          </div>
+          <div id="chuck-scan-status" class="scan-status"></div>
+          <div class="chuck-results">
+            <h3>Scan Results <span id="chuck-results-count">(0 pairs)</span></h3>
+            <table class="scanner-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Pair</th>
+                  <th>Price</th>
+                  <th>Score</th>
+                  <th>Range</th>
+                  <th>Volatility</th>
+                  <th>Volume</th>
+                  <th>Grid Range</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="chuck-scan-tbody">
+                <tr>
+                  <td colspan="9" class="no-data">Click "Run Smart Scan" to find best pairs</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Auto-Portfolio Panel -->
+        <div id="chuck-portfolio-panel" class="chuck-panel">
+          <div class="chuck-description">
+            <p>🤖 Auto-Portfolio autonomously manages multiple positions, entering when conditions are optimal.</p>
+          </div>
+          <div class="chuck-portfolio-status" id="chuck-portfolio-status-bar">
+            <span class="status-indicator" id="portfolio-indicator">●</span>
+            <span id="portfolio-status-text">Not Running</span>
+          </div>
+          <div class="chuck-controls">
+            <div class="filter-group" data-tooltip="Total capital to deploy across all positions"
+              data-tooltip-pos="bottom">
+              <label for="chuck-capital">Total Capital ($)</label>
+              <input type="number" id="chuck-capital" value="500" min="50" step="50">
+            </div>
+            <div class="filter-group" data-tooltip="Maximum number of simultaneous trading positions"
+              data-tooltip-pos="bottom">
+              <label for="chuck-positions">Max Positions</label>
+              <input type="number" id="chuck-positions" value="5" min="1" max="20">
+            </div>
+            <div class="filter-group" data-tooltip="Minimum AI score required to enter a position (0-100)"
+              data-tooltip-pos="bottom">
+              <label for="chuck-min-score">Min Entry Score</label>
+              <input type="number" id="chuck-min-score" value="65" min="0" max="100">
+            </div>
+            <div class="filter-group" data-tooltip="How often to scan for new entry opportunities (seconds)"
+              data-tooltip-pos="bottom">
+              <label for="chuck-interval">Scan Interval (s)</label>
+              <input type="number" id="chuck-interval" value="300" min="60" max="3600">
+            </div>
+            <button class="btn btn-success" id="btn-start-portfolio" onclick="startChuckPortfolio()"
+              data-tooltip="Start autonomous multi-position trading">
+              <span class="btn-icon">▶</span>
+              <span class="btn-text">Start Auto-Portfolio</span>
+            </button>
+            <button class="btn btn-danger" id="btn-stop-portfolio" onclick="stopChuckPortfolio()">
+              <span class="btn-icon">⏹</span>
+              <span class="btn-text">Stop</span>
+            </button>
+          </div>
+          <div class="chuck-portfolio-summary" id="chuck-portfolio-summary">
+            <div class="summary-card">
+              <span class="summary-label">Deployed</span>
+              <span id="portfolio-deployed" class="summary-value">$0.00</span>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">Available</span>
+              <span id="portfolio-available" class="summary-value">$0.00</span>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">Positions</span>
+              <span id="portfolio-position-count" class="summary-value">0 / 0</span>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">Total P&L</span>
+              <span id="portfolio-pnl" class="summary-value pnl-neutral">$0.00</span>
+            </div>
+          </div>
+          <div class="chuck-positions" id="chuck-positions-grid">
+            <p class="no-data">Start Auto-Portfolio to see active positions</p>
+          </div>
+        </div>
+
+        <!-- Entry Signals Panel -->
+        <div id="chuck-signals-panel" class="chuck-panel">
+          <div class="chuck-description">
+            <p>📈 Analyze entry signals for any pair using RSI, price position, and volume trends.</p>
+          </div>
+          <div class="chuck-controls">
+            <div class="filter-group" data-tooltip="The trading pair to analyze for entry signals"
+              data-tooltip-pos="bottom">
+              <label for="signal-pair">Trading Pair</label>
+              <input type="text" id="signal-pair" value="BTC/USD" placeholder="e.g., BTC/USD">
+            </div>
+            <div class="filter-group" data-tooltip="Upper price boundary of your grid range" data-tooltip-pos="bottom">
+              <label for="signal-grid-top">Grid Top ($)</label>
+              <input type="number" id="signal-grid-top" value="50000" min="0" step="100">
+            </div>
+            <div class="filter-group" data-tooltip="Lower price boundary of your grid range" data-tooltip-pos="bottom">
+              <label for="signal-grid-bottom">Grid Bottom ($)</label>
+              <input type="number" id="signal-grid-bottom" value="40000" min="0" step="100">
+            </div>
+            <button class="btn btn-primary" onclick="analyzeEntrySignal()"
+              data-tooltip="Get AI recommendation on whether now is a good time to enter">
+              <span class="btn-icon">📊</span>
+              <span class="btn-text">Analyze Entry</span>
+            </button>
+          </div>
+          <div id="chuck-signal-result" class="chuck-signal-result">
+            <p class="no-data">Enter a pair and grid range to analyze entry signal</p>
+          </div>
+        </div>
+      </section>
+
       <!-- Status Section -->
       <section class="status-section">
         <div class="status-card">
@@ -540,7 +900,13 @@
 
       <!-- Logs Section -->
       <section class="logs-section">
-        <h3>Status Log</h3>
+        <div class="logs-header">
+          <h3>Status Log</h3>
+          <div class="logs-controls">
+            <button class="btn-small" onclick="scrollLogsToBottom()" title="Scroll to bottom">⬇️ Latest</button>
+            <button class="btn-small" onclick="clearLogs()" title="Clear logs">🗑️ Clear</button>
+          </div>
+        </div>
         <div class="logs-container">
           <div id="logs-display" class="logs-display"></div>
         </div>
@@ -551,7 +917,7 @@
     <footer class="footer">
       <div class="footer-content">
         <div class="footer-brand">
-          <span>📊 GridBot Pro</span>
+          <span>📊 GridBot Chuck</span>
           <span class="footer-version">v2.0</span>
         </div>
         <div class="footer-stats">

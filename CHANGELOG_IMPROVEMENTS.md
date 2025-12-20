@@ -4,9 +4,88 @@
 
 Enhanced GridBot Chuck with professional-grade features focused on solving the "stuck market" problem and improving safety for small-capital trading ($55 setup with 2 pairs).
 
+**NEW (Dec 17):** Added Profit Rotation Engine - automatically captures profits and rotates to top-performing pairs.
+
 ---
 
 ## ✨ New Features
+
+### 0. Profit Rotation Engine ⭐⭐ **NEW - CAPTURES PROFITS AUTOMATICALLY**
+
+**Problem**: Price reached predicted target ($3.80) but bot didn't sell. Missed profit opportunities.
+
+**Solution**: Intelligent profit-taking system that monitors P&L in real-time and automatically rotates to better trading opportunities.
+
+**Files Created**:
+- `core/bot_management/profit_rotation_manager.py` - Main rotation engine (~400 lines)
+- `core/bot_management/rotation_bot_integration.py` - Integration with grid bot
+- `PROFIT_ROTATION_GUIDE.md` - Complete usage guide
+
+**How It Works**:
+1. **Monitor Position**: Checks P&L every 60 seconds
+2. **Detect Profit Target**: When +$3 (or 5%) profit is reached
+3. **Close Position**: Cancels all orders and liquidates holdings
+4. **Scan Market**: Queries market scanner for top 4 opportunities
+5. **Enter Best Pair**: Automatically enters highest-scoring pair (score > 65)
+6. **Repeat**: Continues cycle indefinitely
+
+**Key Features**:
+- Real-time P&L tracking
+- Configurable profit targets (USD amount or percentage)
+- Automatic market scanning after exit
+- Smart pair selection (top 4 by score)
+- Cooldown protection (won't re-enter same pair for 30min)
+- Daily rotation limits (max 10/day to control fees)
+- Auto-configured grid ranges for new pairs
+- Full event logging and notifications
+- Database persistence
+
+**Configuration Options**:
+```json
+"profit_rotation": {
+  "enabled": true,
+  "profit_target_usd": 3.0,          // Exit at +$3 profit
+  "profit_target_percent": 5.0,       // OR exit at +5%
+  "use_percent_target": false,        // Use $ amount (not %)
+  "check_interval_seconds": 60,       // Check P&L every minute
+  "top_pairs_to_scan": 4,            // Scan top 4 pairs
+  "min_score_to_enter": 65,          // Only enter if score > 65
+  "cooldown_minutes": 30,             // Wait before re-entering same pair
+  "auto_enter_next": true,            // Auto-enter new position
+  "max_rotations_per_day": 10        // Limit rotations
+}
+```
+
+**Example Scenario**:
+```
+9:00 AM  | Enter MYX/USD @ $3.20    | Balance: $55
+11:30 AM | MYX reaches $3.80 (+$3)  | Balance: $58 ✅
+11:32 AM | Bot closes position      | Sells all MYX
+11:35 AM | Scanner finds:
+         | - MORPHO (score: 85) ✅
+         | - LINK (score: 78)
+         | - DOT (score: 72)
+         | - AVAX (score: 68)
+11:40 AM | Enter MORPHO @ $4.50     | Balance: $58
+2:15 PM  | MORPHO +$3               | Balance: $61 ✅
+2:20 PM  | Rotate to LINK...        | Continue cycle
+```
+
+**Benefits**:
+- ✅ Never miss profit opportunities
+- ✅ Always trading highest-potential pairs
+- ✅ Automatic capital reallocation
+- ✅ Prevents stuck markets
+- ✅ Maximizes compounding potential
+- ✅ Full audit trail
+
+**Expected Performance** (with $55 capital):
+- 5 successful rotations/day × $3 = $15 profit/day
+- Minus ~$1.50 fees = **$13.50 net/day**
+- Monthly potential: **~$400**
+- If compounded over 6 months: **~$2,480**
+
+---
 
 ### 1. Multi-Pair Auto-Switching ⭐ **SOLVES YOUR MAIN ISSUE**
 

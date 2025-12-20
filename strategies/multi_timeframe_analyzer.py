@@ -737,7 +737,7 @@ class MultiTimeframeAnalyzer:
         )
         
         for warning in result.warnings:
-            self.logger.warning(f"  ⚠️ {warning}")
+            self.logger.warning(f"  [!] {warning}")
         
         for rec in result.recommendations[:3]:  # Log first 3 recommendations
             self.logger.info(f"  {rec}")

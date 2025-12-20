@@ -2,7 +2,7 @@
 # Run this script to create a desktop icon for Grid Trading Bot
 
 param(
-    [switch]$Uninstall
+  [switch]$Uninstall
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,20 +17,20 @@ $StartMenuShortcut = Join-Path $StartMenuPath "Programs\$ShortcutName.lnk"
 
 # Uninstall mode
 if ($Uninstall) {
-    Write-Host "Removing Grid Trading Bot shortcuts..." -ForegroundColor Yellow
+  Write-Host "Removing Grid Trading Bot shortcuts..." -ForegroundColor Yellow
     
-    if (Test-Path $ShortcutPath) {
-        Remove-Item $ShortcutPath -Force
-        Write-Host "  Removed desktop shortcut" -ForegroundColor Green
-    }
+  if (Test-Path $ShortcutPath) {
+    Remove-Item $ShortcutPath -Force
+    Write-Host "  Removed desktop shortcut" -ForegroundColor Green
+  }
     
-    if (Test-Path $StartMenuShortcut) {
-        Remove-Item $StartMenuShortcut -Force
-        Write-Host "  Removed Start Menu shortcut" -ForegroundColor Green
-    }
+  if (Test-Path $StartMenuShortcut) {
+    Remove-Item $StartMenuShortcut -Force
+    Write-Host "  Removed Start Menu shortcut" -ForegroundColor Green
+  }
     
-    Write-Host "`nShortcuts removed successfully!" -ForegroundColor Green
-    exit 0
+  Write-Host "`nShortcuts removed successfully!" -ForegroundColor Green
+  exit 0
 }
 
 Write-Host ""
@@ -42,9 +42,9 @@ Write-Host ""
 # Check if we're in the right directory
 $MainPy = Join-Path $ScriptDir "main.py"
 if (-not (Test-Path $MainPy)) {
-    Write-Host "ERROR: main.py not found!" -ForegroundColor Red
-    Write-Host "Please run this script from the grid_trading_bot folder." -ForegroundColor Yellow
-    exit 1
+  Write-Host "ERROR: main.py not found!" -ForegroundColor Red
+  Write-Host "Please run this script from the grid_trading_bot folder." -ForegroundColor Yellow
+  exit 1
 }
 
 # Check for Python
@@ -52,19 +52,21 @@ $PythonPath = $null
 $VenvPython = Join-Path $ScriptDir ".venv\Scripts\python.exe"
 
 if (Test-Path $VenvPython) {
-    $PythonPath = $VenvPython
-    Write-Host "Found virtual environment Python" -ForegroundColor Green
-} else {
-    # Try to find system Python
-    $SystemPython = Get-Command python -ErrorAction SilentlyContinue
-    if ($SystemPython) {
-        $PythonPath = $SystemPython.Source
-        Write-Host "Using system Python: $PythonPath" -ForegroundColor Yellow
-    } else {
-        Write-Host "ERROR: Python not found!" -ForegroundColor Red
-        Write-Host "Please install Python 3.10+ and try again." -ForegroundColor Yellow
-        exit 1
-    }
+  $PythonPath = $VenvPython
+  Write-Host "Found virtual environment Python" -ForegroundColor Green
+}
+else {
+  # Try to find system Python
+  $SystemPython = Get-Command python -ErrorAction SilentlyContinue
+  if ($SystemPython) {
+    $PythonPath = $SystemPython.Source
+    Write-Host "Using system Python: $PythonPath" -ForegroundColor Yellow
+  }
+  else {
+    Write-Host "ERROR: Python not found!" -ForegroundColor Red
+    Write-Host "Please install Python 3.10+ and try again." -ForegroundColor Yellow
+    exit 1
+  }
 }
 
 # Create the launcher batch file
@@ -126,10 +128,11 @@ $Shortcut.WindowStyle = 1  # Normal window
 # Try to set icon (use cmd.exe icon as fallback)
 $IconPath = Join-Path $ScriptDir "Logo\gridbot.ico"
 if (Test-Path $IconPath) {
-    $Shortcut.IconLocation = $IconPath
-} else {
-    # Use a generic icon
-    $Shortcut.IconLocation = "%SystemRoot%\System32\cmd.exe,0"
+  $Shortcut.IconLocation = $IconPath
+}
+else {
+  # Use a generic icon
+  $Shortcut.IconLocation = "%SystemRoot%\System32\cmd.exe,0"
 }
 
 $Shortcut.Save()
@@ -137,20 +140,22 @@ Write-Host "Created desktop shortcut: $ShortcutName" -ForegroundColor Green
 
 # Start Menu shortcut
 try {
-    $StartShortcut = $WshShell.CreateShortcut($StartMenuShortcut)
-    $StartShortcut.TargetPath = $LauncherBat
-    $StartShortcut.WorkingDirectory = $ScriptDir
-    $StartShortcut.Description = "Start Grid Trading Bot with Dashboard"
-    $StartShortcut.WindowStyle = 1
-    if (Test-Path $IconPath) {
-        $StartShortcut.IconLocation = $IconPath
-    } else {
-        $StartShortcut.IconLocation = "%SystemRoot%\System32\cmd.exe,0"
-    }
-    $StartShortcut.Save()
-    Write-Host "Created Start Menu shortcut" -ForegroundColor Green
-} catch {
-    Write-Host "Note: Could not create Start Menu shortcut (optional)" -ForegroundColor Yellow
+  $StartShortcut = $WshShell.CreateShortcut($StartMenuShortcut)
+  $StartShortcut.TargetPath = $LauncherBat
+  $StartShortcut.WorkingDirectory = $ScriptDir
+  $StartShortcut.Description = "Start Grid Trading Bot with Dashboard"
+  $StartShortcut.WindowStyle = 1
+  if (Test-Path $IconPath) {
+    $StartShortcut.IconLocation = $IconPath
+  }
+  else {
+    $StartShortcut.IconLocation = "%SystemRoot%\System32\cmd.exe,0"
+  }
+  $StartShortcut.Save()
+  Write-Host "Created Start Menu shortcut" -ForegroundColor Green
+}
+catch {
+  Write-Host "Note: Could not create Start Menu shortcut (optional)" -ForegroundColor Yellow
 }
 
 Write-Host ""
@@ -171,13 +176,13 @@ Write-Host ""
 # Offer to open the dashboard URL in browser when bot starts
 $CreateBrowserShortcut = Read-Host "Create a separate 'Open Dashboard' shortcut? (y/n)"
 if ($CreateBrowserShortcut -eq 'y') {
-    $DashboardShortcut = Join-Path $DesktopPath "Grid Bot Dashboard.lnk"
-    $DashShortcut = $WshShell.CreateShortcut($DashboardShortcut)
-    $DashShortcut.TargetPath = "http://localhost:8080"
-    $DashShortcut.Description = "Open Grid Trading Bot Dashboard in Browser"
-    $DashShortcut.IconLocation = "%ProgramFiles%\Internet Explorer\iexplore.exe,0"
-    $DashShortcut.Save()
-    Write-Host "Created 'Grid Bot Dashboard' shortcut on Desktop" -ForegroundColor Green
+  $DashboardShortcut = Join-Path $DesktopPath "Grid Bot Dashboard.lnk"
+  $DashShortcut = $WshShell.CreateShortcut($DashboardShortcut)
+  $DashShortcut.TargetPath = "http://localhost:8080"
+  $DashShortcut.Description = "Open Grid Trading Bot Dashboard in Browser"
+  $DashShortcut.IconLocation = "%ProgramFiles%\Internet Explorer\iexplore.exe,0"
+  $DashShortcut.Save()
+  Write-Host "Created 'Grid Bot Dashboard' shortcut on Desktop" -ForegroundColor Green
 }
 
 Write-Host ""

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(dir \"C:\\\\Users\\\\splin\\\\OneDrive\\\\Documents\\\\grid_trading_bot-master\\\\setup_wizard\\\\templates\\\\index.html\")",
+      "Bash(node -e \"const Store = require\\(''electron-store''\\); const store = new Store\\(\\); store.clear\\(\\); console.log\\(''Setup state cleared - will show wizard on next launch''\\);\")",
+      "Bash(timeout 3:*)"
+    ]
+  }
+}

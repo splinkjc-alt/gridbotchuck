@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Grid Trading Bot</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="settings.css">
+</head>
+
+<body>
+  <div class="settings-container">
+    <!-- Header -->
+    <header class="settings-header">
+      <div class="header-left">
+        <a href="index.html" class="back-link">← Back to Dashboard</a>
+        <h1>⚙️ Settings & Configuration</h1>
+      </div>
+      <div class="header-right">
+        <span class="save-status" id="save-status"></span>
+        <button class="btn btn-success" onclick="saveAllSettings()">💾 Save All Settings</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="settings-main">
+      <!-- Sidebar Navigation -->
+      <nav class="settings-nav">
+        <ul>
+          <li class="active" data-section="profile">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">Profile</span>
+          </li>
+          <li data-section="exchanges">
+            <span class="nav-icon">🏦</span>
+            <span class="nav-text">Exchange APIs</span>
+          </li>
+          <li data-section="notifications">
+            <span class="nav-icon">🔔</span>
+            <span class="nav-text">Notifications</span>
+          </li>
+          <li data-section="trading">
+            <span class="nav-icon">📈</span>
+            <span class="nav-text">Trading Defaults</span>
+          </li>
+          <li data-section="security">
+            <span class="nav-icon">🔒</span>
+            <span class="nav-text">Security</span>
+          </li>
+          <li data-section="advanced">
+            <span class="nav-icon">🔧</span>
+            <span class="nav-text">Advanced</span>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Settings Panels -->
+      <div class="settings-content">
+
+        <!-- Profile Section -->
+        <section id="section-profile" class="settings-section active">
+          <h2>👤 Profile Information</h2>
+          <p class="section-description">Your personal information for account identification and notifications.</p>
+
+          <div class="settings-card">
+            <div class="form-group">
+              <label for="user-name">Display Name</label>
+              <input type="text" id="user-name" placeholder="Your name or username">
+            </div>
+
+            <div class="form-group">
+              <label for="user-email">Email Address</label>
+              <input type="email" id="user-email" placeholder="your@email.com">
+              <span class="form-hint">Used for email notifications and alerts</span>
+            </div>
+
+            <div class="form-group">
+              <label for="user-phone">Phone Number (Optional)</label>
+              <input type="tel" id="user-phone" placeholder="+1 234 567 8900">
+              <span class="form-hint">For SMS alerts (if configured)</span>
+            </div>
+
+            <div class="form-group">
+              <label for="timezone">Timezone</label>
+              <select id="timezone">
+                <option value="America/New_York">Eastern Time (ET)</option>
+                <option value="America/Chicago">Central Time (CT)</option>
+                <option value="America/Denver">Mountain Time (MT)</option>
+                <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                <option value="UTC">UTC</option>
+                <option value="Europe/London">London (GMT/BST)</option>
+                <option value="Europe/Paris">Paris (CET)</option>
+                <option value="Asia/Tokyo">Tokyo (JST)</option>
+                <option value="Asia/Singapore">Singapore (SGT)</option>
+                <option value="Australia/Sydney">Sydney (AEST)</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Exchange APIs Section -->
+        <section id="section-exchanges" class="settings-section">
+          <h2>🏦 Exchange API Keys</h2>
+          <p class="section-description">Configure API keys for the exchanges you want to trade on. Keys are stored
+            locally and encrypted.</p>
+
+          <!-- Kraken -->
+          <div class="settings-card exchange-card">
+            <div class="exchange-header">
+              <div class="exchange-info">
+                <span class="exchange-logo">🦑</span>
+                <div>
+                  <h3>Kraken</h3>
+                  <span class="exchange-status" id="kraken-status">Not configured</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="kraken-enabled">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="exchange-fields">
+              <div class="form-group">
+                <label for="kraken-api-key">API Key</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="kraken-api-key" placeholder="Enter your Kraken API key">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('kraken-api-key')">👁️</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="kraken-api-secret">API Secret</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="kraken-api-secret" placeholder="Enter your Kraken API secret">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('kraken-api-secret')">👁️</button>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-small btn-info" onclick="testConnection('kraken')">🔌 Test Connection</button>
+                <a href="https://www.kraken.com/u/security/api" target="_blank" class="btn btn-small btn-secondary">📖
+                  Get API Keys</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coinbase -->
+          <div class="settings-card exchange-card">
+            <div class="exchange-header">
+              <div class="exchange-info">
+                <span class="exchange-logo">🪙</span>
+                <div>
+                  <h3>Coinbase</h3>
+                  <span class="exchange-status" id="coinbase-status">Not configured</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="coinbase-enabled">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="exchange-fields">
+              <div class="form-group">
+                <label for="coinbase-api-key">API Key</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="coinbase-api-key" placeholder="Enter your Coinbase API key">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('coinbase-api-key')">👁️</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="coinbase-api-secret">API Secret</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="coinbase-api-secret" placeholder="Enter your Coinbase API secret">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('coinbase-api-secret')">👁️</button>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-small btn-info" onclick="testConnection('coinbase')">🔌 Test Connection</button>
+                <a href="https://www.coinbase.com/settings/api" target="_blank" class="btn btn-small btn-secondary">📖
+                  Get API Keys</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Binance -->
+          <div class="settings-card exchange-card">
+            <div class="exchange-header">
+              <div class="exchange-info">
+                <span class="exchange-logo">🔶</span>
+                <div>
+                  <h3>Binance</h3>
+                  <span class="exchange-status" id="binance-status">Not configured</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="binance-enabled">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="exchange-fields">
+              <div class="form-group">
+                <label for="binance-api-key">API Key</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="binance-api-key" placeholder="Enter your Binance API key">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('binance-api-key')">👁️</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="binance-api-secret">API Secret</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="binance-api-secret" placeholder="Enter your Binance API secret">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('binance-api-secret')">👁️</button>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-small btn-info" onclick="testConnection('binance')">🔌 Test Connection</button>
+                <a href="https://www.binance.com/en/my/settings/api-management" target="_blank"
+                  class="btn btn-small btn-secondary">📖 Get API Keys</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Binance US -->
+          <div class="settings-card exchange-card">
+            <div class="exchange-header">
+              <div class="exchange-info">
+                <span class="exchange-logo">🔷</span>
+                <div>
+                  <h3>Binance US</h3>
+                  <span class="exchange-status" id="binanceus-status">Not configured</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="binanceus-enabled">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="exchange-fields">
+              <div class="form-group">
+                <label for="binanceus-api-key">API Key</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="binanceus-api-key" placeholder="Enter your Binance US API key">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('binanceus-api-key')">👁️</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="binanceus-api-secret">API Secret</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="binanceus-api-secret" placeholder="Enter your Binance US API secret">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('binanceus-api-secret')">👁️</button>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-small btn-info" onclick="testConnection('binanceus')">🔌 Test Connection</button>
+                <a href="https://www.binance.us/settings/api-management" target="_blank"
+                  class="btn btn-small btn-secondary">📖 Get API Keys</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- KuCoin -->
+          <div class="settings-card exchange-card">
+            <div class="exchange-header">
+              <div class="exchange-info">
+                <span class="exchange-logo">🟢</span>
+                <div>
+                  <h3>KuCoin</h3>
+                  <span class="exchange-status" id="kucoin-status">Not configured</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="kucoin-enabled">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="exchange-fields">
+              <div class="form-group">
+                <label for="kucoin-api-key">API Key</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="kucoin-api-key" placeholder="Enter your KuCoin API key">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('kucoin-api-key')">👁️</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="kucoin-api-secret">API Secret</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="kucoin-api-secret" placeholder="Enter your KuCoin API secret">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('kucoin-api-secret')">👁️</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="kucoin-passphrase">Passphrase</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="kucoin-passphrase" placeholder="Enter your KuCoin passphrase">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('kucoin-passphrase')">👁️</button>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-small btn-info" onclick="testConnection('kucoin')">🔌 Test Connection</button>
+                <a href="https://www.kucoin.com/account/api" target="_blank" class="btn btn-small btn-secondary">📖 Get
+                  API Keys</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bybit -->
+          <div class="settings-card exchange-card">
+            <div class="exchange-header">
+              <div class="exchange-info">
+                <span class="exchange-logo">⬛</span>
+                <div>
+                  <h3>Bybit</h3>
+                  <span class="exchange-status" id="bybit-status">Not configured</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="bybit-enabled">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="exchange-fields">
+              <div class="form-group">
+                <label for="bybit-api-key">API Key</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="bybit-api-key" placeholder="Enter your Bybit API key">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('bybit-api-key')">👁️</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="bybit-api-secret">API Secret</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="bybit-api-secret" placeholder="Enter your Bybit API secret">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('bybit-api-secret')">👁️</button>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-small btn-info" onclick="testConnection('bybit')">🔌 Test Connection</button>
+                <a href="https://www.bybit.com/app/user/api-management" target="_blank"
+                  class="btn btn-small btn-secondary">📖 Get API Keys</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- OKX -->
+          <div class="settings-card exchange-card">
+            <div class="exchange-header">
+              <div class="exchange-info">
+                <span class="exchange-logo">⚫</span>
+                <div>
+                  <h3>OKX</h3>
+                  <span class="exchange-status" id="okx-status">Not configured</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="okx-enabled">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="exchange-fields">
+              <div class="form-group">
+                <label for="okx-api-key">API Key</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="okx-api-key" placeholder="Enter your OKX API key">
+                  <button type="button" class="toggle-visibility" onclick="toggleVisibility('okx-api-key')">👁️</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="okx-api-secret">API Secret</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="okx-api-secret" placeholder="Enter your OKX API secret">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('okx-api-secret')">👁️</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="okx-passphrase">Passphrase</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="okx-passphrase" placeholder="Enter your OKX passphrase">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('okx-passphrase')">👁️</button>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-small btn-info" onclick="testConnection('okx')">🔌 Test Connection</button>
+                <a href="https://www.okx.com/account/my-api" target="_blank" class="btn btn-small btn-secondary">📖 Get
+                  API Keys</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gate.io -->
+          <div class="settings-card exchange-card">
+            <div class="exchange-header">
+              <div class="exchange-info">
+                <span class="exchange-logo">🚪</span>
+                <div>
+                  <h3>Gate.io</h3>
+                  <span class="exchange-status" id="gateio-status">Not configured</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="gateio-enabled">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="exchange-fields">
+              <div class="form-group">
+                <label for="gateio-api-key">API Key</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="gateio-api-key" placeholder="Enter your Gate.io API key">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('gateio-api-key')">👁️</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="gateio-api-secret">API Secret</label>
+                <div class="input-with-toggle">
+                  <input type="password" id="gateio-api-secret" placeholder="Enter your Gate.io API secret">
+                  <button type="button" class="toggle-visibility"
+                    onclick="toggleVisibility('gateio-api-secret')">👁️</button>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-small btn-info" onclick="testConnection('gateio')">🔌 Test Connection</button>
+                <a href="https://www.gate.io/myaccount/apikeys" target="_blank" class="btn btn-small btn-secondary">📖
+                  Get API Keys</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Notifications Section -->
+        <section id="section-notifications" class="settings-section">
+          <h2>🔔 Notification Settings</h2>
+          <p class="section-description">Configure how and when you want to receive trading alerts.</p>
+
+          <!-- Email Notifications -->
+          <div class="settings-card">
+            <h3>📧 Email Notifications</h3>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="notify-email-trades">
+                <span>Trade executions</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="notify-email-errors">
+                <span>Error alerts</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="notify-email-daily">
+                <span>Daily summary</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Telegram Notifications -->
+          <div class="settings-card">
+            <h3>📱 Telegram Notifications</h3>
+            <div class="form-group">
+              <label for="telegram-bot-token">Bot Token</label>
+              <div class="input-with-toggle">
+                <input type="password" id="telegram-bot-token" placeholder="Enter your Telegram bot token">
+                <button type="button" class="toggle-visibility"
+                  onclick="toggleVisibility('telegram-bot-token')">👁️</button>
+              </div>
+              <span class="form-hint">Get from @BotFather on Telegram</span>
+            </div>
+            <div class="form-group">
+              <label for="telegram-chat-id">Chat ID</label>
+              <input type="text" id="telegram-chat-id" placeholder="Your Telegram chat ID">
+              <span class="form-hint">Get from @userinfobot on Telegram</span>
+            </div>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="notify-telegram-trades">
+                <span>Trade executions</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="notify-telegram-errors">
+                <span>Error alerts</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="notify-telegram-signals">
+                <span>Strong buy signals</span>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-small btn-info" onclick="testTelegram()">📤 Send Test Message</button>
+            </div>
+          </div>
+
+          <!-- Discord Notifications -->
+          <div class="settings-card">
+            <h3>💬 Discord Webhook</h3>
+            <div class="form-group">
+              <label for="discord-webhook">Webhook URL</label>
+              <div class="input-with-toggle">
+                <input type="password" id="discord-webhook" placeholder="https://discord.com/api/webhooks/...">
+                <button type="button" class="toggle-visibility"
+                  onclick="toggleVisibility('discord-webhook')">👁️</button>
+              </div>
+            </div>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="notify-discord-trades">
+                <span>Trade executions</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="notify-discord-signals">
+                <span>Market signals</span>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-small btn-info" onclick="testDiscord()">📤 Send Test Message</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Trading Defaults Section -->
+        <section id="section-trading" class="settings-section">
+          <h2>📈 Trading Defaults</h2>
+          <p class="section-description">Set default values for new trading configurations.</p>
+
+          <div class="settings-card">
+            <h3>Grid Settings</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="default-grid-levels">Default Grid Levels</label>
+                <input type="number" id="default-grid-levels" value="10" min="3" max="50">
+              </div>
+              <div class="form-group">
+                <label for="default-spacing">Default Spacing Type</label>
+                <select id="default-spacing">
+                  <option value="ARITHMETIC">Arithmetic</option>
+                  <option value="GEOMETRIC">Geometric</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="default-order-size">Default Order Size ($)</label>
+                <input type="number" id="default-order-size" value="10" min="1" step="1">
+              </div>
+              <div class="form-group">
+                <label for="default-strategy">Default Strategy</label>
+                <select id="default-strategy">
+                  <option value="SIMPLE_GRID">Simple Grid</option>
+                  <option value="HEDGED_GRID">Hedged Grid</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h3>Risk Management</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="default-stop-loss">Stop Loss (%)</label>
+                <input type="number" id="default-stop-loss" value="10" min="1" max="50" step="0.5">
+              </div>
+              <div class="form-group">
+                <label for="default-take-profit">Take Profit (%)</label>
+                <input type="number" id="default-take-profit" value="20" min="1" max="100" step="0.5">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="max-position-size">Max Position Size (%)</label>
+                <input type="number" id="max-position-size" value="25" min="5" max="100" step="5">
+                <span class="form-hint">Maximum % of balance per pair</span>
+              </div>
+              <div class="form-group">
+                <label for="max-daily-loss">Max Daily Loss ($)</label>
+                <input type="number" id="max-daily-loss" value="50" min="0" step="10">
+                <span class="form-hint">0 = no limit</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Security Section -->
+        <section id="section-security" class="settings-section">
+          <h2>🔒 Security Settings</h2>
+          <p class="section-description">Protect your account and API keys.</p>
+
+          <div class="settings-card">
+            <h3>Access Control</h3>
+            <div class="form-group">
+              <label for="dashboard-password">Dashboard Password (Optional)</label>
+              <div class="input-with-toggle">
+                <input type="password" id="dashboard-password" placeholder="Set a password to protect the dashboard">
+                <button type="button" class="toggle-visibility"
+                  onclick="toggleVisibility('dashboard-password')">👁️</button>
+              </div>
+              <span class="form-hint">Leave empty for no password protection</span>
+            </div>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="require-confirm-trades">
+                <span>Require confirmation for manual trades</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="ip-whitelist-enabled">
+                <span>Enable IP whitelist</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h3>Data Management</h3>
+            <div class="button-group">
+              <button class="btn btn-warning" onclick="exportSettings()">📤 Export Settings</button>
+              <button class="btn btn-secondary" onclick="importSettings()">📥 Import Settings</button>
+              <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+            <input type="file" id="import-file" style="display: none;" accept=".json" onchange="handleImport(event)">
+          </div>
+        </section>
+
+        <!-- Advanced Section -->
+        <section id="section-advanced" class="settings-section">
+          <h2>🔧 Advanced Settings</h2>
+          <p class="section-description">Advanced configuration options for power users.</p>
+
+          <div class="settings-card">
+            <h3>API Configuration</h3>
+            <div class="form-group">
+              <label for="api-base-url">API Base URL</label>
+              <input type="text" id="api-base-url" value="http://localhost:8080" placeholder="http://localhost:8080">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="api-timeout">API Timeout (seconds)</label>
+                <input type="number" id="api-timeout" value="30" min="5" max="120">
+              </div>
+              <div class="form-group">
+                <label for="refresh-interval">Auto-refresh Interval (seconds)</label>
+                <input type="number" id="refresh-interval" value="5" min="1" max="60">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h3>Logging & Debug</h3>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="debug-mode">
+                <span>Enable debug mode</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="verbose-logging">
+                <span>Verbose API logging</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="save-trade-history">
+                <span>Save trade history locally</span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label for="log-retention">Log Retention (days)</label>
+              <input type="number" id="log-retention" value="30" min="1" max="365">
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h3>Performance</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="max-chart-points">Max Chart Data Points</label>
+                <input type="number" id="max-chart-points" value="100" min="50" max="500">
+              </div>
+              <div class="form-group">
+                <label for="scanner-batch-size">Scanner Batch Size</label>
+                <input type="number" id="scanner-batch-size" value="10" min="5" max="50">
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+
+</html>

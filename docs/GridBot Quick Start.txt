@@ -1,0 +1,105 @@
+═══════════════════════════════════════════════════════════
+   GridBot Chuck - Quick Start Guide
+═══════════════════════════════════════════════════════════
+
+🚀 HOW TO LAUNCH:
+
+   Option 1: Double-click "GridBot Chuck.lnk" (with icon)
+   Option 2: Double-click "GridBot Launcher.bat"
+
+📊 WHAT TO EXPECT:
+
+   1. Interactive menu appears
+   2. Select your option (1-6):
+      [1] Kraken
+      [2] Coinbase
+      [3] KuCoin
+      [4] Binance (may need VPN)
+      [5] Smart Scan - Find Best Pairs ⭐ NEW!
+      [6] Custom Config
+
+   3. Choose options or let Smart Scan decide
+   4. Bot runs and shows results!
+
+⭐ NEW: SMART SCAN FEATURE
+
+   What it does:
+   - Analyzes 20+ trading pairs automatically
+   - Scores each pair for grid trading suitability
+   - Finds top 10 best opportunities
+   - Generates optimized configs automatically
+
+   Smart Scan analyzes:
+   ✓ Volatility (price movement)
+   ✓ Volume (liquidity)
+   ✓ Range-bound behavior (sideways markets)
+   ✓ Trend strength (avoids strong trends)
+
+   How to use:
+   1. Select [5] Smart Scan from menu
+   2. Choose exchange to scan (Kraken, Coinbase, etc.)
+   3. Pick number of pairs (default: 10)
+   4. Wait ~1 minute for analysis
+   5. Select a pair to trade OR run all pairs!
+
+   Example results:
+   Rank 1: BNB/USDT  - Score: 17.4 (Best!)
+   Rank 2: DOGE/USDT - Score: 17.1
+   Rank 3: XRP/USDT  - Score: 16.6
+
+💰 CURRENT CONFIGURATION:
+
+   - Trading Pair: Auto-selected by Smart Scan or manual
+   - Grid Range: Automatically optimized per pair
+   - Initial Balance: $500
+   - Grid Levels: 10
+   - Strategy: Hedged Grid (Geometric spacing)
+   - Timeframe: 1 hour
+   - Test Period: Dec 16-17, 2025
+
+✅ VERIFIED RESULTS:
+
+   Last test showed:
+   - 6 Buy Trades
+   - 4 Sell Trades
+   - ROI: 0.01%
+   - Results export working!
+
+📁 FILES LOCATION:
+
+   Project: C:\Users\splin\Downloads\grid_trading_bot-master\grid_trading_bot-master
+
+   Configs:
+   - Manual: config/config_*.json
+   - Smart Scan: config/scanned_pairs/
+
+   Logs: logs/
+   Results: *.json files in root
+   Guide: MULTI_EXCHANGE_GUIDE.md
+
+🔧 CUSTOMIZATION:
+
+   To modify settings, edit config files:
+   - config_kraken.json
+   - config_coinbase.json
+   - config_kucoin.json
+   - config_binance.json
+
+   Or let Smart Scan create optimized configs for you!
+
+   Change: trading pairs, grid ranges, balance, dates, etc.
+
+📖 FULL DOCUMENTATION:
+
+   See MULTI_EXCHANGE_GUIDE.md in project folder
+
+🎯 NEXT FEATURES COMING:
+
+   - Trend indicators (RSI, MACD, Moving Averages)
+   - Auto-switch pairs based on performance
+   - Real-time market alerts
+
+═══════════════════════════════════════════════════════════
+Ready to find the best trading opportunities!
+Double-click a shortcut to begin! 🎯
+═══════════════════════════════════════════════════════════

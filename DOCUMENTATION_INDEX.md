@@ -147,7 +147,7 @@
 ### 30 Second Version
 ```bash
 # Terminal 1: Start bot
-python main.py --config config/config.json
+
 
 # Terminal 2 or File Explorer: Launch dashboard
 double-click dashboard_launcher.bat
