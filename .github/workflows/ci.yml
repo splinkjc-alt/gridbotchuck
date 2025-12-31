@@ -9,7 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    continue-on-error: true  # Beta: Allow test failures
     strategy:
       matrix:
         python-version: ['3.11', '3.12', '3.13']
@@ -22,9 +21,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Create logs directory
-        run: mkdir -p logs
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -33,11 +29,10 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests/ -v --tb=short --ignore=tests/services/test_backtest_exchange_service.py || true
+          pytest tests/ -v --tb=short
 
   lint:
     runs-on: ubuntu-latest
-    continue-on-error: true  # Beta: Allow lint warnings
     steps:
       - uses: actions/checkout@v4
 
@@ -52,7 +47,7 @@ jobs:
           pip install ruff
 
       - name: Run Ruff linter
-        run: ruff check . --ignore E501 || true
+        run: ruff check . --ignore E501
 
   security:
     runs-on: ubuntu-latest

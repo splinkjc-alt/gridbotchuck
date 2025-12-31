@@ -22,8 +22,11 @@ const SETTINGS_KEYS = {
     'notify-email-trades', 'notify-email-errors', 'notify-email-daily'
   ],
   trading: [
+    'default-strategy-type',
     'default-grid-levels', 'default-spacing', 'default-order-size', 'default-strategy',
-    'default-stop-loss', 'default-take-profit', 'max-position-size', 'max-daily-loss'
+    'default-stop-loss', 'default-take-profit', 'max-position-size', 'max-daily-loss',
+    'ema-fast-period', 'ema-slow-period', 'ema-position-size', 'ema-max-positions',
+    'ema-reserve', 'ema-check-interval'
   ],
   security: [
     'dashboard-password', 'require-confirm-trades', 'ip-whitelist-enabled'
@@ -572,3 +575,162 @@ function showToast(message, type = 'info') {
     toast.classList.add('hidden');
   }, 4000);
 }
+
+// ====== EMA Crossover Strategy Functions ======
+
+// Toggle between Grid and EMA settings visibility
+function toggleStrategySettings(strategyType) {
+  const gridCard = document.getElementById('grid-settings-card');
+  const emaCard = document.getElementById('ema-settings-card');
+
+  if (strategyType === 'ema_crossover') {
+    gridCard.style.display = 'none';
+    emaCard.style.display = 'block';
+  } else {
+    gridCard.style.display = 'block';
+    emaCard.style.display = 'none';
+  }
+
+  // Save the strategy type
+  localStorage.setItem('default-strategy-type', strategyType);
+  markUnsaved();
+}
+
+// Save EMA settings to localStorage
+function saveEMASettings() {
+  const settings = {
+    fastPeriod: document.getElementById('ema-fast-period').value,
+    slowPeriod: document.getElementById('ema-slow-period').value,
+    positionSize: document.getElementById('ema-position-size').value,
+    maxPositions: document.getElementById('ema-max-positions').value,
+    reserve: document.getElementById('ema-reserve').value,
+    checkInterval: document.getElementById('ema-check-interval').value
+  };
+
+  // Validate
+  if (parseInt(settings.fastPeriod) >= parseInt(settings.slowPeriod)) {
+    showToast('Fast EMA must be smaller than Slow EMA', 'error');
+    return;
+  }
+
+  // Save each setting
+  for (const [key, value] of Object.entries(settings)) {
+    localStorage.setItem(`ema-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`, value);
+  }
+
+  localStorage.setItem('default-strategy-type', 'ema_crossover');
+  markSaved();
+  showToast('EMA settings saved!', 'success');
+}
+
+// Load EMA settings on page load
+function loadEMASettings() {
+  const defaults = {
+    'ema-fast-period': '9',
+    'ema-slow-period': '20',
+    'ema-position-size': '20',
+    'ema-max-positions': '2',
+    'ema-reserve': '10',
+    'ema-check-interval': '60'
+  };
+
+  for (const [key, defaultValue] of Object.entries(defaults)) {
+    const el = document.getElementById(key);
+    if (el) {
+      el.value = localStorage.getItem(key) || defaultValue;
+    }
+  }
+
+  // Load strategy type and toggle visibility
+  const strategyType = localStorage.getItem('default-strategy-type') || 'grid';
+  const strategySelect = document.getElementById('default-strategy-type');
+  if (strategySelect) {
+    strategySelect.value = strategyType;
+    toggleStrategySettings(strategyType);
+  }
+}
+
+// Launch EMA Bot with current settings
+function launchEMABot() {
+  const settings = {
+    fastPeriod: document.getElementById('ema-fast-period').value,
+    slowPeriod: document.getElementById('ema-slow-period').value,
+    positionSize: document.getElementById('ema-position-size').value,
+    maxPositions: document.getElementById('ema-max-positions').value,
+    reserve: document.getElementById('ema-reserve').value,
+    checkInterval: document.getElementById('ema-check-interval').value
+  };
+
+  // Validate
+  if (parseInt(settings.fastPeriod) >= parseInt(settings.slowPeriod)) {
+    showToast('Fast EMA must be smaller than Slow EMA', 'error');
+    return;
+  }
+
+  // Get active exchange credentials
+  const exchange = getActiveExchange();
+  if (!exchange) {
+    showToast('Please configure an exchange first!', 'error');
+    return;
+  }
+
+  // Save settings before launching
+  saveEMASettings();
+
+  // Create launch configuration
+  const launchConfig = {
+    strategy: 'ema_crossover',
+    exchange: exchange.name,
+    emaFast: parseInt(settings.fastPeriod),
+    emaSlow: parseInt(settings.slowPeriod),
+    positionSize: parseFloat(settings.positionSize) / 100,
+    maxPositions: parseInt(settings.maxPositions),
+    reserve: parseFloat(settings.reserve) / 100,
+    checkInterval: parseInt(settings.checkInterval)
+  };
+
+  // Store for the bot to pick up
+  localStorage.setItem('ema-bot-config', JSON.stringify(launchConfig));
+
+  // Try to launch via API
+  fetch(`${API_BASE_URL}/api/strategy/ema/launch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(launchConfig)
+  })
+    .then(response => {
+      if (response.ok) {
+        showToast('EMA Bot launched successfully!', 'success');
+      } else {
+        // API might not be running - show manual instructions
+        showToast('EMA settings saved. Run START_BOT.bat from portable folder to launch.', 'info');
+      }
+    })
+    .catch(err => {
+      // API not available - show manual instructions
+      showToast('EMA settings saved. Run START_BOT.bat from portable folder to launch.', 'info');
+      console.log('EMA Bot config ready:', launchConfig);
+    });
+}
+
+// Get EMA settings for external use
+function getEMASettings() {
+  return {
+    fastPeriod: parseInt(localStorage.getItem('ema-fast-period')) || 9,
+    slowPeriod: parseInt(localStorage.getItem('ema-slow-period')) || 20,
+    positionSize: parseFloat(localStorage.getItem('ema-position-size')) || 20,
+    maxPositions: parseInt(localStorage.getItem('ema-max-positions')) || 2,
+    reserve: parseFloat(localStorage.getItem('ema-reserve')) || 10,
+    checkInterval: parseInt(localStorage.getItem('ema-check-interval')) || 60
+  };
+}
+
+// Add to page load initialization
+const originalDOMContentLoaded = document.addEventListener;
+document.addEventListener('DOMContentLoaded', () => {
+  loadAllSettings();
+  setupNavigation();
+  setupChangeTracking();
+  updateExchangeStatuses();
+  loadEMASettings();  // Add EMA loading
+});

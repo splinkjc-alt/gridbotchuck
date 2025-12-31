@@ -1,22 +1,27 @@
 # Grid Trading Bot - Session Status
+
 **Last Updated:** December 20, 2025, 2:58 PM EST
 
 ## 🎯 Current State
 
 ### Exchange & Account
+
 - **Exchange:** Kraken (LIVE mode)
 - **Actual Balance:** ~$157 USD + ~0.43 UNI
 - **Trading Pair:** UNI/USD @ ~$6.25
 - **Grid Range:** $5.96 - $6.58
 
 ### Active Orders
+
 - **Buy Limit Order:** 5.12 UNI @ $5.96 (~$30.50 reserved)
 - **Available USD:** ~$127 (after reservation)
 
 ## ✅ Features Implemented This Session (Dec 20)
 
 ### 1. Position Sizing (NEW)
+
 **Config:** `config.json` → `risk_management.position_sizing`
+
 ```json
 {
   "buy_percent_of_total": 20.0,    // Use 20% of portfolio per buy
@@ -26,6 +31,7 @@
 ```
 
 **Files Modified:**
+
 - `core/order_handling/order_manager.py` - Added `config_manager` param, `_is_below_min_reserve()` method
 - `core/grid_management/grid_manager.py` - Modified `get_order_size_for_grid_level()` to use buy_percent
 - `core/bot_management/grid_trading_bot.py` - Pass config_manager to OrderManager
@@ -33,12 +39,14 @@
 - `tests/order_handling/test_order_manager.py` - Updated test fixture
 
 ### 2. Auto Pair Selection (Previously Working)
+
 - Scans top gainers on startup
 - Analyzes with MarketAnalyzer (RSI, trend, score)
 - Picks highest scoring bullish pair
 - Updates balance_tracker.base_currency on switch
 
 ### 3. Balance Tracker Fix (Previously Fixed)
+
 - Fixed: balance_tracker.base_currency now updates when pair switches
 - Location: `grid_trading_bot.py` lines ~274-280
 
@@ -120,6 +128,7 @@ Get-NetTCPConnection -LocalPort 8080 | ForEach-Object { Stop-Process -Id $_.Owni
 ## Previous Session (Dec 19) - Settings Page
 
 ### What Was Completed ✅
+
 | `web/dashboard/styles.css` | Added menu-item link styling |
 | `web/dashboard/settings.html` | **NEW** - Complete settings page |
 | `web/dashboard/settings.css` | **NEW** - Settings page styling |
@@ -130,7 +139,7 @@ Get-NetTCPConnection -LocalPort 8080 | ForEach-Object { Stop-Process -Id $_.Owni
 
 1. **Check if bot is running**: Look for process on port 8080
 2. **If not running**: `python main.py --config config/config.json`
-3. **Test settings page**: Navigate to http://localhost:8080/settings.html
+3. **Test settings page**: Navigate to <http://localhost:8080/settings.html>
 4. **If still 404**: Check bot_api_server.py for route registration issues
 
 ### Quick Commands

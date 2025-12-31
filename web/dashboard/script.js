@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadScannerConfig();
   loadAccountSettings();
   initBacktestDates();
+  loadStrategyType();  // Load saved strategy type
 
   // Close account menu when clicking outside
   document.addEventListener('click', (e) => {
@@ -209,6 +210,73 @@ async function changeTradingMode(mode) {
   } catch (error) {
     console.error('Error changing trading mode:', error);
     addLog(`Error changing mode: ${error.message}`, 'error');
+  }
+}
+
+// Change trading strategy type (Grid vs EMA Crossover)
+async function changeStrategyType(strategy) {
+  try {
+    const strategyNames = {
+      'grid': 'Grid Trading',
+      'ema_crossover': 'EMA Crossover'
+    };
+
+    addLog(`Switching to ${strategyNames[strategy]} strategy...`, 'info');
+
+    // Save to localStorage
+    localStorage.setItem('default-strategy-type', strategy);
+
+    // Update strategy display in UI
+    const strategyDisplay = document.getElementById('strategy-type');
+    if (strategyDisplay) {
+      strategyDisplay.textContent = strategyNames[strategy];
+    }
+
+    // Try to notify backend
+    try {
+      const response = await fetch(`${API_BASE_URL}/config/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          strategy: { type: strategy }
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        addLog(`Strategy changed to ${strategyNames[strategy]}. Restart bot to apply.`, 'success');
+      }
+    } catch (apiError) {
+      // API might not support this yet - that's fine
+      addLog(`Strategy set to ${strategyNames[strategy]}. Settings saved locally.`, 'success');
+    }
+
+    showNotification(`Strategy: ${strategyNames[strategy]}`, 'success');
+
+    // If EMA selected, show hint about settings
+    if (strategy === 'ema_crossover') {
+      addLog('Configure EMA periods in Settings > Trading Defaults', 'info');
+    }
+
+  } catch (error) {
+    console.error('Error changing strategy:', error);
+    addLog(`Error changing strategy: ${error.message}`, 'error');
+  }
+}
+
+// Load saved strategy type on page load
+function loadStrategyType() {
+  const savedStrategy = localStorage.getItem('default-strategy-type') || 'grid';
+  const strategySelect = document.getElementById('strategy-type-select');
+  if (strategySelect) {
+    strategySelect.value = savedStrategy;
+  }
+
+  // Update display
+  const strategyDisplay = document.getElementById('strategy-type');
+  if (strategyDisplay) {
+    const strategyNames = { 'grid': 'Grid Trading', 'ema_crossover': 'EMA Crossover' };
+    strategyDisplay.textContent = strategyNames[savedStrategy] || 'Grid Trading';
   }
 }
 

@@ -533,7 +533,23 @@
           <h2>📈 Trading Defaults</h2>
           <p class="section-description">Set default values for new trading configurations.</p>
 
+          <!-- Strategy Type Selector -->
           <div class="settings-card">
+            <h3>Strategy Type</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="default-strategy-type">Active Strategy</label>
+                <select id="default-strategy-type" onchange="toggleStrategySettings(this.value)">
+                  <option value="grid">📊 Grid Trading</option>
+                  <option value="ema_crossover">📈 EMA Crossover</option>
+                </select>
+                <span class="form-hint">Grid uses fixed price levels. EMA uses moving average signals.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grid Settings (shown when Grid strategy selected) -->
+          <div class="settings-card" id="grid-settings-card">
             <h3>Grid Settings</h3>
             <div class="form-row">
               <div class="form-group">
@@ -560,6 +576,53 @@
                   <option value="HEDGED_GRID">Hedged Grid</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          <!-- EMA Crossover Settings (shown when EMA strategy selected) -->
+          <div class="settings-card" id="ema-settings-card" style="display: none;">
+            <h3>📈 EMA Crossover Settings</h3>
+            <p class="form-hint" style="margin-bottom: 15px;">Buy when fast EMA crosses above slow EMA with widening
+              gap. Sell when gap narrows.</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="ema-fast-period">Fast EMA Period</label>
+                <input type="number" id="ema-fast-period" value="9" min="3" max="50">
+                <span class="form-hint">Shorter period (e.g., 9, 12) - more responsive</span>
+              </div>
+              <div class="form-group">
+                <label for="ema-slow-period">Slow EMA Period</label>
+                <input type="number" id="ema-slow-period" value="20" min="10" max="200">
+                <span class="form-hint">Longer period (e.g., 20, 26) - smoother trend</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="ema-position-size">Position Size (%)</label>
+                <input type="number" id="ema-position-size" value="20" min="5" max="50" step="5">
+                <span class="form-hint">% of balance per trade</span>
+              </div>
+              <div class="form-group">
+                <label for="ema-max-positions">Max Positions</label>
+                <input type="number" id="ema-max-positions" value="2" min="1" max="10">
+                <span class="form-hint">Maximum concurrent positions</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="ema-reserve">Cash Reserve (%)</label>
+                <input type="number" id="ema-reserve" value="10" min="0" max="50" step="5">
+                <span class="form-hint">Keep this % of balance as cash reserve</span>
+              </div>
+              <div class="form-group">
+                <label for="ema-check-interval">Check Interval (sec)</label>
+                <input type="number" id="ema-check-interval" value="60" min="30" max="300" step="30">
+                <span class="form-hint">How often to check for signals</span>
+              </div>
+            </div>
+            <div class="form-actions" style="margin-top: 15px;">
+              <button class="btn btn-success" onclick="saveEMASettings()">💾 Save EMA Settings</button>
+              <button class="btn btn-info" onclick="launchEMABot()">🚀 Launch EMA Bot</button>
             </div>
           </div>
 

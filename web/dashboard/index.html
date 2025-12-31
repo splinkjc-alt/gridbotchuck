@@ -80,6 +80,14 @@
                   <option value="backtest">📊 Backtest</option>
                 </select>
               </div>
+              <div class="menu-section">
+                <label class="menu-label">Strategy Type</label>
+                <select id="strategy-type-select" class="exchange-select" onchange="changeStrategyType(this.value)"
+                  data-tooltip="Grid = fixed price levels, EMA = momentum crossover signals">
+                  <option value="grid">📊 Grid Trading</option>
+                  <option value="ema_crossover">📈 EMA Crossover</option>
+                </select>
+              </div>
               <div class="menu-divider"></div>
               <a href="settings.html" class="menu-item">
                 <span class="menu-icon">⚙️</span>

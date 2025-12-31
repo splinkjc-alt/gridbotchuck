@@ -1,0 +1,9 @@
+{
+  "ema_fast": 9,
+  "ema_slow": 20,
+  "max_positions": 2,
+  "position_size_pct": 20.0,
+  "min_reserve_pct": 10.0,
+  "check_interval": 60,
+  "_comment": "Adjust EMA periods above. Fast should be smaller than Slow."
+}
