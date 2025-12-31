@@ -200,13 +200,12 @@ class BacktestExchangeService(ExchangeInterface):
         pair: str,
         timeframe: str = "1m",
         limit: int = 100,
-    ) -> list[list]:
+    ) -> pd.DataFrame:
         raise NotImplementedError("fetch_ohlcv_simple is not used in backtesting")
 
     async def get_available_pairs(
         self,
-        base_currency: str | None = None,
-        quote_currency: str | None = None,
+        quote_currency: str = "USD",
     ) -> list[str]:
         raise NotImplementedError("get_available_pairs is not used in backtesting")
 
