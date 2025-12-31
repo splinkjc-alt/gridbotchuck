@@ -2,7 +2,7 @@
   "exchange": {
     "name": "kraken",
     "trading_fee": 0.0026,
-    "trading_mode": "paper"
+    "trading_mode": "paper_trading"
   },
   "pair": {
     "base_currency": "BTC",
@@ -41,5 +41,9 @@
       "api_key": "YOUR_API_KEY",
       "api_secret": "YOUR_SECRET"
     }
+  },
+  "logging": {
+    "log_level": "INFO",
+    "log_to_file": true
   }
 }
