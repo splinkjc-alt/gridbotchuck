@@ -200,8 +200,9 @@ class GridTradingBot:
             quote_currency = scanner_config.get("quote_currency", "USD")
             min_price = scanner_config.get("min_price", 1.0)
             max_price = scanner_config.get("max_price", 20.0)
+            min_volume_24h = scanner_config.get("min_volume_24h", 500000)  # Default $500k minimum volume
             timeframe = scanner_config.get("timeframe", "15m")
-            
+
             # First try to get top gainers dynamically
             pairs = []
             if hasattr(self.exchange_service, "get_top_gainers"):
@@ -213,23 +214,24 @@ class GridTradingBot:
                     limit=10,
                 )
                 pairs = [g["pair"] for g in top_gainers]
-            
+
             # Fallback to candidate_pairs from config
             if not pairs:
                 pairs = scanner_config.get("candidate_pairs", [])
-            
+
             if not pairs:
                 self.logger.warning("[AUTO-SELECT] No pairs to scan, using configured pair")
                 return
-            
-            self.logger.info(f"[AUTO-SELECT] Analyzing {len(pairs)} pairs: {pairs[:5]}...")
-            
-            # Run analysis
+
+            self.logger.info(f"[AUTO-SELECT] Analyzing {len(pairs)} pairs (min volume: ${min_volume_24h:,.0f})...")
+
+            # Run analysis with volume filter
             results = await analyzer.find_best_trading_pairs(
                 candidate_pairs=pairs,
                 timeframe=timeframe,
                 min_price=min_price,
                 max_price=max_price,
+                min_volume_threshold=min_volume_24h,  # Pass volume filter for active pairs
             )
             
             if not results:

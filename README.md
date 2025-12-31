@@ -1,377 +1,566 @@
-# GridBot Pro
+# GridBot Chuck - Multi-Strategy Trading Bot Suite
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/272a2527-5258-4fc8-9c37-4da01cfe03fc/deploy-status)](https://app.netlify.com/projects/gridbotchuck/deploys)
-[![CI](https://github.com/splinkjc-alt/gridbotchuck/actions/workflows/ci.yml/badge.svg)](https://github.com/splinkjc-alt/gridbotchuck/actions)
+**Automated trading across crypto and stocks with proven strategies and full transparency.**
 
-Professional Grid Trading Bot for cryptocurrency markets. Automate your trading with advanced grid algorithms.
+[![Live Trading](https://img.shields.io/badge/Live%20Trading-Active-success)](https://github.com/yourusername/gridbot-chuck)
+[![Paper Trading](https://img.shields.io/badge/Paper%20Trading-Supported-blue)](https://github.com/yourusername/gridbot-chuck)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-🌐 **Website:** [gridbotchuck.netlify.app](https://gridbotchuck.netlify.app)
+---
 
-## 📚 Table of Contents
+## 🚀 What is GridBot Chuck?
 
-- [Grid Trading Bot](#grid-trading-bot)
-- [Features](#features)
-- [🤔 What is Grid Trading?](#-what-is-grid-trading)
-  - [🔢 Arithmetic Grid Trading](#-arithmetic-grid-trading)
-  - [📐 Geometric Grid Trading](#-geometric-grid-trading)
-  - [📅 When to Use Each Type?](#-when-to-use-each-type)
-  - [🆚 Simple Grid vs. Hedged Grid Strategies](#-simple-grid-vs-hedged-grid-strategies)
-- [🖥️ Installation](#️-installation)
-  - [Prerequisites](#prerequisites)
-  - [Setting Up the Environment](#setting-up-the-environment)
-- [📋 Configuration](#-configuration)
-  - [Example Configuration File](#example-configuration-file)
-  - [Parameters](#parameters)
-  - [Environment Variables (.env)](#environment-variables-env)
-- [🏃 Running the Bot](#-running-the-bot)
-  - [Basic Usage](#basic-usage)
-  - [Multiple Configurations](#multiple-configurations)
-  - [Saving Performance Results](#saving-performance-results)
-  - [Disabling Plots](#disabling-plots)
-  - [Combining Options](#combining-options)
-  - [Available Command-Line Arguments](#available-command-line-arguments)
-- [📊 Docker Compose for Logs Management](#-docker-compose-for-logs-management)
-  - [Steps to Set Up](#steps-to-set-up)
-- [🤝 Contributing](#-contributing)
-  - [Reporting Issues](#reporting-issues)
-- [💸 Donations](#-donations)
-- [📜 License](#-license)
-- [🚨 Disclaimer](#-disclaimer)
+GridBot Chuck is a comprehensive trading bot suite that runs **multiple proven strategies simultaneously** across crypto and stock markets. Built with transparency and risk management at its core.
 
-## Features
+**Real Performance (Day 1 - Dec 30, 2025):**
+- GridBot Live Trading: **+71.6% in 8.5 hours** ($157 → $269.58)
+- Live proof: Verified Kraken transaction history
+- Strategy: Hedged grid trading on CC/USD
 
-- **Backtesting**: Simulate your grid trading strategy using historical data.
-- **Live Trading**: Execute trades on live markets using real funds, supported by robust configurations and risk management.
-- **Paper Trading**: Test strategies in a simulated live market environment without risking actual funds.
-- **Multiple Grid Trading Strategies**: Implement different grid trading strategies to match market conditions.
-- **Customizable Configurations**: Use a JSON file to define grid levels, strategies, and risk settings.
-- **Support for Multiple Exchanges**: Seamless integration with multiple cryptocurrency exchanges via the CCXT library.
-- **Take Profit & Stop Loss**: Safeguard your investments with configurable take profit and stop loss thresholds.
-- **Performance Metrics**: Gain insights with comprehensive metrics like ROI, max drawdown, run-up, and more.
-- **HealthCheck**: Continuously monitor the bot’s performance and system resource usage to ensure stability.
-- **CLI BotController**: Control and interact with the bot in real time using intuitive commands.
-- **Logging with Grafana**: Centralized logging system for monitoring bot activity and debugging, enhanced with visual dashboards.
+---
 
-## 🤔 What is Grid Trading?
+## 🎯 Features
 
-Grid trading is a trading strategy that places buy and sell orders at predefined intervals above and below a set price. The goal is to capitalize on market volatility by buying low and selling high at different price points. There are two primary types of grid trading: **arithmetic** and **geometric**.
+### Multi-Strategy Trading
+- **Grid Trading Bot** - Profit from sideways/volatile markets (hedged grid strategy)
+- **Triple-Threat Trader** - Combines 3 strategies: Mean Reversion + Momentum + Breakout
+- **Stock Trading Assistant** - Mean reversion scanner for US stocks (RSI-based)
 
-### 🔢 **Arithmetic Grid Trading**
+### Multi-Exchange Support
+- ✅ Kraken (crypto + live grid trading)
+- ✅ Coinbase Advanced Trading (crypto)
+- ✅ Alpaca (US stocks - paper trading)
+- ✅ Yahoo Finance (free stock market data)
 
-In an arithmetic grid, the grid levels (price intervals) are spaced **equally**. The distance between each buy and sell order is constant, providing a more straightforward strategy for fluctuating markets.
+### Risk Management
+- Position sizing (% of capital per trade)
+- Stop losses (configurable)
+- Maximum concurrent trades
+- Portfolio-level risk controls
+- Circuit breakers
 
-#### **Example**
+### Trading Modes
+- **Paper Trading** - Test with virtual capital ($3,000 crypto, $25,000 stocks)
+- **Live Trading** - Real money on Kraken (grid trading)
 
-Suppose the price of a cryptocurrency is $3000, and you set up a grid with the following parameters:
+### Monitoring & Analytics
+- Real-time WebSocket price feeds
+- Health checks (bot status, system resources)
+- Trade history persistence (SQLite)
+- Performance analytics
+- Activity monitoring (auto-switching for stuck markets)
 
-- **Grid levels**: $2900, $2950, $3000, $3050, $3100
-- **Buy orders**: Set at $2900 and $2950
-- **Sell orders**: Set at $3050 and $3100
+---
 
-As the price fluctuates, the bot will automatically execute buy orders as the price decreases and sell orders as the price increases. This method profits from small, predictable price fluctuations, as the intervals between buy/sell orders are consistent (in this case, $50).
+## 📊 Trading Strategies Explained
 
-### 📐 **Geometric Grid Trading**
+### 1. Grid Trading (GridBot Chuck)
+**Best for:** Sideways/ranging markets with volatility
 
-In a geometric grid, the grid levels are spaced **proportionally** or by a percentage. The intervals between price levels increase or decrease exponentially based on a set percentage, making this grid type more suited for assets with higher volatility.
+**How it works:**
+1. Sets up buy orders at lower price levels
+2. Sets up sell orders at higher price levels
+3. Profits from each price oscillation
+4. Hedged approach protects against trends
 
-#### **Simple Example**
+**Example:**
+- Price range: $0.1367 - $0.1511
+- Grid levels: 5 levels
+- Each buy→sell cycle: ~2-4% profit
+- Compounds gains through multiple cycles
 
-Suppose the price of a cryptocurrency is $3000, and you set up a geometric grid with a 5% spacing between levels. The price intervals will not be equally spaced but will grow or shrink based on the percentage.
+**Real Result:** +71.6% in 8.5 hours on CC/USD
 
-- **Grid levels**: $2700, $2835, $2975, $3125, $3280
-- **Buy orders**: Set at $2700 and $2835
-- **Sell orders**: Set at $3125 and $3280
+### 2. Triple-Threat Trader
+**Best for:** Diverse market conditions
 
-As the price fluctuates, buy orders are executed at lower levels and sell orders at higher levels, but the grid is proportional. This strategy is better for markets that experience exponential price movements.
+**Combines 3 strategies:**
 
-### 📅 **When to Use Each Type?**
+**A. Mean Reversion (40% weight)**
+- Buys oversold assets (RSI < 30-40)
+- Quick 3-4% bounces
+- Tight 3% stop losses
 
-- **Arithmetic grids** are ideal for assets with more stable, linear price fluctuations.
-- **Geometric grids** are better for assets with significant, unpredictable volatility, as they adapt more flexibly to market swings.
+**B. Momentum (30% weight)**
+- Catches trending moves (RSI > 60)
+- Rides 8%+ moves
+- Trailing stops
 
-### 🆚 Simple Grid vs. Hedged Grid Strategies
+**C. Breakout (30% weight)**
+- Detects range breakouts
+- High volume confirmation
+- Risk/reward: 1:2.7
 
-- **Simple Grid**: Independent buy and sell grids. Profits from each grid level are standalone.
-- **Hedged Grid**: Pairs buy and sell levels dynamically, balancing risk and reward for higher volatility markets.
+**Real Setup:**
+- Scans 14 crypto pairs every 60 seconds
+- Max 7 concurrent trades
+- $3,000 virtual capital
+- 2% risk per trade
 
-## 🖥️ Installation
+### 3. Stock Trading Assistant
+**Best for:** US market day trading (9:30 AM - 4:00 PM ET)
+
+**Strategy:**
+- Scans 19 high-volatility stocks
+- RSI + Bollinger Bands analysis
+- Mean reversion score (0-100)
+- Targets 4% bounces with 3% stops
+
+**Watchlist:**
+- Tech: TSLA, NVDA, AMD, PLTR, HOOD
+- Leveraged ETFs: TQQQ, SOXL, UPRO, SPXL
+- Large caps: AAPL, MSFT, META, GOOGL, AMZN
+
+---
+
+## 🛠️ Tech Stack
+
+**Core:**
+- Python 3.10+
+- asyncio (async/await for concurrent operations)
+- SQLite (trade history persistence)
+
+**Trading:**
+- ccxt (unified exchange API)
+- alpaca-py (stock trading API)
+- yfinance (free stock market data)
+
+**Data Analysis:**
+- pandas (data manipulation)
+- numpy (numerical computations)
+- Technical indicators (RSI, Bollinger Bands, etc.)
+
+**Monitoring:**
+- WebSockets (real-time price feeds)
+- Health checks (bot + system resources)
+- Event-driven architecture (EventBus)
+
+---
+
+## 📁 Project Structure
+
+```
+grid_trading_bot-master/
+├── main.py                          # GridBot Chuck launcher
+├── triple_threat_trader.py          # Kraken Triple-Threat bot
+├── triple_threat_trader_coinbase.py # Coinbase Triple-Threat bot
+├── stock_trading_assistant.py       # Stock mean reversion scanner
+│
+├── config/
+│   ├── config.json                  # GridBot configuration
+│   ├── config_coinbase.json         # Coinbase config
+│   └── config_small_capital_multi_pair.json
+│
+├── core/
+│   ├── bot_management/
+│   │   ├── grid_trading_bot.py
+│   │   ├── activity_monitor.py      # Auto-switching for stuck markets
+│   │   └── enhanced_multi_pair_manager.py
+│   │
+│   ├── order_handling/
+│   │   ├── order_manager.py
+│   │   ├── enhanced_order_manager.py
+│   │   └── balance_tracker.py
+│   │
+│   ├── risk_management/
+│   │   ├── circuit_breaker.py       # Auto-stop on cascading losses
+│   │   └── rate_limiter.py          # Prevent API bans
+│   │
+│   ├── persistence/
+│   │   └── order_repository.py      # SQLite database
+│   │
+│   └── validation/
+│       └── enhanced_order_validator.py
+│
+├── strategies/
+│   ├── pair_performance_monitor.py  # Multi-pair switching logic
+│   └── grid_trading_strategy.py
+│
+├── .env                             # API keys (DO NOT COMMIT)
+├── requirements.txt                 # Python dependencies
+└── README.md                        # This file
+```
+
+---
+
+## 🚦 Quick Start
 
 ### Prerequisites
+- Python 3.10 or higher
+- pip (Python package manager)
+- API keys from supported exchanges
 
-This project leverages [uv](https://github.com/astral-sh/uv) for managing virtual environments and dependencies. Below, you’ll find instructions for getting started with uv, along with an alternative approach using **venv**. While not covered in detail here, you can also easily set up the project using **Poetry**.
+### 1. Clone Repository
+```bash
+git clone https://github.com/yourusername/gridbot-chuck.git
+cd gridbot-chuck
+```
 
-### Setting Up the Environment
+### 2. Install Dependencies
+```bash
+# Create virtual environment
+python -m venv .venv
 
-#### Using `uv` (Recommended)
+# Activate virtual environment
+# Windows:
+.venv\Scripts\activate
+# Mac/Linux:
+source .venv/bin/activate
 
-1. **Install `uv` (if not already installed)**
-   Ensure `uv` is installed on your system. If not, install it with `pip`:
+# Install packages
+pip install -r requirements.txt
+```
 
-  ```sh
-  pip install uv
-  ```
+### 3. Configure API Keys
+Create a `.env` file in the project root:
 
-2. **Clone the repository**:
+```env
+# Kraken (for crypto trading)
+EXCHANGE_API_KEY=your_kraken_api_key
+EXCHANGE_SECRET_KEY=your_kraken_secret_key
 
-  ```sh
-  git clone https://github.com/jordantete/grid_trading_bot.git
-  cd grid_trading_bot
-  ```
+# Coinbase Advanced Trading (for crypto)
+COINBASE_API_KEY=your_coinbase_api_key
+COINBASE_SECRET_KEY=your_coinbase_private_key
 
-3. **Install Dependencies and Set Up Virtual Environment**:
-  Run the following command to automatically set up a virtual environment and install all dependencies defined in `pyproject.toml`:
+# Alpaca (for stock trading - paper trading is free!)
+ALPACA_API_KEY=your_alpaca_api_key
+ALPACA_SECRET_KEY=your_alpaca_secret_key
+```
 
-  ```sh
-   uv sync --all-extras --dev
-  ```
+**Get API Keys:**
+- Kraken: https://www.kraken.com/u/security/api
+- Coinbase: https://www.coinbase.com/settings/api
+- Alpaca (free paper trading): https://app.alpaca.markets/signup
 
-#### Using `venv` and `pip` (Alternative)
-
-1. **Clone the repository**:
-
-  ```sh
-  git clone https://github.com/jordantete/grid_trading_bot.git
-  cd grid_trading_bot
-  ```
-
-2. **Set up a virtual environment**:
-  Create and activate a virtual environment:
-
-  ```sh
-  python3 -m venv .venv
-  source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-  ```
-
-2. **Install dependencies**:
-  Use pip to install the dependencies listed in `pyproject.toml`:
-
-  ```sh
-  pip install -r requirements.txt
-  ```
-
-  Note: You may need to generate a requirements.txt file from pyproject.toml if it’s not already present. You can use a tool like pipreqs or manually extract dependencies.
-
-## 📋 Configuration
-
-The bot is configured via a JSON file `config/config.json` to suit your trading needs, alongside a `.env` file to securely store sensitive credentials and environment variables. Below is an example configuration file and a breakdown of all parameters.
-
-### **Example Configuration File**
+### 4. Configure Bot Settings
+Edit `config/config.json` for GridBot settings:
 
 ```json
 {
-  "exchange": {
-    "name": "binance",
-    "trading_fee": 0.001,
-    "trading_mode": "backtest"
-  },
-  "pair": {
-    "base_currency": "SOL",
-    "quote_currency": "USD"
-  },
-  "trading_settings": {
-    "timeframe": "1m",
-    "period": {
-      "start_date": "2024-08-01T00:00:00Z",
-      "end_date": "2024-10-20T00:00:00Z"
-    },
-    "initial_balance": 10000,
-    "historical_data_file": "data/SOL_usd/2024/1m.csv"
-  },
-  "grid_strategy": {
-    "type": "simple_grid",
-    "spacing": "geometric",
-    "num_grids": 8,
-    "range": {
-      "top": 200,
-      "bottom": 250
+  "exchange": "kraken",
+  "trading_mode": "paper_trading",  // Change to "live" for real money
+  "pair": "CC/USD",
+  "grid_levels": 5,
+  "grid_range_percent": [0.03, 0.06],
+  "initial_balance": 157.0
+}
+```
+
+### 5. Run Bots
+
+**GridBot Chuck (Grid Trading):**
+```bash
+python main.py --config config/config.json
+```
+
+**Triple-Threat Trader (Kraken):**
+```bash
+python triple_threat_trader.py
+```
+
+**Triple-Threat Trader (Coinbase):**
+```bash
+python triple_threat_trader_coinbase.py
+```
+
+**Stock Trading Assistant:**
+```bash
+python stock_trading_assistant.py
+```
+
+---
+
+## ⚙️ Configuration
+
+### Grid Trading Settings
+```json
+{
+  "grid_levels": 5,              // Number of grid levels
+  "grid_spacing": "geometric",   // "geometric" or "arithmetic"
+  "grid_range_percent": [0.03, 0.06],  // Price range around current price
+  "max_pairs": 2,                // Multi-pair trading
+  "auto_select": true,           // Auto-select best pairs
+  "activity_monitor": {
+    "enabled": true,
+    "check_interval_minutes": 10,
+    "stale_threshold_periods": 2,
+    "stagnation_exit": {
+      "enabled": true,
+      "max_minutes": 45,
+      "min_movement_percent": 0.3
     }
-  },
-  "risk_management": {
-    "take_profit": {
-      "enabled": false,
-      "threshold": 300
-    },
-    "stop_loss": {
-      "enabled": false,
-      "threshold": 150
-    }
-  },
-  "logging": {
-    "log_level": "INFO",
-    "log_to_file": true
   }
 }
 ```
 
-### **Parameters**
+### Triple-Threat Settings
+```python
+# In triple_threat_trader.py
+self.mean_reversion_threshold = 65.0  # Mean reversion score threshold
+self.momentum_threshold = 65.0        # Momentum score threshold
+self.breakout_threshold = 70.0        # Breakout score threshold
 
-- **exchange**: Defines the exchange and trading fee to be used.
-  - **name**: The name of the exchange (e.g., binance).
-  - **trading_fee**: The trading fee should be in decimal format (e.g., 0.001 for 0.1%).
-  - **trading_mode**: The trading mode of operation (backtest, live or paper trading).
-
-- **pair**: Specifies the trading pair.
-  - **base_currency**: The base currency (e.g., ETH).
-  - **quote_currency**: The quote currency (e.g., usd).
-
-- **trading_settings**: General trading settings.
-  - **timeframe**: Time interval for the data (e.g., `1m` for one minute).
-  - **period**: The start and end dates for the backtest or trading period.
-    - **start_date**: The start date of the trading or backtest period.
-    - **end_date**: The end date of the trading or backtest period.
-  - **initial_balance**: Starting balance for the bot.
-  - **historical_data_file**: Path to a local historical data file for offline testing (optional).
-
-- **grid_strategy**: Defines the grid trading parameters.
-  - **type**: Type of grid strategy:
-    - **simple_grid**: Independent buy/sell levels.
-    - **hedged_grid**: Dynamically paired buy/sell levels for risk balancing.
-  - **spacing**: Grid spacing type:
-    - **arithmetic**: Equal price intervals.
-    - **geometric**: Proportional price intervals based on percentage.
-  - **num_grids**: The total number of grid levels.
-  - **range**: Defines the price range of the grid.
-    - **top**: The upper price limit of the grid.
-    - **bottom**: The lower price limit of the grid.
-
-- **risk_management**: Configurations for risk management.
-  - **take_profit**: Settings for taking profit.
-    - **enabled**: Whether the take profit is active.
-    - **threshold**: The price at which to take profit.
-  - **stop_loss**: Settings for stopping loss.
-    - **enabled**: Whether the stop loss is active.
-    - **threshold**: The price at which to stop loss.
-
-- **logging**: Configures logging settings.
-  - **log_level**: The logging level (e.g., `INFO`, `DEBUG`).
-  - **log_to_file**: Enables logging to a file.
-
-### **Environment Variables (.env)**
-
-The `.env` file securely stores sensitive data like API keys and credentials. Below is an example:
-
-```
-# Exchange API credentials
-EXCHANGE_API_KEY=YourExchangeAPIKeyHere
-EXCHANGE_SECRET_KEY=YourExchangeSecretKeyHere
-
-# Notification URLs for Apprise
-APPRISE_NOTIFICATION_URLS=
-
-# Grafana Admin Access
-GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=YourGrafanaPasswordHere
+self.pairs = [
+    "XRP/USD", "ADA/USD", "DOGE/USD", "DOT/USD",
+    "LINK/USD", "ATOM/USD", "UNI/USD", "AVAX/USD",
+    "FIL/USD", "NEAR/USD", "APT/USD", "ARB/USD",
+    "OP/USD", "SOL/USD"
+]
 ```
 
-**Environment Variables Breakdown**
+### Stock Bot Settings
+```python
+# In stock_trading_assistant.py
+self.threshold = 60.0  # Mean reversion score threshold
 
-- `EXCHANGE_API_KEY`: Your API key for the exchange.
-- `EXCHANGE_SECRET_KEY`: Your secret key for the exchange.
-- `APPRISE_NOTIFICATION_URLS`: URLs for notifications (e.g., Telegram bot, Discord Server). For detailed setup instructions, visit the [Apprise GitHub repository](https://github.com/caronc/apprise).
-- `GRAFANA_ADMIN_USER`: Admin username for Grafana.
-- `GRAFANA_ADMIN_PASSWORD`: Admin password for Grafana.
+self.watchlist = [
+    "TSLA", "NVDA", "AMD", "PLTR", "HOOD",
+    "TQQQ", "SOXL", "UPRO", "SPXL",
+    "AAPL", "MSFT", "META", "GOOGL", "AMZN"
+]
+```
 
-## 🏃 Running the Bot
+---
 
-To run the bot, use the following command:
+## 📈 Performance Tracking
 
-> **Note:** If you're using `uv` to manage your virtual environment, make sure to prefix the command with `uv run` to ensure it runs within the environment.
+### Real-Time Monitoring
+Each bot logs performance updates:
 
-### Basic Usage
+```
+GridBot Chuck - Status Update
+CC/USD @ $0.1482
+Balance: $32.54 + 173.85 CC
+Portfolio Value: $269.58
+Profit: +$112.51 (+71.6%)
+```
 
-  ```sh
-  uv run python main.py --config config/config.json
-  ```
+### Trade History
+All trades stored in SQLite database:
+- Entry/exit prices
+- P&L per trade
+- Strategy used
+- Timestamps
+- Full audit trail
 
-### Multiple Configurations
+### Export Data
+```bash
+sqlite3 data/orders.db
+.headers on
+.mode csv
+.output trades.csv
+SELECT * FROM orders;
+```
 
-If you want to run the bot with multiple configuration files simultaneously, you can specify them all:
+---
 
-  ```sh
-  uv run python main.py --config config/config1.json config/config2.json config/config3.json
-  ```
+## 🔒 Risk Management
 
-### Saving Performance Results
+### Built-in Safety Features
 
-To save the performance results to a file, use the **--save_performance_results** option:
+**Position Sizing:**
+- Max 2% risk per trade (Triple-Threat)
+- Max 40% portfolio per order (GridBot)
+- Configurable position limits
 
-  ```sh
-  uv run python main.py --config config/config.json --save_performance_results results.json
-  ```
+**Stop Losses:**
+- Mean Reversion: 3% stop
+- Momentum: 3% stop
+- Breakout: 3% stop
+- Grid: Range-based stops
 
-### Disabling Plots
+**Circuit Breaker:**
+- Auto-stops on cascading failures
+- Loss threshold monitoring
+- Configurable recovery period
 
-To run the bot without displaying the end-of-simulation plots, use the **--no-plot** flag:
+**Rate Limiting:**
+- Prevents exchange API bans
+- Request throttling
+- Exponential backoff on errors
 
-  ```sh
-  uv run python main.py --config config/config.json --no-plot
-  ```
+**Portfolio Validation:**
+- Ensures sufficient balance
+- Checks order minimums
+- Validates allocation
 
-### Combining Options
+---
 
-You can combine multiple options to customize how the bot runs. For example:
+## 🧪 Testing
 
-  ```sh
-  uv run python main.py --config config/config1.json config/config2.json --save_performance_results combined_results.json --no-plot
-  ```
+### Paper Trading (Recommended First)
+All bots support paper trading with virtual capital:
 
-### Available Command-Line Arguments
+```python
+# In triple_threat_trader.py
+self.trading_mode = TradingMode.PAPER_TRADING
+```
 
-| **Argument**                  | **Type**   | **Required** | **Description**                                                                 |
-|-------------------------------|------------|--------------|---------------------------------------------------------------------------------|
-| `--config`                    | `str`      | ✅ Yes       | Path(s) to configuration file(s). Multiple files can be provided.              |
-| `--save_performance_results`  | `str`      | ❌ No        | Path to save simulation results (e.g., `results.json`).                        |
-| `--no-plot`                   | `flag`     | ❌ No        | Disable the display of plots at the end of the simulation.                     |
-| `--profile`                   | `flag`     | ❌ No        | Enable profiling to analyze performance metrics during execution.              |
+**Paper Trading Capital:**
+- Crypto bots: $3,000 virtual
+- Stock bot: $25,000 virtual
 
-## 📊 Docker Compose for Logs Management
+### Backtesting (Coming Soon)
+- Historical data replay
+- Strategy optimization
+- Risk analysis
 
-A `docker-compose.yml` file is included to set up centralized logging using Grafana, Loki, and Promtail. This allows you to monitor and analyze the bot's logs efficiently.
+---
 
-### Steps to Set Up
+## 🐛 Troubleshooting
 
-1. **Ensure Docker and Docker Compose Are Installed**
-  Verify that Docker and Docker Compose are installed on your system. If not, follow the official [Docker installation guide](https://docs.docker.com/get-docker/).
+### Common Issues
 
-2. **Start the Services**
-  Run the following command to spin up Grafana, Loki, and Promtail:
+**1. API Errors (401 Unauthorized)**
+- Check API keys in `.env` file
+- Verify API permissions (reading, trading)
+- For Alpaca: Paper trading keys ≠ Live keys
 
-  ```sh
-  docker-compose up -d
-  ```
+**2. "MATIC/USD not found"**
+- MATIC not supported on Kraken/Coinbase
+- Remove from watchlist or use different pair
 
-3. **Access Grafana Dashboards**
+**3. Rate Limiting (429 errors)**
+- Reduce scan frequency
+- Wait 30-60 minutes
+- Use rate_limiter configuration
 
-  Navigate to <http://localhost:3000> in your browser to access the Grafana dashboard.
-  Use the following default credentials to log in:
+**4. Market Closed (Stock Bot)**
+- US market hours: 9:30 AM - 4:00 PM ET
+- Bot automatically sleeps outside hours
 
-- Username: admin
-- Password: YourGrafanaPasswordHere (as defined in the .env file)
+**5. WebSocket Disconnects**
+- Auto-reconnects after 30 seconds
+- Check internet connection
+- Verify exchange status
 
-4. **Import Dashboards**
-
-  Go to the Dashboards section in Grafana and click Import. Use the provided JSON file for predefined dashboards. This file can be found in the project directory: ```grafana/dashboards/grid_trading_bot_dashboard.json```
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! If you have suggestions or want to improve the bot, feel free to fork the repository and submit a pull request.
+Contributions welcome! Please:
 
-### Reporting Issues
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
-If you encounter any issues or have feature requests, please create a new issue on the [GitHub Issues](https://github.com/pownedjojo/grid_trading_bot/issues) page.
+**Coding Standards:**
+- PEP 8 style guide
+- Type hints preferred
+- Docstrings for all functions
+- Unit tests for new features
 
-## 💸 Donations
+---
 
-If you find this project helpful and would like to support its development, consider buying me a coffee! Your support is greatly appreciated and motivates me to continue improving and adding new features.
+## 📝 Roadmap
 
-[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/pownedj)
+### Phase 1: Core Functionality ✅ (COMPLETE)
+- [x] Grid trading bot
+- [x] Triple-Threat strategies
+- [x] Stock mean reversion
+- [x] Multi-exchange support
+- [x] Risk management
+- [x] Paper trading
 
-Thank you for your support!
+### Phase 2: Enhanced Features (IN PROGRESS)
+- [ ] Windows desktop app
+- [ ] Android mobile app
+- [ ] Web dashboard
+- [ ] Real-time notifications
+- [ ] Advanced analytics
+
+### Phase 3: Advanced (PLANNED)
+- [ ] Backtesting engine
+- [ ] Custom strategy builder
+- [ ] API for third-party integrations
+- [ ] Machine learning optimization
+- [ ] Multi-account management
+
+---
 
 ## 📜 License
 
-This project is licensed under the MIT License. See the [LICENSE](./LICENSE.txt) file for more details.
+MIT License
 
-## 🚨 Disclaimer
+Copyright (c) 2025 GridBot Chuck
 
-This project is intended for educational purposes only. The authors and contributors are not responsible for any financial losses incurred while using this bot. Trading cryptocurrencies involves significant risk and can result in the loss of all invested capital. Please do your own research and consult with a licensed financial advisor before making any trading decisions. Use this software at your own risk.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## ⚠️ Disclaimer
+
+**IMPORTANT: Trading involves substantial risk of loss.**
+
+- This software is provided for educational and research purposes
+- Past performance does not guarantee future results
+- You can lose money trading (including all invested capital)
+- Only trade with money you can afford to lose
+- The authors are not responsible for your trading losses
+- This is not financial advice
+- Always do your own research (DYOR)
+- Test thoroughly with paper trading before risking real money
+
+**Regulatory Compliance:**
+- Ensure trading is legal in your jurisdiction
+- Comply with local tax laws
+- Some features may require licenses (e.g., operating as a money manager)
+
+---
+
+## 📞 Support & Community
+
+- **Issues:** [GitHub Issues](https://github.com/yourusername/gridbot-chuck/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/yourusername/gridbot-chuck/discussions)
+- **Discord:** [Join Community](#) (Coming soon)
+- **Twitter:** [@GridBotChuck](#) (Coming soon)
+
+---
+
+## 🙏 Acknowledgments
+
+Built with:
+- [ccxt](https://github.com/ccxt/ccxt) - Cryptocurrency exchange trading API
+- [alpaca-py](https://github.com/alpacahq/alpaca-py) - Alpaca trading API
+- [yfinance](https://github.com/ranaroussi/yfinance) - Yahoo Finance market data
+- Python asyncio - Asynchronous I/O
+
+Special thanks to the open-source trading community.
+
+---
+
+## 📊 Performance History
+
+**Day 1 (December 30, 2025):**
+- GridBot Chuck: **+71.6%** ($157 → $269.58) in 8.5 hours
+- Strategy: Hedged grid on CC/USD
+- Kraken live trading
+- Verified transaction history available
+
+**Full performance log:** See [PERFORMANCE.md](PERFORMANCE.md) (coming soon)
+
+---
+
+**Made with ❤️ and Python**
+
+*GridBot Chuck: The Most Honest Bot You'll Ever Meet*

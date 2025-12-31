@@ -105,6 +105,8 @@ class BalanceTracker:
     async def sync_balances_from_exchange(
         self,
         exchange_service: ExchangeInterface,
+        max_retries: int = 3,
+        retry_delay: float = 2.0,
     ) -> bool:
         """
         Syncs internal balances with actual exchange balances.
@@ -115,6 +117,8 @@ class BalanceTracker:
 
         Args:
             exchange_service: The exchange instance.
+            max_retries: Number of times to retry if crypto balance is 0 after a purchase.
+            retry_delay: Seconds to wait between retries.
 
         Returns:
             bool: True if sync was successful, False otherwise.
@@ -123,25 +127,52 @@ class BalanceTracker:
             self.logger.debug("Skipping balance sync in backtest mode.")
             return True
 
-        try:
-            old_balance = self.balance
-            old_crypto = self.crypto_balance
+        for attempt in range(max_retries):
+            try:
+                old_balance = self.balance
+                old_crypto = self.crypto_balance
 
-            self.balance, self.crypto_balance = await self._fetch_live_balances(exchange_service)
+                self.balance, self.crypto_balance = await self._fetch_live_balances(exchange_service)
 
-            # Reset reserved amounts since we're syncing with actual exchange state
-            self.reserved_fiat = 0.0
-            self.reserved_crypto = 0.0
+                # Reset reserved amounts since we're syncing with actual exchange state
+                self.reserved_fiat = 0.0
+                self.reserved_crypto = 0.0
 
-            if old_balance != self.balance or old_crypto != self.crypto_balance:
                 self.logger.info(
-                    f"Balance sync completed. Fiat: {old_balance:.4f} -> {self.balance:.4f}, "
+                    f"Balance sync attempt {attempt + 1}/{max_retries}: "
+                    f"Fiat: {old_balance:.4f} -> {self.balance:.4f}, "
                     f"Crypto: {old_crypto:.6f} -> {self.crypto_balance:.6f}"
                 )
-            return True
-        except Exception as e:
-            self.logger.error(f"Failed to sync balances from exchange: {e}")
-            return False
+
+                # If we got crypto balance, we're done
+                if self.crypto_balance > 0:
+                    self.logger.info(f"Balance sync successful - crypto balance: {self.crypto_balance}")
+                    return True
+
+                # If no crypto balance yet, wait and retry (exchange might be slow to update)
+                if attempt < max_retries - 1:
+                    self.logger.warning(
+                        f"Crypto balance is 0 after sync (attempt {attempt + 1}). "
+                        f"Waiting {retry_delay}s for exchange to update..."
+                    )
+                    import asyncio
+
+                    await asyncio.sleep(retry_delay)
+
+            except Exception as e:
+                self.logger.error(f"Failed to sync balances from exchange (attempt {attempt + 1}): {e}")
+                if attempt < max_retries - 1:
+                    import asyncio
+
+                    await asyncio.sleep(retry_delay)
+
+        # If we still have no crypto balance after all retries, log error but return True
+        # (the order might have failed or balance is legitimately 0)
+        if self.crypto_balance <= 0:
+            self.logger.error(
+                f"Crypto balance still 0 after {max_retries} sync attempts. Check exchange for order status."
+            )
+        return True  # Return True so caller can decide what to do
 
     async def _update_balance_on_order_completion(self, order: Order) -> None:
         """

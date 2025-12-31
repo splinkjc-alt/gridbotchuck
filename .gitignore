@@ -1,49 +1,81 @@
-# Byte-compiled / optimized / DLL files
-*.DS_Store
-__pycache__/
-*.pyc
-*.py[cod]
+# GridBot Chuck - Git Ignore File
 
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-*.lock
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-.tox/
-.coverage
-.cache
-coverage.xml
-
-# Ignore profiling output files
-*.prof
-
-# VS Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/extensions.json
-
-# Secrets
-secrets.json
-.env.yml
+# Environment variables (NEVER COMMIT API KEYS!)
 .env
-loki-data/
-grafana-data/
+.env.local
+.env.*.local
 
-# API Keys and Config - IMPORTANT!
-config/config.json
-*.license
-beta_signups.json
-licenses/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# `uv` Package Manager
-.uv/
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
 
-# Project specific
-/data/
-logs/*
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+bot_*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+
+# Trade History (may contain sensitive info)
+trades.csv
+orders.csv
+trade_history/
+
+# Backup files
+*.bak
+*.backup
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Custom configs with sensitive data
+config/*_live.json
+config/*_production.json
+
+# Test outputs
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+*.tmp
+temp/
+tmp/

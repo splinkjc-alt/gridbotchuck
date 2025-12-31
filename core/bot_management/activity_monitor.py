@@ -199,7 +199,7 @@ class ActivityMonitor:
         """
         try:
             # Get current ticker
-            ticker = await self.exchange_service.get_ticker(self.current_pair)
+            ticker = await self.exchange_service.exchange.fetch_ticker(self.current_pair)
 
             if not ticker:
                 self.logger.warning(f"Could not fetch ticker for {self.current_pair}")

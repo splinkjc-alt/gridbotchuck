@@ -266,7 +266,7 @@ class MarketAnalyzer:
             ema_slow_series = self._calculate_ema(data["close"], period=ema_slow)
             cci = self._calculate_cci(data, period=20)
             macd_line, signal_line = self._calculate_macd(data["close"])
-            rsi = self._calculate_rsi(data["close"], period=14)
+            rsi = self._calculate_rsi(data["close"], period=7)  # Changed to RSI(7) - more responsive
             bb_upper, bb_middle, bb_lower = self._calculate_bollinger_bands(data["close"])
 
             # Import candlestick patterns
@@ -719,7 +719,7 @@ class MarketAnalyzer:
             if data is None or len(data) < 26:
                 return "HOLD"
 
-            rsi = self._calculate_rsi(data["close"], period=14)
+            rsi = self._calculate_rsi(data["close"], period=7)  # Changed to RSI(7)
             macd_line, signal_line = self._calculate_macd(data["close"])
 
             if macd_line is None or signal_line is None or rsi is None:

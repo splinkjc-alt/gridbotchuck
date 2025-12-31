@@ -35,9 +35,25 @@ class LiveExchangeService(ExchangeInterface):
         self.connection_active = False
 
     def _get_env_variable(self, key: str) -> str:
-        value = os.getenv(key)
+        # First try exchange-specific key (e.g., COINBASE_API_KEY, KRAKEN_API_KEY)
+        # Remove "EXCHANGE_" prefix from key to avoid redundancy
+        key_suffix = key.replace("EXCHANGE_", "")
+        exchange_specific_key = f"{self.exchange_name.upper()}_{key_suffix}"
+        value = os.getenv(exchange_specific_key)
+
+        # Fall back to generic key (e.g., EXCHANGE_API_KEY)
         if value is None:
-            raise MissingEnvironmentVariableError(f"Missing required environment variable: {key}")
+            value = os.getenv(key)
+
+        if value is None:
+            raise MissingEnvironmentVariableError(
+                f"Missing required environment variable: {exchange_specific_key} or {key}"
+            )
+
+        # For Coinbase secret keys, convert literal \n to actual newlines
+        if self.exchange_name.lower() == "coinbase" and "SECRET" in key:
+            value = value.replace("\\n", "\n")
+
         return value
 
     def _initialize_exchange(self) -> None:

@@ -48,11 +48,21 @@ class BotController:
                 )
                 await self._handle_command(command.strip().lower())
 
+            except EOFError:
+                # stdin closed (running in background/detached mode) - just wait
+                self.logger.debug("stdin closed (EOF), command listener waiting...")
+                await asyncio.sleep(60)  # Sleep and continue - bot runs via API instead
+
             except CommandParsingError as e:
                 self.logger.warning(f"Command error: {e}")
 
+            except asyncio.CancelledError:
+                self.logger.info("Command listener cancelled.")
+                break
+
             except Exception as e:
                 self.logger.error(f"Unexpected error in command listener: {e}", exc_info=True)
+                await asyncio.sleep(5)  # Brief pause before retrying
 
     async def _handle_command(self, command: str):
         """

@@ -545,6 +545,7 @@ async def run_auto_portfolio(
     scan_interval: int = 300,
     quote_currency: str = "USD",
     num_pairs: int = 10,
+    min_volume_24h: float = 500000,
     duration_minutes: int | None = None,
 ) -> PortfolioState:
     """
@@ -558,6 +559,7 @@ async def run_auto_portfolio(
         scan_interval: Seconds between scan cycles
         quote_currency: Quote currency for pair scanning
         num_pairs: Number of pairs to monitor
+        min_volume_24h: Minimum 24h volume for active pairs (default $500k)
         duration_minutes: How long to run (None = indefinitely)
 
     Returns:
@@ -575,6 +577,7 @@ async def run_auto_portfolio(
         await manager.start(
             quote_currency=quote_currency,
             num_pairs=num_pairs,
+            min_volume_24h=min_volume_24h,
         )
 
     if duration_minutes:
