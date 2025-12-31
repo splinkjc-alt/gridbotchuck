@@ -2,7 +2,6 @@
 
 # Core
 python-dotenv>=1.0.0
-asyncio>=3.4.3
 
 # Trading APIs
 ccxt>=4.0.0
