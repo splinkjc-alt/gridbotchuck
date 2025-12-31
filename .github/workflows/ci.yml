@@ -26,6 +26,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-asyncio pytest-cov
+          echo "Installed packages:"
+          pip list | grep -E "(psutil|pytest|asyncio)"
+
+      - name: Verify psutil installation
+        run: |
+          python -c "import psutil; print(f'psutil version: {psutil.__version__}')"
 
       - name: Run tests
         run: |
