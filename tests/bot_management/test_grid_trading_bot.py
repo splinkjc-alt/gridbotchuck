@@ -32,6 +32,15 @@ class TestGridTradingBot:
         mock_config.get_top_range.return_value = 2000
         mock_config.get_bottom_range.return_value = 1500
         mock_config.get_num_grids.return_value = 10
+        # Add config attribute for position sizing
+        mock_config.config = {
+            "risk_management": {
+                "position_sizing": {
+                    "buy_percent_of_total": 20.0,
+                    "min_reserve_percent": 10.0
+                }
+            }
+        }
         return mock_config
 
     @pytest.fixture

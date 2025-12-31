@@ -8,6 +8,10 @@ from core.grid_management.grid_level import GridLevel
 from core.order_handling.order import Order, OrderSide, OrderStatus, OrderType
 from strategies.trading_performance_analyzer import TradingPerformanceAnalyzer
 
+# Currency constants for tests
+USD = "USD"
+BTC = "BTC"
+
 
 class TestPerformanceAnalyzer:
     @pytest.fixture

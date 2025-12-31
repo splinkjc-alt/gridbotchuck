@@ -29,6 +29,9 @@ class TestGridTradingStrategy:
         plotter = Mock(spec=Plotter)
         event_bus = Mock(spec=EventBus)
 
+        # Add price_grids attribute to grid_manager for tests
+        grid_manager.price_grids = [1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000]
+
         config_manager.get_timeframe.return_value = "1d"
         config_manager.is_take_profit_enabled.return_value = True
         config_manager.is_stop_loss_enabled.return_value = True
