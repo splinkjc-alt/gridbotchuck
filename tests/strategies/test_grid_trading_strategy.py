@@ -294,7 +294,7 @@ class TestGridTradingStrategy:
         grid_manager.get_trigger_price.return_value = 15000
         order_manager.perform_initial_purchase = AsyncMock(return_value=True)
         order_manager.initialize_grid_orders = AsyncMock()
-        
+
         # Mock sync_balances_from_exchange to update crypto_balance
         async def sync_balances_side_effect(*args):
             balance_tracker.crypto_balance = 0.1  # Simulate that we have crypto after purchase
@@ -484,7 +484,7 @@ class TestGridTradingStrategy:
 
         order_manager.perform_initial_purchase = AsyncMock(return_value=True)
         order_manager.initialize_grid_orders = AsyncMock()
-        
+
         # Mock sync_balances_from_exchange to update crypto_balance
         async def sync_balances_side_effect(*args):
             balance_tracker.crypto_balance = 0.1  # Simulate that we have crypto after purchase
