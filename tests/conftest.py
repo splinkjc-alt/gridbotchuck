@@ -1,4 +1,14 @@
+import os
+
 import pytest
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_environment():
+    """Create necessary directories for tests."""
+    os.makedirs("logs", exist_ok=True)
+    yield
+    # Cleanup could go here if needed
 
 
 @pytest.fixture

@@ -12,6 +12,10 @@ from core.validation.exceptions import (
     InsufficientCryptoBalanceError,
 )
 
+# Currency constants for tests
+USD = "USD"
+BTC = "BTC"
+
 
 class TestBalanceTracker:
     @pytest.fixture
