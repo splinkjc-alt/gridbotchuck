@@ -19,6 +19,15 @@ class TestGridManager:
         mock_config_manager.get_top_range.return_value = 2000
         mock_config_manager.get_num_grids.return_value = 10
         mock_config_manager.get_spacing_type.return_value = SpacingType.ARITHMETIC
+        # Add config attribute for position sizing
+        mock_config_manager.config = {
+            "risk_management": {
+                "position_sizing": {
+                    "buy_percent_of_total": 20.0,
+                    "min_reserve_percent": 10.0
+                }
+            }
+        }
         return mock_config_manager
 
     @pytest.fixture
