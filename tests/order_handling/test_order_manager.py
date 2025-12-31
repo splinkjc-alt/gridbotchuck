@@ -19,6 +19,9 @@ class TestOrderManager:
         grid_manager = Mock()
         order_validator = Mock()
         balance_tracker = Mock()
+        balance_tracker.balance = 1000
+        balance_tracker.crypto_balance = 1
+        balance_tracker.get_total_balance_value = Mock(return_value=50000)
         order_book = Mock()
         event_bus = Mock(spec=EventBus)
         order_execution_strategy = Mock()

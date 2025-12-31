@@ -195,5 +195,20 @@ class BacktestExchangeService(ExchangeInterface):
     async def get_exchange_status(self) -> dict:
         raise NotImplementedError("get_exchange_status is not used in backtesting")
 
+    async def fetch_ohlcv_simple(
+        self,
+        pair: str,
+        timeframe: str = "1m",
+        limit: int = 100,
+    ) -> list[list]:
+        raise NotImplementedError("fetch_ohlcv_simple is not used in backtesting")
+
+    async def get_available_pairs(
+        self,
+        base_currency: str | None = None,
+        quote_currency: str | None = None,
+    ) -> list[str]:
+        raise NotImplementedError("get_available_pairs is not used in backtesting")
+
     async def close_connection(self) -> None:
         self.logger.info("[BACKTEST] Closing WebSocket connection...")

@@ -36,6 +36,7 @@ class TestExchangeServiceFactory:
                 "apiKey": "test_api_key",
                 "secret": "test_secret_key",
                 "enableRateLimit": True,
+                "timeout": 30000,
             },
         )
 
