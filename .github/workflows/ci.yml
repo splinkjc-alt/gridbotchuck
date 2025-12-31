@@ -69,4 +69,6 @@ jobs:
               echo "⚠ WARNING: config.json may contain real credentials"
               exit 1
             fi
+          else
+            echo "✓ Config files not in repository (using .gitignore)"
           fi
