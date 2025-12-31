@@ -41,7 +41,7 @@ def test_parse_and_validate_console_args_save_performance_results_dir_does_not_e
         ),
         patch("utils.arg_parser.logging.error") as mock_log,
     ):
-        with pytest.raises(RuntimeError, match="Argument validation failed."):
+        with pytest.raises(RuntimeError, match=r"Argument validation failed."):
             parse_and_validate_console_args()
         mock_log.assert_called_once_with(
             "Validation failed: The directory for saving performance results does not exist: non_existent_dir",
@@ -69,7 +69,7 @@ def test_parse_and_validate_console_args_profile(mock_exists):
 @patch("utils.arg_parser.logging.error")
 def test_parse_and_validate_console_args_argument_error(mock_log):
     with patch.object(sys, "argv", ["program_name", "--config"]):
-        with pytest.raises(RuntimeError, match="Failed to parse arguments. Please check your inputs."):
+        with pytest.raises(RuntimeError, match=r"Failed to parse arguments. Please check your inputs."):
             parse_and_validate_console_args()
         mock_log.assert_called_once_with("Argument parsing failed: 2")
 
@@ -84,6 +84,6 @@ def test_parse_and_validate_console_args_unexpected_error(mock_log):
         ),
         patch("os.path.exists", side_effect=Exception("Unexpected error")),
     ):
-        with pytest.raises(RuntimeError, match="An unexpected error occurred during argument parsing."):
+        with pytest.raises(RuntimeError, match=r"An unexpected error occurred during argument parsing."):
             parse_and_validate_console_args()
         mock_log.assert_any_call("An unexpected error occurred while parsing arguments: Unexpected error")

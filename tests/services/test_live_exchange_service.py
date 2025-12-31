@@ -95,7 +95,7 @@ class TestLiveExchangeService:
         config_manager.get_exchange_name.return_value = "unsupported_exchange"
         mock_getattr.side_effect = AttributeError
 
-        with pytest.raises(UnsupportedExchangeError, match="The exchange 'unsupported_exchange' is not supported."):
+        with pytest.raises(UnsupportedExchangeError, match=r"The exchange 'unsupported_exchange' is not supported."):
             LiveExchangeService(config_manager, is_paper_trading_activated=False)
 
     @patch("core.services.live_exchange_service.ccxtpro")
@@ -230,7 +230,7 @@ class TestLiveExchangeService:
 
         service = LiveExchangeService(config_manager, is_paper_trading_activated=False)
 
-        with pytest.raises(NotImplementedError, match="fetch_ohlcv is not used in live or paper trading mode."):
+        with pytest.raises(NotImplementedError, match=r"fetch_ohlcv is not used in live or paper trading mode."):
             service.fetch_ohlcv("BTC/USD", "1m", "start_date", "end_date")
 
     @patch("core.services.live_exchange_service.getattr")
