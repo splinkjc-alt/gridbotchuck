@@ -2,14 +2,14 @@
 Order Repository - SQLite persistence for order history.
 """
 
-import aiosqlite
+from datetime import datetime, timedelta
 import json
 import logging
-from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Dict, Optional
 
-from core.order_handling.order import Order, OrderSide, OrderStatus, OrderType
+import aiosqlite
+
+from core.order_handling.order import Order
 
 
 class OrderRepository:
@@ -108,7 +108,7 @@ class OrderRepository:
 
         self.logger.info(f"Order repository initialized at {self.db_path}")
 
-    async def save_order(self, order: Order, grid_level: float = None, metadata: Dict = None):
+    async def save_order(self, order: Order, grid_level: float | None = None, metadata: dict | None = None):
         """
         Save or update an order in the database.
 
@@ -152,8 +152,8 @@ class OrderRepository:
     async def save_trade(
         self,
         order: Order,
-        profit: float = None,
-        balance_after: float = None,
+        profit: float | None = None,
+        balance_after: float | None = None,
     ):
         """
         Record a completed trade in history.
@@ -191,7 +191,7 @@ class OrderRepository:
         except Exception as e:
             self.logger.error(f"Error saving trade {order.id}: {e}")
 
-    async def get_order(self, order_id: str) -> Optional[Dict]:
+    async def get_order(self, order_id: str) -> dict | None:
         """
         Retrieve an order by ID.
 
@@ -215,7 +215,7 @@ class OrderRepository:
 
         return None
 
-    async def get_open_orders(self, pair: str = None) -> List[Dict]:
+    async def get_open_orders(self, pair: str | None = None) -> list[dict]:
         """
         Get all open orders, optionally filtered by pair.
 
@@ -246,11 +246,11 @@ class OrderRepository:
 
     async def get_order_history(
         self,
-        pair: str = None,
-        start_date: datetime = None,
-        end_date: datetime = None,
+        pair: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         limit: int = 100,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Get order history with optional filters.
 
@@ -295,10 +295,10 @@ class OrderRepository:
 
     async def get_trade_history(
         self,
-        pair: str = None,
-        start_date: datetime = None,
+        pair: str | None = None,
+        start_date: datetime | None = None,
         limit: int = 100,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Get trade history.
 
@@ -336,7 +336,7 @@ class OrderRepository:
             self.logger.error(f"Error retrieving trade history: {e}")
             return []
 
-    async def get_statistics(self, pair: str = None) -> Dict:
+    async def get_statistics(self, pair: str | None = None) -> dict:
         """
         Get trading statistics.
 

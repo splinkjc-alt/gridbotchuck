@@ -53,7 +53,6 @@ class BetaManager:
         email = email.lower().strip()
 
         if email in [s["email"] for s in self.signups["signups"]]:
-            print(f"⚠️  {email} is already signed up for beta.")
             return False
 
         self.signups["signups"].append(
@@ -64,10 +63,9 @@ class BetaManager:
             }
         )
         self._save_signups()
-        print(f"✅ Added {email} to beta list.")
         return True
 
-    def generate_beta_key(self, email: str, machine_id: str = None) -> str:
+    def generate_beta_key(self, email: str, machine_id: str | None = None) -> str:
         """Generate a beta license key for an email."""
         email = email.lower().strip()
 
@@ -101,21 +99,13 @@ class BetaManager:
     def list_signups(self):
         """List all beta signups."""
         if not self.signups["signups"]:
-            print("📭 No beta signups yet.")
             return
 
-        print("\n📋 Beta Signups")
-        print("=" * 60)
 
-        for i, signup in enumerate(self.signups["signups"], 1):
-            status = "🔑 Key Generated" if signup["key_generated"] else "⏳ Awaiting Key"
-            date = datetime.fromisoformat(signup["signup_date"]).strftime("%Y-%m-%d %H:%M")
-            print(f"{i:3}. {signup['email']:<35} {status}")
-            print(f"     Signed up: {date}")
+        for _i, signup in enumerate(self.signups["signups"], 1):
+            "🔑 Key Generated" if signup["key_generated"] else "⏳ Awaiting Key"
+            datetime.fromisoformat(signup["signup_date"]).strftime("%Y-%m-%d %H:%M")
 
-        print("=" * 60)
-        print(f"Total signups: {len(self.signups['signups'])}")
-        print(f"Keys generated: {len(self.signups['generated_keys'])}")
 
     def export_signups(self, filename: str = "beta_testers.csv"):
         """Export signups to CSV."""
@@ -137,7 +127,6 @@ class BetaManager:
                     ]
                 )
 
-        print(f"✅ Exported {len(self.signups['signups'])} signups to {filepath}")
 
 
 def main():
@@ -165,25 +154,12 @@ Beta keys are valid for 14 days from generation.
 
     if args.command == "generate":
         if not args.email:
-            print("❌ Error: Email required for generate command")
             sys.exit(1)
 
-        key = manager.generate_beta_key(args.email, args.machine_id)
-        print("\n" + "=" * 60)
-        print("🎉 BETA LICENSE KEY GENERATED")
-        print("=" * 60)
-        print(f"\nEmail: {args.email}")
-        print("Valid for: 14 days")
-        print("\nLicense Key:")
-        print("-" * 60)
-        print(key)
-        print("-" * 60)
-        print("\n📧 Send this key to the user with download instructions.")
-        print("   They save it as 'license.key' in the GridBot folder.")
+        manager.generate_beta_key(args.email, args.machine_id)
 
     elif args.command == "add":
         if not args.email:
-            print("❌ Error: Email required for add command")
             sys.exit(1)
         manager.add_signup(args.email)
 

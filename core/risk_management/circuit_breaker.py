@@ -4,10 +4,11 @@ Protects against cascading failures and runaway losses.
 """
 
 import asyncio
+from collections.abc import Callable
 from enum import Enum
 import logging
 import time
-from typing import Callable, Any
+from typing import Any
 
 
 class CircuitState(Enum):
@@ -203,7 +204,7 @@ class TradingCircuitBreaker(CircuitBreaker):
         failure_threshold: int = 5,
         recovery_timeout: int = 300,  # 5 minutes
         max_loss_percent: float = 10.0,  # Stop if 10% loss
-        max_loss_absolute: float = None,  # Stop if losing this much $
+        max_loss_absolute: float | None = None,  # Stop if losing this much $
         name: str = "TradingBreaker",
     ):
         super().__init__(failure_threshold, recovery_timeout, name=name)
@@ -212,7 +213,7 @@ class TradingCircuitBreaker(CircuitBreaker):
         self.initial_balance = None
         self.current_balance = None
 
-    def check_balance(self, current_balance: float, initial_balance: float = None):
+    def check_balance(self, current_balance: float, initial_balance: float | None = None):
         """
         Check if current balance triggers circuit breaker.
 

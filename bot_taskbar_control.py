@@ -82,8 +82,7 @@ class BotTaskbarControl:
         try:
             response = requests.post(f"{self.api_url}/api/bot/start", timeout=5)
             return response.status_code == 200
-        except Exception as e:
-            print(f"Error starting bot: {e}")
+        except Exception:
             return False
 
     def stop_bot(self):
@@ -91,8 +90,7 @@ class BotTaskbarControl:
         try:
             response = requests.post(f"{self.api_url}/api/bot/stop", timeout=5)
             return response.status_code == 200
-        except Exception as e:
-            print(f"Error stopping bot: {e}")
+        except Exception:
             return False
 
     def pause_bot(self):
@@ -100,8 +98,7 @@ class BotTaskbarControl:
         try:
             response = requests.post(f"{self.api_url}/api/bot/pause", timeout=5)
             return response.status_code == 200
-        except Exception as e:
-            print(f"Error pausing bot: {e}")
+        except Exception:
             return False
 
     def resume_bot(self):
@@ -109,8 +106,7 @@ class BotTaskbarControl:
         try:
             response = requests.post(f"{self.api_url}/api/bot/resume", timeout=5)
             return response.status_code == 200
-        except Exception as e:
-            print(f"Error resuming bot: {e}")
+        except Exception:
             return False
 
     def open_dashboard(self):
@@ -120,33 +116,33 @@ class BotTaskbarControl:
     def on_start_clicked(self, icon, item):
         """Handle start button click"""
         if self.start_bot():
-            print("✓ Bot started")
+            pass
         else:
-            print("✗ Failed to start bot")
+            pass
         self.update_icon()
 
     def on_stop_clicked(self, icon, item):
         """Handle stop button click"""
         if self.stop_bot():
-            print("✓ Bot stopped")
+            pass
         else:
-            print("✗ Failed to stop bot")
+            pass
         self.update_icon()
 
     def on_pause_clicked(self, icon, item):
         """Handle pause button click"""
         if self.pause_bot():
-            print("✓ Bot paused")
+            pass
         else:
-            print("✗ Failed to pause bot")
+            pass
         self.update_icon()
 
     def on_resume_clicked(self, icon, item):
         """Handle resume button click"""
         if self.resume_bot():
-            print("✓ Bot resumed")
+            pass
         else:
-            print("✗ Failed to resume bot")
+            pass
         self.update_icon()
 
     def on_dashboard_clicked(self, icon, item):
@@ -173,27 +169,17 @@ class BotTaskbarControl:
 
     def run(self):
         """Run the system tray application"""
-        print("🤖 Grid Trading Bot - Taskbar Control")
-        print("=" * 50)
 
         # Check if API is running
         if not self.check_api_running():
-            print("⚠ Bot API server is not running!")
-            print("Please start the bot first:")
-            print(f"  python main.py --config {self.config_path}")
-            print("\nWaiting for API to start... (up to 30 seconds)")
 
-            for i in range(30):
+            for _i in range(30):
                 if self.check_api_running():
-                    print("✓ API server detected!")
                     break
                 time.sleep(1)
-                print(".", end="", flush=True)
             else:
-                print("\n✗ API server did not start. Exiting.")
                 return
 
-        print("✓ Connected to bot API")
 
         # Create the menu
         menu = pystray.Menu(
@@ -219,11 +205,6 @@ class BotTaskbarControl:
         update_thread = Thread(target=self.update_status_thread, daemon=True)
         update_thread.start()
 
-        print("✓ Taskbar icon ready!")
-        print("  Right-click the icon in your taskbar to control the bot")
-        print("  Click 'Dashboard' to open the web interface")
-        print("  Click 'Quit' to close this application")
-        print("\nRunning... (Close this window or right-click icon → Quit to exit)")
 
         # Run the icon
         self.icon.run()
@@ -236,10 +217,6 @@ def main():
         from PIL import Image
         import pystray
     except ImportError:
-        print("❌ Required packages not installed!")
-        print("\nPlease install the required packages:")
-        print("  pip install pystray pillow requests")
-        print("\nThen try again.")
         return 1
 
     # Create and run the control app

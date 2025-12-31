@@ -148,7 +148,7 @@ class PaperOrderExecutionStrategy(OrderExecutionStrategyInterface):
         """
         filled_orders = []
 
-        for order_id, order in self._simulated_orders.items():
+        for _order_id, order in self._simulated_orders.items():
             if order.status != OrderStatus.OPEN:
                 continue
             if order.symbol != pair:
@@ -175,13 +175,12 @@ class PaperOrderExecutionStrategy(OrderExecutionStrategyInterface):
 
         return filled_orders
 
-    def get_open_orders(self, pair: str = None) -> list[Order]:
+    def get_open_orders(self, pair: str | None = None) -> list[Order]:
         """Get all open simulated orders."""
         orders = []
         for order in self._simulated_orders.values():
-            if order.status == OrderStatus.OPEN:
-                if pair is None or order.symbol == pair:
-                    orders.append(order)
+            if order.status == OrderStatus.OPEN and (pair is None or order.symbol == pair):
+                orders.append(order)
         return orders
 
     def get_all_orders(self) -> dict[str, Order]:

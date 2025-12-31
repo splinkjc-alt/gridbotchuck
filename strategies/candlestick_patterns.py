@@ -212,7 +212,7 @@ def detect_morning_star(data: pd.DataFrame) -> bool:
     is_small_star = second_body < first_body * 0.3
 
     # Third candle: long bullish, closes above first midpoint
-    third_body = _get_body_size(third["open"], third["close"])
+    _get_body_size(third["open"], third["close"])
     third_bullish = _is_bullish(third["open"], third["close"])
     first_midpoint = (first["open"] + first["close"]) / 2
     closes_above_midpoint = third["close"] > first_midpoint

@@ -80,22 +80,7 @@ async def main():
     load_dotenv()
 
     if not args.json:
-        print(f"""
-{"=" * 60}
-  GridBot Chuck - Auto-Portfolio Manager
-{"=" * 60}
-  Exchange: {args.exchange.upper()}
-  Capital: ${args.capital:,.2f}
-  Max Positions: {args.positions}
-  Capital per Position: ${args.capital / args.positions:,.2f}
-  Pairs to Monitor: {args.pairs}
-  Min Entry Score: {args.min_score}
-  Scan Interval: {args.scan_interval}s
-  Duration: {"Indefinite" if not args.duration else f"{args.duration} minutes"}
-{"=" * 60}
-
-Press Ctrl+C to stop gracefully.
-""")
+        pass
 
     # Create temporary config
     temp_config = {
@@ -155,7 +140,7 @@ Press Ctrl+C to stop gracefully.
         # Handle graceful shutdown
         def signal_handler(sig, frame):
             if not args.json:
-                print("\n\nReceived interrupt signal. Stopping...")
+                pass
             asyncio.create_task(manager.stop())
 
         signal.signal(signal.SIGINT, signal_handler)
@@ -180,37 +165,21 @@ Press Ctrl+C to stop gracefully.
             )
 
         # Get final state
-        final_state = manager.get_state()
+        manager.get_state()
 
         if args.save_state:
             manager.save_state(args.save_state)
 
         if args.json:
-            print(json.dumps(final_state, indent=2, default=str))
+            pass
         else:
-            print(f"""
-{"=" * 60}
-  FINAL PORTFOLIO STATUS
-{"=" * 60}
-  Total Capital: ${final_state["capital"]["total"]:,.2f}
-  Deployed: ${final_state["capital"]["deployed"]:,.2f}
-  Available: ${final_state["capital"]["available"]:,.2f}
-  
-  Active Positions: {final_state["positions"]["active"]}
-  
-  Realized PnL: ${final_state["performance"]["realized_pnl"]:+,.2f}
-  Unrealized PnL: ${final_state["performance"]["unrealized_pnl"]:+,.2f}
-  Total PnL: ${final_state["performance"]["total_pnl"]:+,.2f}
-  
-  Scan Cycles: {final_state["status"]["scan_cycle"]}
-{"=" * 60}
-""")
+            pass
 
-    except Exception as e:
+    except Exception:
         if args.json:
-            print(json.dumps({"error": str(e)}))
+            pass
         else:
-            print(f"\n✗ Error: {e}")
+            pass
         sys.exit(1)
 
     finally:

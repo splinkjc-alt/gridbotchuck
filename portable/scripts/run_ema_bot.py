@@ -54,13 +54,10 @@ def load_ema_settings():
                 for key in defaults:
                     if key in loaded:
                         defaults[key] = loaded[key]
-                print(f"[CONFIG] Loaded settings from {settings_file}")
-        except Exception as e:
-            print(f"[CONFIG] Error loading settings: {e}, using defaults")
+        except Exception:
+            pass
     else:
-        print(
-            f"[CONFIG] No ema_settings.json found, using defaults (EMA {defaults['ema_fast']}/{defaults['ema_slow']})"
-        )
+        pass
 
     return defaults
 
@@ -413,7 +410,6 @@ async def main():
 
     # Handle Ctrl+C
     def handle_signal(sig, frame):
-        print("\nShutting down...")
         bot.running = False
 
     signal.signal(signal.SIGINT, handle_signal)

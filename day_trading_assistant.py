@@ -20,19 +20,13 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-import json
 import logging
-from pathlib import Path
-from typing import Optional
-
-import pandas as pd
 
 from config.config_manager import ConfigManager
 from config.config_validator import ConfigValidator
 from config.trading_mode import TradingMode
 from core.services.exchange_service_factory import ExchangeServiceFactory
-from strategies.market_analyzer import MarketAnalyzer, CoinAnalysis, TrendSignal
-from strategies.candlestick_patterns import detect_patterns
+from strategies.market_analyzer import CoinAnalysis, MarketAnalyzer
 
 
 class TradeAction(Enum):
@@ -76,11 +70,11 @@ class TradeOpportunity:
     risk_reward_ratio: float
 
     # User decision
-    user_action: Optional[TradeAction] = None
+    user_action: TradeAction | None = None
 
     def __str__(self) -> str:
         """Format opportunity for display."""
-        bullish_patterns = [p for p, detected in self.patterns.items() if detected and 'bullish' in p]
+        bullish_patterns = [p for p, detected in self.patterns.items() if detected and "bullish" in p]
         pattern_str = ", ".join(bullish_patterns) if bullish_patterns else "Momentum/Trend"
 
         return f"""
@@ -137,10 +131,10 @@ class PaperTrade:
     status: TradeStatus
 
     # Exit (if closed)
-    exit_time: Optional[datetime] = None
-    exit_price: Optional[float] = None
-    pnl_dollars: Optional[float] = None
-    pnl_percent: Optional[float] = None
+    exit_time: datetime | None = None
+    exit_price: float | None = None
+    pnl_dollars: float | None = None
+    pnl_percent: float | None = None
 
     # Tracking for advanced exit logic
     last_significant_move_time: datetime = None
@@ -153,7 +147,7 @@ class PaperTrade:
         if self.highest_price_since_entry == 0.0:
             self.highest_price_since_entry = self.entry_price
 
-    def update_with_current_price(self, current_price: float, ema_9: Optional[float] = None) -> bool:
+    def update_with_current_price(self, current_price: float, ema_9: float | None = None) -> bool:
         """
         Check if stop, target, EMA cross, or time-based exit hit.
         Returns True if trade should close.
@@ -266,7 +260,7 @@ class TradingStats:
 
     def __str__(self) -> str:
         """Format stats for display."""
-        goal_status = " **GOAL MET!**" if self.win_rate >= 60 else f' (Target: 60%)'
+        goal_status = " **GOAL MET!**" if self.win_rate >= 60 else " (Target: 60%)"
         return f"""
 ================================================================
   PAPER TRADING PERFORMANCE
@@ -344,7 +338,7 @@ class DayTradingAssistant:
         # Candidate pairs to scan (from config)
         self.candidate_pairs = self._load_candidate_pairs()
 
-        logging.info(f"Day Trading Assistant initialized")
+        logging.info("Day Trading Assistant initialized")
         logging.info(f"Virtual balance: ${self.virtual_balance:,.2f}")
         logging.info(f"Position size: ${self.position_size_min}-${self.position_size_max}")
         logging.info(f"Score threshold: {self.score_threshold}")
@@ -382,14 +376,14 @@ class DayTradingAssistant:
                 response = await loop.run_in_executor(None, input, "")
                 response = response.strip().upper()
 
-                if response == 'A':
+                if response == "A":
                     return TradeAction.ACCEPT
-                elif response == 'D':
+                elif response == "D":
                     return TradeAction.DECLINE
-                elif response == 'W':
+                elif response == "W":
                     return TradeAction.WATCH
                 else:
-                    print("Invalid input. Please enter A (Accept), D (Decline), or W (Watch): ", end='', flush=True)
+                    pass
             except Exception as e:
                 logging.error(f"Error reading user input: {e}")
                 return TradeAction.DECLINE
@@ -471,7 +465,6 @@ class DayTradingAssistant:
 
         # Present each opportunity and handle based on auto_accept mode
         for opportunity in new_opportunities:
-            print(opportunity)
 
             # Check if we can accept more trades
             can_accept = len(self.open_trades) < self.max_concurrent_trades
@@ -481,15 +474,12 @@ class DayTradingAssistant:
                 try:
                     trade = self.accept_trade(opportunity)
                     opportunity.user_action = TradeAction.ACCEPT
-                    print(f"\n>>> AUTO-ACCEPTED! Opened {trade.trade_id} for {trade.pair}\n")
                     logging.info(f"Auto-accepted trade: {trade.trade_id} - {trade.pair}")
                 except Exception as e:
-                    print(f"\n>>> ERROR: Could not accept trade: {e}\n")
                     logging.error(f"Error accepting trade: {e}")
                     opportunity.user_action = TradeAction.DECLINE
             elif self.auto_accept and not can_accept:
                 # Max concurrent trades reached
-                print(f"\n>>> SKIPPED: Max concurrent trades ({self.max_concurrent_trades}) reached\n")
                 opportunity.user_action = TradeAction.DECLINE
             else:
                 # Interactive mode
@@ -499,15 +489,12 @@ class DayTradingAssistant:
                 if action == TradeAction.ACCEPT:
                     try:
                         trade = self.accept_trade(opportunity)
-                        print(f"\n>>> TRADE ACCEPTED! Opened {trade.trade_id} for {trade.pair}\n")
                     except Exception as e:
-                        print(f"\n>>> ERROR: Could not accept trade: {e}\n")
                         logging.error(f"Error accepting trade: {e}")
                 elif action == TradeAction.DECLINE:
-                    print(f"\n>>> Trade declined for {opportunity.pair}\n")
+                    pass
                 elif action == TradeAction.WATCH:
                     self.opportunities.append(opportunity)
-                    print(f"\n>>> Added {opportunity.pair} to watchlist\n")
 
         return opportunities_found
 
@@ -592,7 +579,6 @@ class DayTradingAssistant:
         self.available_cash -= opportunity.suggested_position_size
 
         logging.info(f"PAPER TRADE OPENED: {trade}")
-        print(f"\n>> Trade opened: {trade}\n")
 
         return trade
 
@@ -637,29 +623,12 @@ class DayTradingAssistant:
                     self.stats.update(trade)
 
                     logging.info(f"Trade closed: {trade}")
-                    print(f"\n{trade}\n")
-                    print(self.stats)
 
             except Exception as e:
                 logging.error(f"Error monitoring trade {trade.trade_id}: {e}")
 
     async def run(self):
         """Main loop: scan markets, present opportunities, monitor trades."""
-        mode_str = "AUTO-ACCEPT MODE" if self.auto_accept else "INTERACTIVE MODE"
-        print(f"""
-================================================================
-  DAY TRADING ASSISTANT - PAPER TRADING
-================================================================
-  Mode: {mode_str}
-  Virtual Balance: ${self.virtual_balance:,.0f}
-  Position Size: ${self.position_size_min:.0f}-${self.position_size_max:.0f} per trade
-  Alert Threshold: Score >= {self.score_threshold}
-  Max Concurrent: {self.max_concurrent_trades} trades
-  Target Win Rate: 60%
-
-  STATUS: Running... Scanning markets every {self.scan_interval} seconds
-================================================================
-""")
 
         while True:
             try:
@@ -670,15 +639,12 @@ class DayTradingAssistant:
                 await self.monitor_open_trades()
 
                 # Show status
-                print(f"\nCash: ${self.available_cash:.2f} | Open Trades: {len(self.open_trades)} | Stats: {self.stats.total_trades} trades, {self.stats.win_rate:.1f}% win rate\n")
 
                 # Wait before next scan
                 await asyncio.sleep(self.scan_interval)
 
             except KeyboardInterrupt:
                 logging.info("Shutting down...")
-                print("\n\nGoodbye! Final stats:")
-                print(self.stats)
                 break
             except Exception as e:
                 logging.error(f"Error in main loop: {e}", exc_info=True)

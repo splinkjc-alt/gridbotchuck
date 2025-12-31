@@ -13,16 +13,15 @@ Premium features:
 Run: streamlit run trading_control_center_enhanced.py
 """
 
-import streamlit as st
-import streamlit.components.v1 as components
-import os
-import json
-import time
 from datetime import datetime, timedelta
-from pathlib import Path
+import os
+import time
+
+from dotenv import load_dotenv
 import pandas as pd
 import plotly.graph_objects as go
-from dotenv import load_dotenv
+import streamlit as st
+import streamlit.components.v1 as components
 
 # Load environment variables
 load_dotenv()
@@ -199,13 +198,13 @@ recognition.onerror = () => {
 """
 
 # Initialize session state
-if 'messages' not in st.session_state:
+if "messages" not in st.session_state:
     st.session_state.messages = []
-if 'pending_trades' not in st.session_state:
+if "pending_trades" not in st.session_state:
     st.session_state.pending_trades = []
-if 'trade_history' not in st.session_state:
+if "trade_history" not in st.session_state:
     st.session_state.trade_history = []
-if 'notifications_enabled' not in st.session_state:
+if "notifications_enabled" not in st.session_state:
     st.session_state.notifications_enabled = True
 
 
@@ -223,7 +222,7 @@ def chat_with_claude_ai(user_message, context=""):
         client = Anthropic(api_key=api_key)
 
         # Build context from bot status
-        system_prompt = f"""You are Claude, an AI assistant helping manage trading bots.
+        system_prompt = """You are Claude, an AI assistant helping manage trading bots.
 
 Current Status:
 - Crypto Day Trader: Running mean reversion strategy (RSI < 45), $10,000 balance
@@ -294,18 +293,18 @@ def get_bot_status():
 def create_performance_chart():
     """Create performance chart"""
     # Placeholder data - replace with real trade history
-    dates = pd.date_range(start='2025-12-27', periods=10, freq='H')
+    dates = pd.date_range(start="2025-12-27", periods=10, freq="H")
     pnl = [0, 5, -2, 8, 3, 10, 7, 15, 12, 18]
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=dates,
         y=pnl,
-        mode='lines+markers',
-        name='P&L',
-        line=dict(color='#667eea', width=3),
-        fill='tozeroy',
-        fillcolor='rgba(102, 126, 234, 0.2)'
+        mode="lines+markers",
+        name="P&L",
+        line={"color": "#667eea", "width": 3},
+        fill="tozeroy",
+        fillcolor="rgba(102, 126, 234, 0.2)"
     ))
 
     fig.update_layout(
@@ -314,7 +313,7 @@ def create_performance_chart():
         yaxis_title="Profit/Loss ($)",
         height=400,
         template="plotly_white",
-        hovermode='x unified'
+        hovermode="x unified"
     )
 
     return fig
@@ -323,7 +322,7 @@ def create_performance_chart():
 def create_price_chart(pair="BTC/USD"):
     """Create live price chart"""
     # Placeholder - replace with real price data
-    times = pd.date_range(start=datetime.now() - timedelta(hours=24), periods=100, freq='15min')
+    times = pd.date_range(start=datetime.now() - timedelta(hours=24), periods=100, freq="15min")
     prices = [45000 + i*10 + (i%10)*50 for i in range(100)]
 
     fig = go.Figure(data=[go.Candlestick(
@@ -384,7 +383,7 @@ with tab1:
 
     # Display messages
     for msg in st.session_state.messages:
-        if msg['role'] == 'user':
+        if msg["role"] == "user":
             st.markdown(f'<div class="chat-message user-message">👤 You: {msg["content"]}</div>', unsafe_allow_html=True)
         else:
             st.markdown(f'<div class="chat-message assistant-message">🤖 Claude: {msg["content"]}</div>', unsafe_allow_html=True)
@@ -418,7 +417,7 @@ with tab2:
 
     bots = get_bot_status()
 
-    for bot_id, bot in bots.items():
+    for _bot_id, bot in bots.items():
         with st.container():
             col1, col2, col3 = st.columns([2, 2, 1])
 
@@ -426,19 +425,19 @@ with tab2:
                 st.markdown(f"### {bot['name']}")
                 st.write(f"**Strategy:** {bot['strategy']}")
                 st.write(f"**Balance:** {bot['balance']}")
-                if 'profit' in bot:
+                if "profit" in bot:
                     st.write(f"**Profit:** {bot['profit']}")
 
             with col2:
-                if 'open_trades' in bot:
+                if "open_trades" in bot:
                     st.write(f"**Open Trades:** {bot['open_trades']}")
                 st.write(f"**Status:** {bot['status']}")
 
             with col3:
-                if bot['status'] == "Running":
-                    st.markdown(f'<div class="status-good">✅ Active</div>', unsafe_allow_html=True)
+                if bot["status"] == "Running":
+                    st.markdown('<div class="status-good">✅ Active</div>', unsafe_allow_html=True)
                 else:
-                    st.markdown(f'<div class="status-warn">😴 Sleeping</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="status-warn">😴 Sleeping</div>', unsafe_allow_html=True)
 
             st.markdown("---")
 

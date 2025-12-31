@@ -26,18 +26,12 @@ else:
 
 
 async def main():
-    print("=" * 50)
-    print("  KRAKEN ACCOUNT STATUS")
-    print("=" * 50)
-    print()
 
     # Verify API keys
     api_key = os.getenv("EXCHANGE_API_KEY")
     api_secret = os.getenv("EXCHANGE_SECRET_KEY")
 
     if not api_key or not api_secret or api_key == "your_api_key_here":
-        print("ERROR: API keys not configured!")
-        print("Please edit config\\.env with your Kraken API keys")
         return
 
     exchange = ccxt.kraken(
@@ -52,16 +46,13 @@ async def main():
         # Get balances
         balance = await exchange.fetch_balance()
 
-        print("BALANCES:")
-        print("-" * 30)
 
         total_value = 0
-        usd_balance = balance["total"].get("USD", 0)
+        balance["total"].get("USD", 0)
 
         for currency, amount in sorted(balance["total"].items()):
             if amount > 0.0001:
                 if currency == "USD":
-                    print(f"  USD: ${amount:.2f}")
                     total_value += amount
                 else:
                     # Try to get USD value
@@ -72,32 +63,24 @@ async def main():
                         value = amount * price
                         if value > 0.01:
                             total_value += value
-                            print(f"  {currency}: {amount:.4f} (~${value:.2f})")
                     except:
                         if amount > 0.01:
-                            print(f"  {currency}: {amount:.4f}")
+                            pass
 
-        print("-" * 30)
-        print(f"  TOTAL: ~${total_value:.2f}")
-        print()
 
         # Get open orders
         orders = await exchange.fetch_open_orders()
 
-        print("OPEN ORDERS:")
-        print("-" * 30)
 
         if orders:
-            for order in orders:
-                print(f"  {order['side'].upper()} {order['amount']} {order['symbol']} @ ${order['price']}")
+            for _order in orders:
+                pass
         else:
-            print("  No open orders")
+            pass
 
-        print()
-        print("Connection OK!")
 
-    except Exception as e:
-        print(f"ERROR: {e}")
+    except Exception:
+        pass
 
     finally:
         await exchange.close()

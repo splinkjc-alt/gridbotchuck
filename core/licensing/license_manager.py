@@ -301,7 +301,7 @@ def get_license_manager() -> LicenseManager:
     return _license_manager
 
 
-def check_license(feature: str = None) -> bool:
+def check_license(feature: str | None = None) -> bool:
     """Quick check if license is valid (and optionally if a feature is enabled)."""
     manager = get_license_manager()
     if feature:
@@ -324,15 +324,9 @@ if __name__ == "__main__":
     manager = LicenseManager()
 
     if args.machine_id is None:
-        print(f"Current Machine ID: {manager._get_machine_id()}")
+        pass
 
     license_key = manager.generate_license_key(
         license_type=args.type, customer_email=args.email, machine_id=args.machine_id, expiry_days=args.days
     )
 
-    print("\n" + "=" * 60)
-    print("GENERATED LICENSE KEY")
-    print("=" * 60)
-    print(license_key)
-    print("=" * 60)
-    print("\nSave this to 'license.key' in the GridBot Pro directory.")

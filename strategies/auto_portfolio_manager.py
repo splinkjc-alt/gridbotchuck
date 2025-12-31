@@ -446,27 +446,15 @@ class AutoPortfolioManager:
 
     def _print_status(self) -> None:
         """Print current portfolio status."""
-        print("\n" + "=" * 60)
-        print("  AUTO-PORTFOLIO STATUS")
-        print("=" * 60)
-        print(f"  Capital: ${self.state.deployed_capital:.2f} / ${self.state.total_capital:.2f} deployed")
-        print(f"  Positions: {self.state.active_positions} / {self.state.max_positions}")
-        print(f"  Unrealized PnL: ${self.state.total_unrealized_pnl:+.2f}")
-        print("-" * 60)
 
         for position in self.state.positions:
             if position.status == PositionStatus.ACTIVE:
-                pnl_pct = (
+                (
                     (position.unrealized_pnl / position.allocated_capital) * 100
                     if position.allocated_capital > 0
                     else 0
                 )
-                print(
-                    f"  {position.pair:<12} ${position.current_price:<12.4f} "
-                    f"PnL: ${position.unrealized_pnl:+.2f} ({pnl_pct:+.1f}%)"
-                )
 
-        print("=" * 60 + "\n")
 
     async def close_position(self, pair: str) -> bool:
         """
@@ -512,9 +500,8 @@ class AutoPortfolioManager:
         """
         closed = 0
         for position in self.state.positions:
-            if position.status == PositionStatus.ACTIVE:
-                if await self.close_position(position.pair):
-                    closed += 1
+            if position.status == PositionStatus.ACTIVE and await self.close_position(position.pair):
+                closed += 1
         return closed
 
     def get_state(self) -> dict[str, Any]:

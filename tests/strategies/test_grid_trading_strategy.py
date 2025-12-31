@@ -500,7 +500,7 @@ class TestGridTradingStrategy:
 
     @pytest.mark.asyncio
     async def test_on_ticker_update_error_handling(self, setup_strategy):
-        create_strategy, _, exchange_service, grid_manager, order_manager, balance_tracker, _, _, _ = setup_strategy
+        create_strategy, _, exchange_service, grid_manager, _order_manager, balance_tracker, _, _, _ = setup_strategy
         strategy = create_strategy(TradingMode.LIVE)
 
         grid_manager.get_trigger_price.return_value = 15000

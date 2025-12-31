@@ -384,7 +384,7 @@ class PairScanner:
         close = ohlcv["close"]
 
         # Calculate trend strength using linear regression slope
-        x = range(len(close))
+        range(len(close))
         slope = pd.Series(close).diff().mean() / close.mean() * 100
 
         # Higher absolute slope = stronger trend = lower score
@@ -518,37 +518,23 @@ class PairScanner:
 
     def print_scan_results(self, results: list[PairScanResult], top_n: int = 10) -> None:
         """Print formatted scan results to console."""
-        print("\n" + "=" * 80)
-        print("  SMART PAIR SCAN RESULTS")
-        print("=" * 80)
-        print(f"\n  {'Rank':<6}{'Pair':<12}{'Score':<8}{'24h Vol':<12}{'Volatility':<12}{'Range':<12}")
-        print("  " + "-" * 68)
 
         for result in results[:top_n]:
             # Format volume
             if result.volume_24h >= 1_000_000:
-                vol_str = f"${result.volume_24h / 1_000_000:.1f}M"
+                f"${result.volume_24h / 1_000_000:.1f}M"
             elif result.volume_24h >= 1_000:
-                vol_str = f"${result.volume_24h / 1_000:.1f}K"
+                f"${result.volume_24h / 1_000:.1f}K"
             else:
-                vol_str = f"${result.volume_24h:.0f}"
+                pass
 
             # Range quality descriptor
-            if result.range_bound_score >= 80:
-                range_quality = "Excellent"
-            elif result.range_bound_score >= 60:
-                range_quality = "Very Good"
-            elif result.range_bound_score >= 40:
-                range_quality = "Good"
+            if result.range_bound_score >= 80 or result.range_bound_score >= 60 or result.range_bound_score >= 40:
+                pass
             else:
-                range_quality = "Moderate"
+                pass
 
-            print(
-                f"  {result.rank:<6}{result.pair:<12}{result.total_score:<8.1f}"
-                f"{vol_str:<12}{result.daily_volatility_pct:<12.1f}%{range_quality:<12}"
-            )
 
-        print("=" * 80 + "\n")
 
     async def save_configs(
         self,

@@ -4,10 +4,10 @@ Automatically detects stuck markets and switches to better performing pairs.
 """
 
 import asyncio
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-import logging
-from typing import Dict, List, TYPE_CHECKING
+import contextlib
+from dataclasses import dataclass
+from datetime import datetime
+from typing import TYPE_CHECKING
 
 from core.bot_management.multi_pair_manager import MultiPairManager, PairStatus
 from strategies.pair_performance_monitor import PairPerformanceMonitor
@@ -79,7 +79,7 @@ class EnhancedMultiPairManager(MultiPairManager):
         )
 
         # Tracking
-        self.last_switch_time: Dict[str, datetime] = {}
+        self.last_switch_time: dict[str, datetime] = {}
         self.performance_check_task = None
 
     async def start(self):
@@ -99,10 +99,8 @@ class EnhancedMultiPairManager(MultiPairManager):
         """Stop trading and monitoring."""
         if self.performance_check_task:
             self.performance_check_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self.performance_check_task
-            except asyncio.CancelledError:
-                pass
 
         await super().stop()
 
@@ -255,7 +253,7 @@ class EnhancedMultiPairManager(MultiPairManager):
         """
         await self._switch_pair(old_pair, new_pair, reason="manual_override")
 
-    def get_status(self) -> Dict:
+    def get_status(self) -> dict:
         """Get enhanced status with performance metrics."""
         base_status = super().get_status()
 
@@ -281,7 +279,7 @@ class EnhancedMultiPairManager(MultiPairManager):
 
         return base_status
 
-    def get_performance_report(self) -> Dict:
+    def get_performance_report(self) -> dict:
         """Get detailed performance report for all monitored pairs."""
         top_performers = self.performance_monitor.get_top_performers(n=10)
 

@@ -69,6 +69,10 @@ desktop.ini
 # Custom configs with sensitive data
 config/*_live.json
 config/*_production.json
+config/config.json
+config/config_coinbase.json
+config/config_paper_trading.json
+config/config_small_capital_multi_pair.json
 
 # Test outputs
 .pytest_cache/

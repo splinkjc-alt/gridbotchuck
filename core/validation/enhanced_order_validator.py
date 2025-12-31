@@ -3,10 +3,8 @@ Enhanced Order Validator - Adds position size limits and risk checks.
 """
 
 import logging
-from typing import Optional
 
 from core.validation.order_validator import OrderValidator
-from core.validation.exceptions import InvalidOrderQuantityError
 
 
 class PositionSizeTooLargeError(Exception):
@@ -46,7 +44,7 @@ class EnhancedOrderValidator(OrderValidator):
         balance: float,
         order_quantity: float,
         price: float,
-        total_portfolio_value: Optional[float] = None,
+        total_portfolio_value: float | None = None,
     ) -> float:
         """
         Enhanced buy quantity validation with position size limits.
@@ -107,8 +105,8 @@ class EnhancedOrderValidator(OrderValidator):
         self,
         crypto_balance: float,
         order_quantity: float,
-        price: Optional[float] = None,
-        total_portfolio_value: Optional[float] = None,
+        price: float | None = None,
+        total_portfolio_value: float | None = None,
     ) -> float:
         """
         Enhanced sell quantity validation with position size limits.

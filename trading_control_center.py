@@ -12,14 +12,13 @@ Run: streamlit run trading_control_center.py
 Access: http://localhost:8501 (works on phone too!)
 """
 
-import streamlit as st
-import os
-import json
-import time
 from datetime import datetime
 from pathlib import Path
-import pandas as pd
+import time
+
 from dotenv import load_dotenv
+import pandas as pd
+import streamlit as st
 
 # Load environment variables
 load_dotenv()
@@ -91,9 +90,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Initialize session state
-if 'messages' not in st.session_state:
+if "messages" not in st.session_state:
     st.session_state.messages = []
-if 'pending_trades' not in st.session_state:
+if "pending_trades" not in st.session_state:
     st.session_state.pending_trades = []
 
 
@@ -132,7 +131,7 @@ def get_recent_scans(bot_file, limit=5):
     """Get recent scan results from bot output."""
     try:
         if Path(bot_file).exists():
-            with open(bot_file, 'r') as f:
+            with open(bot_file) as f:
                 lines = f.readlines()
                 # Get last N lines
                 recent = lines[-50:]
@@ -213,7 +212,7 @@ with tab1:
 
     # Display chat history
     for msg in st.session_state.messages:
-        if msg['role'] == 'user':
+        if msg["role"] == "user":
             st.markdown(f'<div class="chat-message user-message">👤 You: {msg["content"]}</div>', unsafe_allow_html=True)
         else:
             st.markdown(f'<div class="chat-message assistant-message">🤖 Claude: {msg["content"]}</div>', unsafe_allow_html=True)
@@ -239,7 +238,7 @@ with tab2:
 
     bots = get_bot_status()
 
-    for bot_id, bot in bots.items():
+    for _bot_id, bot in bots.items():
         with st.container():
             col1, col2 = st.columns([3, 1])
 
@@ -247,18 +246,18 @@ with tab2:
                 st.markdown(f"### {bot['name']}")
                 st.write(f"**Strategy:** {bot['strategy']}")
                 st.write(f"**Balance:** {bot['balance']}")
-                if 'profit' in bot:
+                if "profit" in bot:
                     st.write(f"**Profit:** {bot['profit']}")
 
             with col2:
-                if bot['status'] == "Running":
+                if bot["status"] == "Running":
                     st.markdown(f'<div class="status-good">✅ {bot["status"]}</div>', unsafe_allow_html=True)
                 else:
                     st.markdown(f'<div class="status-bad">😴 {bot["status"]}</div>', unsafe_allow_html=True)
 
             # Show recent activity
             with st.expander(f"Recent Activity ({bot['name']})"):
-                recent = get_recent_scans(bot['file'])
+                recent = get_recent_scans(bot["file"])
                 if recent:
                     for scan in recent:
                         st.text(scan)
@@ -358,12 +357,12 @@ with tab4:
     # Show example table
     with st.expander("👀 See Example"):
         example_data = pd.DataFrame({
-            'Date': ['2025-12-28 10:30', '2025-12-28 11:15'],
-            'Pair': ['DOGE/USD', 'XRP/USD'],
-            'Entry': ['$0.1245', '$1.87'],
-            'Exit': ['$0.1295', '$1.90'],
-            'P&L': ['+$25.00', '+$15.00'],
-            'Result': ['Win ✅', 'Win ✅']
+            "Date": ["2025-12-28 10:30", "2025-12-28 11:15"],
+            "Pair": ["DOGE/USD", "XRP/USD"],
+            "Entry": ["$0.1245", "$1.87"],
+            "Exit": ["$0.1295", "$1.90"],
+            "P&L": ["+$25.00", "+$15.00"],
+            "Result": ["Win ✅", "Win ✅"]
         })
         st.dataframe(example_data, use_container_width=True)
 

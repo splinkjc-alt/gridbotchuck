@@ -119,9 +119,7 @@ class GridTradingStrategy(TradingStrategyInterface):
         # Check if analysis is due
         if current_time - self._last_mtf_analysis_time < analysis_interval:
             # Use cached result
-            if self._trading_paused_by_trend:
-                return False
-            return True
+            return not self._trading_paused_by_trend
 
         try:
             # Get grid boundaries

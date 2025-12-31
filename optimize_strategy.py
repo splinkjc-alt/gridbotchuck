@@ -3,11 +3,10 @@ Strategy Optimizer - Test different indicator combos to find best profit.
 
 Tests 20+ strategies on historical data and ranks by performance.
 """
+from datetime import datetime, timedelta
+
 import ccxt
 import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-from typing import List, Dict, Tuple
 
 
 def calculate_rsi(data: pd.Series, period: int = 14) -> pd.Series:
@@ -20,7 +19,7 @@ def calculate_rsi(data: pd.Series, period: int = 14) -> pd.Series:
     return rsi
 
 
-def calculate_bollinger_bands(data: pd.Series, period: int = 20, std_dev: int = 2) -> Tuple[pd.Series, pd.Series, pd.Series]:
+def calculate_bollinger_bands(data: pd.Series, period: int = 20, std_dev: int = 2) -> tuple[pd.Series, pd.Series, pd.Series]:
     """Calculate Bollinger Bands."""
     sma = data.rolling(window=period).mean()
     std = data.rolling(window=period).std()
@@ -63,7 +62,7 @@ def backtest_strategy(df: pd.DataFrame, strategy: Strategy) -> Strategy:
         row = df.iloc[idx]
 
         # Skip if not enough data for indicators
-        if pd.isna(row['rsi_14']) or pd.isna(row['bb_lower']):
+        if pd.isna(row["rsi_14"]) or pd.isna(row["bb_lower"]):
             continue
 
         # Check for entry signal (not in trade)
@@ -71,12 +70,12 @@ def backtest_strategy(df: pd.DataFrame, strategy: Strategy) -> Strategy:
             if strategy.entry_fn(row):
                 # Enter trade
                 in_trade = True
-                entry_price = row['close']
+                entry_price = row["close"]
                 entry_idx = idx
 
         # Check for exit signal (in trade)
         else:
-            current_price = row['close']
+            current_price = row["close"]
             pct_change = ((current_price - entry_price) / entry_price) * 100
 
             # Check if target hit
@@ -86,12 +85,12 @@ def backtest_strategy(df: pd.DataFrame, strategy: Strategy) -> Strategy:
                 strategy.wins += 1
                 strategy.total_profit += profit
                 strategy.trades.append({
-                    'entry_time': df.iloc[entry_idx]['timestamp'],
-                    'exit_time': row['timestamp'],
-                    'entry_price': entry_price,
-                    'exit_price': current_price,
-                    'profit_pct': profit,
-                    'result': 'WIN'
+                    "entry_time": df.iloc[entry_idx]["timestamp"],
+                    "exit_time": row["timestamp"],
+                    "entry_price": entry_price,
+                    "exit_price": current_price,
+                    "profit_pct": profit,
+                    "result": "WIN"
                 })
                 in_trade = False
 
@@ -102,12 +101,12 @@ def backtest_strategy(df: pd.DataFrame, strategy: Strategy) -> Strategy:
                 strategy.losses += 1
                 strategy.total_profit += loss
                 strategy.trades.append({
-                    'entry_time': df.iloc[entry_idx]['timestamp'],
-                    'exit_time': row['timestamp'],
-                    'entry_price': entry_price,
-                    'exit_price': current_price,
-                    'profit_pct': loss,
-                    'result': 'LOSS'
+                    "entry_time": df.iloc[entry_idx]["timestamp"],
+                    "exit_time": row["timestamp"],
+                    "entry_price": entry_price,
+                    "exit_price": current_price,
+                    "profit_pct": loss,
+                    "result": "LOSS"
                 })
                 in_trade = False
 
@@ -118,40 +117,33 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
     """
     Test multiple strategies on XRP to find the best one.
     """
-    print("="*60)
-    print("STRATEGY OPTIMIZER - Finding Best XRP Strategy")
-    print("="*60)
 
     # Initialize exchange
-    exchange = ccxt.kraken({'enableRateLimit': True})
+    exchange = ccxt.kraken({"enableRateLimit": True})
 
     # Fetch data
-    print(f"\nFetching {hours_lookback} hours of XRP/USD data from {exchange_name}...")
     since = exchange.parse8601((datetime.utcnow() - timedelta(hours=hours_lookback)).isoformat())
-    ohlcv = exchange.fetch_ohlcv('XRP/USD', '5m', since=since, limit=1000)
+    ohlcv = exchange.fetch_ohlcv("XRP/USD", "5m", since=since, limit=1000)
 
     # Convert to DataFrame
-    df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+    df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
+    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
 
-    print(f"Data range: {df['timestamp'].min()} to {df['timestamp'].max()}")
-    print(f"Total candles: {len(df)}")
 
     # Calculate indicators
-    print("\nCalculating indicators...")
-    df['rsi_7'] = calculate_rsi(df['close'], 7)
-    df['rsi_14'] = calculate_rsi(df['close'], 14)
-    df['rsi_21'] = calculate_rsi(df['close'], 21)
-    df['bb_upper'], df['bb_middle'], df['bb_lower'] = calculate_bollinger_bands(df['close'], 20, 2)
-    df['volume_ratio'] = calculate_volume_ratio(df['volume'], 20)
-    df['price_change_pct'] = df['close'].pct_change() * 100
+    df["rsi_7"] = calculate_rsi(df["close"], 7)
+    df["rsi_14"] = calculate_rsi(df["close"], 14)
+    df["rsi_21"] = calculate_rsi(df["close"], 21)
+    df["bb_upper"], df["bb_middle"], df["bb_lower"] = calculate_bollinger_bands(df["close"], 20, 2)
+    df["volume_ratio"] = calculate_volume_ratio(df["volume"], 20)
+    df["price_change_pct"] = df["close"].pct_change() * 100
 
     # Define strategies to test
     strategies = [
         # Strategy 1: Aggressive RSI(7)
         Strategy(
             "RSI(7) < 25",
-            lambda row: row['rsi_7'] < 25,
+            lambda row: row["rsi_7"] < 25,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -159,7 +151,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 2: Conservative RSI(7)
         Strategy(
             "RSI(7) < 30",
-            lambda row: row['rsi_7'] < 30,
+            lambda row: row["rsi_7"] < 30,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -167,7 +159,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 3: Moderate RSI(7)
         Strategy(
             "RSI(7) < 35",
-            lambda row: row['rsi_7'] < 35,
+            lambda row: row["rsi_7"] < 35,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -175,7 +167,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 4: Aggressive RSI(14)
         Strategy(
             "RSI(14) < 25",
-            lambda row: row['rsi_14'] < 25,
+            lambda row: row["rsi_14"] < 25,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -183,7 +175,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 5: Conservative RSI(14)
         Strategy(
             "RSI(14) < 30",
-            lambda row: row['rsi_14'] < 30,
+            lambda row: row["rsi_14"] < 30,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -191,7 +183,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 6: Moderate RSI(14)
         Strategy(
             "RSI(14) < 35",
-            lambda row: row['rsi_14'] < 35,
+            lambda row: row["rsi_14"] < 35,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -199,7 +191,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 7: Current bot (RSI < 45)
         Strategy(
             "RSI(14) < 45 [Current Bot]",
-            lambda row: row['rsi_14'] < 45,
+            lambda row: row["rsi_14"] < 45,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -207,7 +199,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 8: Bollinger Band touch
         Strategy(
             "Price touches BB lower",
-            lambda row: row['close'] <= row['bb_lower'],
+            lambda row: row["close"] <= row["bb_lower"],
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -215,7 +207,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 9: Combo - RSI + BB
         Strategy(
             "RSI(7)<30 + BB touch",
-            lambda row: row['rsi_7'] < 30 and row['close'] <= row['bb_lower'],
+            lambda row: row["rsi_7"] < 30 and row["close"] <= row["bb_lower"],
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -223,7 +215,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 10: Combo - RSI + Volume
         Strategy(
             "RSI(7)<30 + Volume>1.5x",
-            lambda row: row['rsi_7'] < 30 and row['volume_ratio'] > 1.5,
+            lambda row: row["rsi_7"] < 30 and row["volume_ratio"] > 1.5,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -231,7 +223,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 11: Volume spike only
         Strategy(
             "Volume spike > 2x",
-            lambda row: row['volume_ratio'] > 2.0,
+            lambda row: row["volume_ratio"] > 2.0,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -239,7 +231,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 12: Large red candle
         Strategy(
             "Red candle > -2%",
-            lambda row: row['price_change_pct'] < -2.0,
+            lambda row: row["price_change_pct"] < -2.0,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -247,7 +239,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 13: RSI + Red candle
         Strategy(
             "RSI(7)<35 + Red>-1.5%",
-            lambda row: row['rsi_7'] < 35 and row['price_change_pct'] < -1.5,
+            lambda row: row["rsi_7"] < 35 and row["price_change_pct"] < -1.5,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -255,7 +247,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 14: Triple combo
         Strategy(
             "RSI(7)<30 + BB + Vol>1.5x",
-            lambda row: row['rsi_7'] < 30 and row['close'] <= row['bb_lower'] and row['volume_ratio'] > 1.5,
+            lambda row: row["rsi_7"] < 30 and row["close"] <= row["bb_lower"] and row["volume_ratio"] > 1.5,
             target_pct=4.0,
             stop_pct=3.0
         ),
@@ -263,14 +255,13 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         # Strategy 15: Extreme oversold
         Strategy(
             "RSI(7) < 20",
-            lambda row: row['rsi_7'] < 20,
+            lambda row: row["rsi_7"] < 20,
             target_pct=4.0,
             stop_pct=3.0
         ),
     ]
 
     # Run backtests
-    print("\nBacktesting strategies...")
     results = []
 
     for strategy in strategies:
@@ -280,72 +271,46 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
         win_rate = (strategy.wins / total_trades * 100) if total_trades > 0 else 0
 
         results.append({
-            'name': strategy.name,
-            'trades': total_trades,
-            'wins': strategy.wins,
-            'losses': strategy.losses,
-            'win_rate': win_rate,
-            'total_profit': strategy.total_profit,
-            'strategy': strategy
+            "name": strategy.name,
+            "trades": total_trades,
+            "wins": strategy.wins,
+            "losses": strategy.losses,
+            "win_rate": win_rate,
+            "total_profit": strategy.total_profit,
+            "strategy": strategy
         })
 
     # Sort by total profit (descending)
-    results.sort(key=lambda x: x['total_profit'], reverse=True)
+    results.sort(key=lambda x: x["total_profit"], reverse=True)
 
     # Print results
-    print("\n" + "="*80)
-    print("RESULTS - Ranked by Total Profit")
-    print("="*80)
-    print(f"\n{'Rank':<5} {'Strategy':<35} {'Trades':<8} {'Win%':<8} {'Profit':<10}")
-    print("-" * 80)
 
-    for i, result in enumerate(results, 1):
-        rank_marker = "[BEST]" if i == 1 else f"#{i}"
-        print(f"{rank_marker:<5} {result['name']:<35} {result['trades']:<8} {result['win_rate']:<7.1f}% {result['total_profit']:>+9.2f}%")
+    for _i, result in enumerate(results, 1):
+        pass
 
     # Show details of top 3 strategies
-    print("\n" + "="*80)
-    print("TOP 3 STRATEGIES - DETAILED BREAKDOWN")
-    print("="*80)
 
-    for i, result in enumerate(results[:3], 1):
-        print(f"\n#{i}. {result['name']}")
-        print(f"   Total Trades: {result['trades']}")
-        print(f"   Wins: {result['wins']} | Losses: {result['losses']}")
-        print(f"   Win Rate: {result['win_rate']:.1f}%")
-        print(f"   Total Profit: {result['total_profit']:+.2f}%")
+    for _i, result in enumerate(results[:3], 1):
 
-        if result['strategy'].trades:
-            print(f"   Sample Trades:")
-            for trade in result['strategy'].trades[:3]:  # Show first 3 trades
-                print(f"     {trade['entry_time'].strftime('%m-%d %H:%M')} -> "
-                      f"{trade['exit_time'].strftime('%H:%M')} | "
-                      f"${trade['entry_price']:.4f} -> ${trade['exit_price']:.4f} | "
-                      f"{trade['profit_pct']:+.2f}% {trade['result']}")
+        if result["strategy"].trades:
+            for _trade in result["strategy"].trades[:3]:  # Show first 3 trades
+                pass
 
-    print("\n" + "="*80)
-    print("RECOMMENDATION")
-    print("="*80)
 
     if results:
         best = results[0]
-        print(f"\nBest Strategy: {best['name']}")
-        print(f"Performance: {best['trades']} trades, {best['win_rate']:.1f}% win rate, {best['total_profit']:+.2f}% profit")
 
-        if best['total_profit'] > 0:
-            print("\n[ACTION] This strategy beat the current bot! Consider implementing it.")
+        if best["total_profit"] > 0:
+            pass
         else:
-            print("\n[WARNING] All strategies lost money in this period. Market may be unfavorable.")
-            print("Consider waiting for better conditions or adjusting target/stop percentages.")
+            pass
 
-    print("\n" + "="*80)
 
 
 if __name__ == "__main__":
     try:
         # Test on last 24 hours of XRP data
         optimize_xrp_strategy(hours_lookback=24, exchange_name="kraken")
-    except Exception as e:
-        print(f"\n[ERROR] {e}")
+    except Exception:
         import traceback
         traceback.print_exc()

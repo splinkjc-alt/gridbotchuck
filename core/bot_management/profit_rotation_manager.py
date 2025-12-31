@@ -10,6 +10,7 @@ Key Features:
 """
 
 import asyncio
+import contextlib
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
@@ -140,10 +141,8 @@ class ProfitRotationManager:
         self.running = False
         if self.monitoring_task:
             self.monitoring_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self.monitoring_task
-            except asyncio.CancelledError:
-                pass
         self.logger.info("Profit rotation manager stopped")
 
     async def _monitoring_loop(self):
@@ -334,7 +333,7 @@ class ProfitRotationManager:
                 current_price = ticker.get("last", 0.0)
 
                 # Place market sell order
-                sell_order = await self.exchange_service.create_order(
+                await self.exchange_service.create_order(
                     symbol=pair,
                     order_type="market",
                     side="sell",

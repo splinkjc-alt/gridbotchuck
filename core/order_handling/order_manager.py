@@ -55,26 +55,26 @@ class OrderManager:
     def _is_below_min_reserve(self, current_price: float) -> bool:
         """
         Check if fiat balance is below the minimum reserve threshold.
-        
+
         Returns True if buying should be blocked (reserve too low).
         """
         position_sizing = self.config_manager.config.get("risk_management", {}).get("position_sizing", {})
         min_reserve_percent = position_sizing.get("min_reserve_percent", 0)
-        
+
         if min_reserve_percent <= 0:
             return False  # No reserve check configured
-        
+
         total_value = self.balance_tracker.get_total_balance_value(current_price)
         fiat_balance = self.balance_tracker.balance
         reserve_ratio = (fiat_balance / total_value * 100) if total_value > 0 else 0
-        
+
         if reserve_ratio < min_reserve_percent:
             self.logger.warning(
                 f"⚠️ USD reserve at {reserve_ratio:.1f}% (${fiat_balance:.2f}/${total_value:.2f}) - "
                 f"below {min_reserve_percent}% minimum. Skipping buy."
             )
             return True
-        
+
         self.logger.debug(f"Reserve check: {reserve_ratio:.1f}% >= {min_reserve_percent}% - OK to buy")
         return False
 
@@ -340,7 +340,7 @@ class OrderManager:
         sell_grid_level: GridLevel,
         buy_grid_level: GridLevel,
         quantity: float,
-        current_price: float = None,
+        current_price: float | None = None,
     ) -> None:
         """
         Places a buy order at the specified grid level.

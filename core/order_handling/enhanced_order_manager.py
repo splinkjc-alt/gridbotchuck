@@ -3,14 +3,11 @@ Enhanced Order Manager - Adds retry logic and better error handling.
 """
 
 import asyncio
-import logging
-from datetime import datetime
-from typing import Optional
 
-from core.order_handling.order_manager import OrderManager
-from core.order_handling.order import Order, OrderSide, OrderStatus
-from core.order_handling.exceptions import OrderExecutionFailedError
 from core.bot_management.notification.notification_content import NotificationType
+from core.order_handling.exceptions import OrderExecutionFailedError
+from core.order_handling.order import Order, OrderSide
+from core.order_handling.order_manager import OrderManager
 
 
 class EnhancedOrderManager(OrderManager):
@@ -112,7 +109,7 @@ class EnhancedOrderManager(OrderManager):
         side: OrderSide,
         quantity: float,
         price: float,
-    ) -> Optional[Order]:
+    ) -> Order | None:
         """
         Retry placing an order at a grid level.
 

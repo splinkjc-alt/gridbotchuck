@@ -8,10 +8,10 @@ This script creates a complete Windows installer package including:
 """
 
 import os
+from pathlib import Path
+import shutil
 import subprocess
 import sys
-import shutil
-from pathlib import Path
 
 # Paths
 ROOT_DIR = Path(__file__).parent.parent.parent
@@ -22,16 +22,11 @@ DIST_DIR = ROOT_DIR / "dist"
 
 def print_step(message):
     """Print a formatted step message."""
-    print(f"\n{'=' * 60}")
-    print(f"  {message}")
-    print(f"{'=' * 60}\n")
 
 def run_command(cmd, cwd=None):
     """Run a command and check for errors."""
-    print(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"Error: {result.stderr}")
         sys.exit(1)
     return result.stdout
 
@@ -42,7 +37,6 @@ def clean_build_dirs():
     dirs_to_clean = [BUILD_DIR, DIST_DIR]
     for dir_path in dirs_to_clean:
         if dir_path.exists():
-            print(f"Removing {dir_path}")
             shutil.rmtree(dir_path)
         dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -63,11 +57,9 @@ def bundle_python_bot():
         "--noconfirm"
     ], cwd=ROOT_DIR)
 
-    print("✅ Python bot bundled successfully")
 
 def create_pyinstaller_spec():
     """Create PyInstaller spec file."""
-    print("Creating PyInstaller spec file...")
 
     spec_content = """# -*- mode: python ; coding: utf-8 -*-
 
@@ -135,21 +127,17 @@ coll = COLLECT(
 
     spec_file = INSTALLER_DIR / "gridbot.spec"
     spec_file.write_text(spec_content)
-    print(f"Created spec file: {spec_file}")
 
 def build_electron_app():
     """Build Electron desktop app."""
     print_step("Building Electron desktop app")
 
     # Install npm dependencies
-    print("Installing npm dependencies...")
     run_command(["npm", "install"], cwd=DESKTOP_DIR)
 
     # Build Electron app
-    print("Building Electron app...")
     run_command(["npm", "run", "build:win"], cwd=DESKTOP_DIR)
 
-    print("✅ Electron app built successfully")
 
 def create_nsis_installer():
     """Create NSIS installer script."""
@@ -162,14 +150,10 @@ def create_nsis_installer():
     # Run NSIS compiler
     nsis_path = find_nsis()
     if not nsis_path:
-        print("❌ NSIS not found. Please install NSIS from https://nsis.sourceforge.io/")
-        print("Skipping installer creation...")
         return
 
-    print(f"Running NSIS from: {nsis_path}")
     run_command([nsis_path, str(nsis_script)])
 
-    print("✅ Installer created successfully")
 
 def find_nsis():
     """Find NSIS compiler."""
@@ -188,7 +172,6 @@ def find_nsis():
 
 def create_nsis_script():
     """Create NSIS installer script."""
-    print("Creating NSIS script...")
 
     nsis_content = r"""
 ; GridBot Chuck Installer Script
@@ -257,15 +240,9 @@ SectionEnd
 
     nsis_script = INSTALLER_DIR / "installer.nsi"
     nsis_script.write_text(nsis_content)
-    print(f"Created NSIS script: {nsis_script}")
 
 def main():
     """Main build process."""
-    print(r"""
-    ╔═══════════════════════════════════════╗
-    ║   GridBot Chuck - Windows Builder     ║
-    ╚═══════════════════════════════════════╝
-    """)
 
     try:
         # Step 1: Clean previous builds
@@ -281,14 +258,8 @@ def main():
         create_nsis_installer()
 
         print_step("✅ BUILD COMPLETE!")
-        print(f"Installer location: {DIST_DIR / 'GridBotChuck-Setup-1.0.0.exe'}")
-        print("\nNext steps:")
-        print("1. Test the installer on a clean Windows machine")
-        print("2. Run the installed app and complete setup wizard")
-        print("3. Verify bot starts and connects properly")
 
-    except Exception as e:
-        print(f"\n❌ Build failed: {e}")
+    except Exception:
         sys.exit(1)
 
 if __name__ == "__main__":

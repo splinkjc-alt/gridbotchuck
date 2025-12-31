@@ -16,7 +16,7 @@ class Events:
     STOP_BOT = "stop_bot"
     SWITCH_PAIR = "switch_pair"
     FORCE_EXIT_POSITION = "force_exit_position"  # Exit position due to stagnation
-    
+
     # Multi-timeframe analysis events
     MTF_ANALYSIS_COMPLETE = "mtf_analysis_complete"
     MTF_TRADING_PAUSED = "mtf_trading_paused"

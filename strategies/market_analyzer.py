@@ -539,7 +539,7 @@ class MarketAnalyzer:
             return 50
 
         u = upper.iloc[-1]
-        m = middle.iloc[-1]
+        middle.iloc[-1]
         lo = lower.iloc[-1]
 
         band_width = u - lo
@@ -599,10 +599,7 @@ class MarketAnalyzer:
         # Apply logarithmic scaling for better distribution
         import math
 
-        if volume_ratio > 0:
-            score = min(100, 50 + (math.log10(volume_ratio + 0.1) + 1) * 25)
-        else:
-            score = 0
+        score = min(100, 50 + (math.log10(volume_ratio + 0.1) + 1) * 25) if volume_ratio > 0 else 0
 
         return max(0, score)
 

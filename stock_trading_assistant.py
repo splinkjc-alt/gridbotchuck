@@ -15,25 +15,21 @@ Trading Hours: 9:30 AM - 4:00 PM ET
 """
 
 import asyncio
-from datetime import datetime, time, timedelta
+from dataclasses import dataclass
+from datetime import datetime, time
 import logging
 import os
-from dataclasses import dataclass
-from typing import List, Optional
-import pytz
-from dotenv import load_dotenv
 
-import pandas as pd
-import yfinance as yf
 from alpaca.trading.client import TradingClient
-from alpaca.trading.requests import MarketOrderRequest
-from alpaca.trading.enums import OrderSide, TimeInForce
-
+from dotenv import load_dotenv
+import pandas as pd
+import pytz
+import yfinance as yf
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 
@@ -63,7 +59,7 @@ class StockTradingAssistant:
         api_key: str,
         secret_key: str,
         paper: bool = True,
-        watchlist: Optional[List[str]] = None,
+        watchlist: list[str] | None = None,
         threshold: float = 60.0,
     ):
         """
@@ -104,10 +100,10 @@ class StockTradingAssistant:
         self.open_trades = {}
 
         # Eastern timezone for market hours
-        self.et_tz = pytz.timezone('US/Eastern')
+        self.et_tz = pytz.timezone("US/Eastern")
 
         logging.info("Stock Trading Assistant initialized")
-        logging.info(f"Data source: Yahoo Finance (FREE)")
+        logging.info("Data source: Yahoo Finance (FREE)")
         logging.info(f"Paper trading: {paper}")
         logging.info(f"Watchlist: {len(self.watchlist)} stocks")
         logging.info(f"Threshold: {threshold}")
@@ -168,7 +164,7 @@ class StockTradingAssistant:
         position = ((current_price - lower_band.iloc[-1]) / band_width) * 100
         return max(0, min(100, position))
 
-    async def analyze_stock(self, symbol: str) -> Optional[StockAnalysis]:
+    async def analyze_stock(self, symbol: str) -> StockAnalysis | None:
         """
         Analyze a stock for mean reversion opportunity using Yahoo Finance.
 
@@ -186,7 +182,7 @@ class StockTradingAssistant:
                 return None
 
             # Use Close and Volume columns
-            prices = df['Close']
+            prices = df["Close"]
             current_price = prices.iloc[-1]
 
             # Calculate indicators
@@ -194,8 +190,8 @@ class StockTradingAssistant:
             bb_position = self.calculate_bollinger_position(prices)
 
             # Volume ratio (current vs 20-bar average)
-            avg_volume = df['Volume'].rolling(20).mean().iloc[-1]
-            current_volume = df['Volume'].iloc[-1]
+            avg_volume = df["Volume"].rolling(20).mean().iloc[-1]
+            current_volume = df["Volume"].iloc[-1]
             volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1.0
 
             # Mean reversion score (0-100)
@@ -236,7 +232,7 @@ class StockTradingAssistant:
             logging.error(f"Error analyzing {symbol}: {e}")
             return None
 
-    async def scan_for_opportunities(self) -> List[StockAnalysis]:
+    async def scan_for_opportunities(self) -> list[StockAnalysis]:
         """
         Scan watchlist for oversold mean reversion setups.
 
@@ -302,11 +298,11 @@ class StockTradingAssistant:
 
         # Track position
         self.open_trades[analysis.symbol] = {
-            'entry': entry,
-            'stop': stop,
-            'target': target,
-            'shares': shares,
-            'opened_at': datetime.now()
+            "entry": entry,
+            "stop": stop,
+            "target": target,
+            "shares": shares,
+            "opened_at": datetime.now()
         }
 
     async def monitor_open_trades(self):
@@ -322,11 +318,11 @@ class StockTradingAssistant:
                     continue
 
                 current_price = analysis.price
-                entry = trade['entry']
+                entry = trade["entry"]
                 pnl_pct = ((current_price - entry) / entry) * 100
 
                 # Check stop loss
-                if current_price <= trade['stop']:
+                if current_price <= trade["stop"]:
                     logging.info(
                         f"STOP LOSS HIT: {symbol} at ${current_price:.2f} "
                         f"({pnl_pct:.1f}%)"
@@ -334,7 +330,7 @@ class StockTradingAssistant:
                     del self.open_trades[symbol]
 
                 # Check target
-                elif current_price >= trade['target']:
+                elif current_price >= trade["target"]:
                     logging.info(
                         f"TARGET HIT: {symbol} at ${current_price:.2f} "
                         f"({pnl_pct:.1f}%)"
@@ -352,7 +348,7 @@ class StockTradingAssistant:
             max_concurrent_trades: Maximum number of open positions
         """
         logging.info("Starting Stock Day Trading Assistant...")
-        logging.info(f"Market hours: 9:30 AM - 4:00 PM ET")
+        logging.info("Market hours: 9:30 AM - 4:00 PM ET")
         logging.info(f"Max concurrent trades: {max_concurrent_trades}")
 
         while True:
@@ -397,8 +393,6 @@ async def main():
     secret_key = os.getenv("ALPACA_SECRET_KEY")
 
     if not api_key or not secret_key:
-        print("ERROR: Set ALPACA_API_KEY and ALPACA_SECRET_KEY environment variables")
-        print("\nGet free paper trading keys from: https://app.alpaca.markets/signup")
         return
 
     # Initialize assistant

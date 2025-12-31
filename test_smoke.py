@@ -2,18 +2,9 @@
 
 from __future__ import annotations
 
-import argparse
 import logging
-import subprocess
 import sys
-import threading
-import time
-import webbrowser
-from pathlib import Path
-from typing import TYPE_CHECKING
 
-import requests
-from requests import RequestException
 # ...existing code...
 
 LOGGER = logging.getLogger(__name__)

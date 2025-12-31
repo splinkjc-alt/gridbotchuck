@@ -20,19 +20,17 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 import logging
-from typing import Optional
-import pandas as pd
 
 from config.config_manager import ConfigManager
 from config.config_validator import ConfigValidator
 from config.trading_mode import TradingMode
 from core.services.exchange_service_factory import ExchangeServiceFactory
-from strategies.market_analyzer import MarketAnalyzer, CoinAnalysis
+from strategies.market_analyzer import CoinAnalysis, MarketAnalyzer
 
 # Logging setup
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 
@@ -153,7 +151,7 @@ class TripleThreatTrader:
 
         return position_size
 
-    def detect_mean_reversion(self, analysis: CoinAnalysis) -> Optional[TripleThreatSignal]:
+    def detect_mean_reversion(self, analysis: CoinAnalysis) -> TripleThreatSignal | None:
         """
         Detect mean reversion opportunity (oversold bounce).
 
@@ -209,7 +207,7 @@ class TripleThreatTrader:
             risk_reward_ratio=4.0/3.0
         )
 
-    def detect_momentum(self, analysis: CoinAnalysis) -> Optional[TripleThreatSignal]:
+    def detect_momentum(self, analysis: CoinAnalysis) -> TripleThreatSignal | None:
         """
         Detect momentum opportunity (trend continuation).
 
@@ -268,7 +266,7 @@ class TripleThreatTrader:
             risk_reward_ratio=8.0/3.0
         )
 
-    async def detect_breakout(self, analysis: CoinAnalysis) -> Optional[TripleThreatSignal]:
+    async def detect_breakout(self, analysis: CoinAnalysis) -> TripleThreatSignal | None:
         """
         Detect breakout/pump opportunity (steep climb).
 
@@ -291,15 +289,15 @@ class TripleThreatTrader:
                 return None
 
             # Calculate price change over last 15-30 min
-            current_price = df['close'].iloc[-1]
-            price_30min_ago = df['close'].iloc[-2]
-            price_15min_ago = df['close'].iloc[-1]
+            current_price = df["close"].iloc[-1]
+            price_30min_ago = df["close"].iloc[-2]
+            df["close"].iloc[-1]
 
             pct_change_30m = ((current_price - price_30min_ago) / price_30min_ago) * 100
 
             # Calculate volume ratio
-            avg_volume = df['volume'].iloc[:-1].mean()
-            current_volume = df['volume'].iloc[-1]
+            avg_volume = df["volume"].iloc[:-1].mean()
+            current_volume = df["volume"].iloc[-1]
             volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1.0
 
             # BREAKOUT CRITERIA
@@ -443,17 +441,17 @@ class TripleThreatTrader:
         reward_dollars = shares * (signal.target - signal.entry)
 
         trade = {
-            'id': trade_id,
-            'pair': signal.pair,
-            'strategy': signal.strategy.value,
-            'entry': signal.entry,
-            'stop': signal.stop,
-            'target': signal.target,
-            'shares': shares,
-            'position_size': position_size,
-            'opened_at': datetime.now(),
-            'risk_dollars': risk_dollars,
-            'reward_dollars': reward_dollars
+            "id": trade_id,
+            "pair": signal.pair,
+            "strategy": signal.strategy.value,
+            "entry": signal.entry,
+            "stop": signal.stop,
+            "target": signal.target,
+            "shares": shares,
+            "position_size": position_size,
+            "opened_at": datetime.now(),
+            "risk_dollars": risk_dollars,
+            "reward_dollars": reward_dollars
         }
 
         self.open_trades[trade_id] = trade
@@ -467,7 +465,7 @@ class TripleThreatTrader:
             StrategyType.BREAKOUT: "🔴"
         }[signal.strategy]
 
-        logging.info(f"")
+        logging.info("")
         logging.info(f"{strategy_icon} PAPER TRADE OPENED: {trade_id}")
         logging.info(f"  Pair: {signal.pair}")
         logging.info(f"  Strategy: {signal.strategy.value.upper()}")
@@ -477,7 +475,7 @@ class TripleThreatTrader:
         logging.info(f"  Size: {shares:.2f} units = ${position_size:.2f}")
         logging.info(f"  Risk: ${risk_dollars:.2f} | Reward: ${reward_dollars:.2f} (1:{signal.risk_reward_ratio:.1f})")
         logging.info(f"  Capital remaining: ${self.capital:.2f}")
-        logging.info(f"")
+        logging.info("")
 
     async def monitor_open_trades(self):
         """Monitor and close trades when targets/stops hit."""
@@ -487,17 +485,17 @@ class TripleThreatTrader:
         for trade_id, trade in list(self.open_trades.items()):
             try:
                 # Get current price
-                current_price = await self.exchange_service.get_current_price(trade['pair'])
+                current_price = await self.exchange_service.get_current_price(trade["pair"])
 
-                pnl_pct = ((current_price - trade['entry']) / trade['entry']) * 100
-                pnl_dollars = (current_price - trade['entry']) * trade['shares']
+                ((current_price - trade["entry"]) / trade["entry"]) * 100
+                (current_price - trade["entry"]) * trade["shares"]
 
                 # Check stop loss
-                if current_price <= trade['stop']:
+                if current_price <= trade["stop"]:
                     self.close_trade(trade_id, current_price, "STOP LOSS")
 
                 # Check target
-                elif current_price >= trade['target']:
+                elif current_price >= trade["target"]:
                     self.close_trade(trade_id, current_price, "TARGET HIT")
 
             except Exception as e:
@@ -508,30 +506,30 @@ class TripleThreatTrader:
         trade = self.open_trades.pop(trade_id)
 
         # Calculate P&L
-        pnl_dollars = (exit_price - trade['entry']) * trade['shares']
-        pnl_pct = ((exit_price - trade['entry']) / trade['entry']) * 100
+        pnl_dollars = (exit_price - trade["entry"]) * trade["shares"]
+        pnl_pct = ((exit_price - trade["entry"]) / trade["entry"]) * 100
 
         # Return capital + P&L
-        self.capital += trade['position_size'] + pnl_dollars
+        self.capital += trade["position_size"] + pnl_dollars
 
         # Record trade
-        trade['exit'] = exit_price
-        trade['closed_at'] = datetime.now()
-        trade['pnl_dollars'] = pnl_dollars
-        trade['pnl_pct'] = pnl_pct
-        trade['reason'] = reason
+        trade["exit"] = exit_price
+        trade["closed_at"] = datetime.now()
+        trade["pnl_dollars"] = pnl_dollars
+        trade["pnl_pct"] = pnl_pct
+        trade["reason"] = reason
 
         self.trade_history.append(trade)
 
         result_icon = "✅" if pnl_dollars > 0 else "❌"
 
-        logging.info(f"")
+        logging.info("")
         logging.info(f"{result_icon} TRADE CLOSED: {trade_id} - {reason}")
         logging.info(f"  Pair: {trade['pair']}")
         logging.info(f"  Entry: ${trade['entry']:.6f} → Exit: ${exit_price:.6f}")
         logging.info(f"  P&L: ${pnl_dollars:+.2f} ({pnl_pct:+.2f}%)")
         logging.info(f"  Capital: ${self.capital:.2f}")
-        logging.info(f"")
+        logging.info("")
 
         # Print stats
         self.print_stats()
@@ -542,11 +540,11 @@ class TripleThreatTrader:
             return
 
         total_trades = len(self.trade_history)
-        wins = sum(1 for t in self.trade_history if t['pnl_dollars'] > 0)
+        wins = sum(1 for t in self.trade_history if t["pnl_dollars"] > 0)
         losses = total_trades - wins
         win_rate = (wins / total_trades) * 100 if total_trades > 0 else 0
 
-        total_pnl = sum(t['pnl_dollars'] for t in self.trade_history)
+        total_pnl = sum(t["pnl_dollars"] for t in self.trade_history)
         roi = ((self.capital - self.initial_capital) / self.initial_capital) * 100
 
         logging.info("=" * 60)

@@ -107,19 +107,12 @@ async def analyze_pair(exchange, pair: str) -> dict:
 
 
 async def main():
-    print("=" * 70)
-    print("  EMA 9/20 CROSSOVER SIGNAL SCANNER")
-    print("  DRY RUN - No trades will be placed")
-    print("=" * 70)
-    print()
 
     # Verify API keys
     api_key = os.getenv("EXCHANGE_API_KEY")
     api_secret = os.getenv("EXCHANGE_SECRET_KEY")
 
     if not api_key or not api_secret or api_key == "your_api_key_here":
-        print("ERROR: API keys not configured!")
-        print("Please edit config\\.env with your Kraken API keys")
         return
 
     exchange = ccxt.kraken(
@@ -133,7 +126,6 @@ async def main():
     try:
         results = []
 
-        print("Scanning pairs...")
         for pair in PAIRS:
             result = await analyze_pair(exchange, pair)
             if result:
@@ -143,43 +135,26 @@ async def main():
         action_order = {"BUY": 0, "SAFE_BUY": 1, "HOLD": 2, "WARN": 3, "SELL": 4, "AVOID": 5}
         results.sort(key=lambda x: (action_order.get(x["action"], 99), -x["spread_change"]))
 
-        print()
-        print("-" * 70)
-        print(f"{'PAIR':<12} {'ACTION':<10} {'PRICE':>10} {'SPREAD':>10} {'DELTA':>10} {'TREND':>10}")
-        print("-" * 70)
 
         for r in results:
             action = r["action"]
 
             # Color coding via markers
-            if action in ("BUY", "SAFE_BUY"):
-                marker = "[+]"
-            elif action == "SELL":
-                marker = "[-]"
-            elif action == "WARN":
-                marker = "[!]"
+            if action in ("BUY", "SAFE_BUY") or action == "SELL" or action == "WARN":
+                pass
             else:
-                marker = "   "
+                pass
 
-            print(
-                f"{marker} {r['pair']:<8} {action:<10} ${r['price']:>9.4f} {r['spread']:>9.2f}% {r['spread_change']:>+9.3f}% {r['spread_trend']:>+9.3f}%"
-            )
 
-        print("-" * 70)
-        print()
 
         # Summary
         buys = [r for r in results if r["action"] in ("BUY", "SAFE_BUY")]
-        sells = [r for r in results if r["action"] == "SELL"]
+        [r for r in results if r["action"] == "SELL"]
 
-        print(f"BUY signals: {len(buys)}")
-        print(f"SELL signals: {len(sells)}")
 
         if buys:
-            print()
-            print("Top opportunities (gap widening):")
             for r in buys[:3]:
-                print(f"  {r['pair']}: {r['action']} - spread {r['spread']:.2f}%, delta {r['spread_change']:+.3f}%")
+                pass
 
     finally:
         await exchange.close()

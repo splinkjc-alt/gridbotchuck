@@ -362,7 +362,7 @@ class BotAPIServer:
                         updated_fields.append(key)
                     elif isinstance(value, dict):
                         # Nested object - validate subkeys
-                        for subkey in value.keys():
+                        for subkey in value:
                             if subkey not in allowed_subkeys:
                                 return web.json_response(
                                     {"success": False, "message": f"Cannot update {key}.{subkey}"},
@@ -927,9 +927,8 @@ class BotAPIServer:
                 total_usd = 0
                 if "total" in balance:
                     for currency, amount in balance["total"].items():
-                        if amount and amount > 0:
-                            if currency in ["USD", "USDT", "USDC"]:
-                                total_usd += amount
+                        if amount and amount > 0 and currency in ["USD", "USDT", "USDC"]:
+                            total_usd += amount
 
                 return web.json_response(
                     {"status": "success", "message": "Connection successful", "balance": total_usd}
@@ -1026,7 +1025,7 @@ class BotAPIServer:
 
                 # Parse dates
                 start_dt = datetime.fromisoformat(start_date.replace("T", " "))
-                end_dt = datetime.fromisoformat(end_date.replace("T", " "))
+                datetime.fromisoformat(end_date.replace("T", " "))
                 since = int(start_dt.timestamp() * 1000)
 
                 # Fetch OHLCV
@@ -1103,7 +1102,7 @@ class BotAPIServer:
 
             for i, (idx, row) in enumerate(ohlcv_data.iterrows()):
                 price = float(row["close"])
-                timestamp = row["timestamp"] if "timestamp" in row else idx
+                timestamp = row.get("timestamp", idx)
 
                 # Update progress
                 progress = 30 + int(60 * i / total_candles)

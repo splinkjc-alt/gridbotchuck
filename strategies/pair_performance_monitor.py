@@ -6,7 +6,6 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Dict, List
 
 from core.services.exchange_interface import ExchangeInterface
 
@@ -52,7 +51,7 @@ class PairPerformanceMonitor:
         self.check_interval = check_interval
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.pair_metrics: Dict[str, PairPerformance] = {}
+        self.pair_metrics: dict[str, PairPerformance] = {}
         self.monitoring = False
 
     async def analyze_pair(self, pair: str) -> PairPerformance:
@@ -118,7 +117,7 @@ class PairPerformanceMonitor:
             self.logger.error(f"Error analyzing {pair}: {e}")
             return None
 
-    def _calculate_volatility(self, candles: List) -> float:
+    def _calculate_volatility(self, candles: list) -> float:
         """
         Calculate price volatility from OHLCV candles.
 
@@ -142,7 +141,7 @@ class PairPerformanceMonitor:
         volatility = ((max_price - min_price) / avg_price) * 100
         return volatility
 
-    def _calculate_price_change(self, candles: List, hours: int) -> float:
+    def _calculate_price_change(self, candles: list, hours: int) -> float:
         """
         Calculate price change over specified hours.
 
@@ -203,7 +202,7 @@ class PairPerformanceMonitor:
 
         return total_score
 
-    async def find_better_pair(self, current_pair: str, candidate_pairs: List[str]) -> str | None:
+    async def find_better_pair(self, current_pair: str, candidate_pairs: list[str]) -> str | None:
         """
         Find a better performing pair than the current one.
 
@@ -245,7 +244,7 @@ class PairPerformanceMonitor:
 
         return best_pair
 
-    async def should_replace_pair(self, pair: str, last_trade_time: datetime = None, trades_count: int = 0) -> bool:
+    async def should_replace_pair(self, pair: str, last_trade_time: datetime | None = None, trades_count: int = 0) -> bool:
         """
         Determine if a pair should be replaced due to poor performance.
 
@@ -281,7 +280,7 @@ class PairPerformanceMonitor:
 
         return False
 
-    def get_top_performers(self, n: int = 5) -> List[PairPerformance]:
+    def get_top_performers(self, n: int = 5) -> list[PairPerformance]:
         """
         Get top N performing pairs from monitored pairs.
 
@@ -295,7 +294,7 @@ class PairPerformanceMonitor:
 
         return sorted_pairs[:n]
 
-    def get_pair_status(self, pair: str) -> Dict:
+    def get_pair_status(self, pair: str) -> dict:
         """Get current status of a trading pair."""
         metrics = self.pair_metrics.get(pair)
 

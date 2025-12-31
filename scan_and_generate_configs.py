@@ -90,15 +90,7 @@ async def main():
     load_dotenv()
 
     if not args.json:
-        print(f"\n{'=' * 60}")
-        print("  GridBot Chuck - Smart Pair Scanner")
-        print(f"{'=' * 60}")
-        print(f"  Exchange: {args.exchange.upper()}")
-        print(f"  Quote Currency: {args.quote}")
-        print(f"  Pairs to Find: {args.pairs}")
-        print(f"  Price Range: ${args.min_price} - ${args.max_price}")
-        print(f"  Min Volume: ${args.min_volume:,.0f}")
-        print(f"{'=' * 60}\n")
+        pass
 
     # Create temporary config for exchange service
     temp_config = {
@@ -159,28 +151,26 @@ async def main():
 
         if args.json:
             # Output as JSON
-            output = {
+            {
                 "exchange": args.exchange,
                 "quote_currency": args.quote,
                 "results": [r.to_dict() for r in results],
             }
-            print(json.dumps(output, indent=2))
         else:
             if results:
-                print(f"\n✓ Found {len(results)} suitable pairs!")
                 if not args.no_save:
-                    print(f"✓ Configs saved to {args.output_dir}/")
+                    pass
             else:
-                print("\n✗ No suitable pairs found. Try adjusting filters.")
+                pass
 
         # Cleanup
         await exchange_service.close_connection()
 
-    except Exception as e:
+    except Exception:
         if args.json:
-            print(json.dumps({"error": str(e)}))
+            pass
         else:
-            print(f"\n✗ Error: {e}")
+            pass
         sys.exit(1)
 
     finally:

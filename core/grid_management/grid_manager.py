@@ -24,7 +24,7 @@ class GridManager:
         self.sorted_buy_grids: list[float]
         self.sorted_sell_grids: list[float]
         self.grid_levels: dict[float, GridLevel] = {}
-        
+
         # Volatility-based spacing adjustment
         self._spacing_multiplier: float = 1.0
         self._original_num_grids: int | None = None
@@ -82,7 +82,7 @@ class GridManager:
         self,
         total_balance: float,
         current_price: float,
-        buy_percent: float = None,
+        buy_percent: float | None = None,
     ) -> float:
         """
         Calculates the order size for a grid level based on the total balance and buy percentage.
@@ -102,7 +102,7 @@ class GridManager:
         if buy_percent is None:
             position_sizing = self.config_manager.config.get("risk_management", {}).get("position_sizing", {})
             buy_percent = position_sizing.get("buy_percent_of_total", None)
-        
+
         if buy_percent is not None:
             # Use configured percentage of total portfolio
             buy_value = total_balance * (buy_percent / 100.0)
@@ -112,7 +112,7 @@ class GridManager:
             # Fall back to grid-based sizing
             total_grids = len(self.grid_levels)
             order_size = total_balance / total_grids / current_price
-        
+
         return order_size
 
     def get_initial_order_quantity(
@@ -398,89 +398,89 @@ class GridManager:
     def set_spacing_multiplier(self, multiplier: float) -> None:
         """
         Set a spacing multiplier for volatility-based grid adjustment.
-        
+
         A multiplier > 1.0 creates wider spacing (fewer grids for high volatility).
         A multiplier < 1.0 creates tighter spacing (more grids for low volatility).
-        
+
         Args:
             multiplier: Spacing multiplier (e.g., 1.5 for 50% wider, 0.75 for 25% tighter)
         """
         if multiplier <= 0:
             self.logger.warning(f"Invalid spacing multiplier {multiplier}, using 1.0")
             multiplier = 1.0
-        
+
         if multiplier != self._spacing_multiplier:
             old_multiplier = self._spacing_multiplier
             self._spacing_multiplier = multiplier
             self.logger.info(
                 f"Grid spacing multiplier changed: {old_multiplier:.2f}x -> {multiplier:.2f}x"
             )
-    
+
     def get_spacing_multiplier(self) -> float:
         """Get the current spacing multiplier."""
         return self._spacing_multiplier
-    
+
     def calculate_adjusted_num_grids(self) -> int:
         """
         Calculate the number of grids adjusted for spacing multiplier.
-        
+
         When volatility is high (multiplier > 1), use fewer grids for wider spacing.
         When volatility is low (multiplier < 1), use more grids for tighter spacing.
-        
+
         Returns:
             Adjusted number of grids
         """
         if self._original_num_grids is None:
             self._original_num_grids = self.config_manager.get_num_grids()
-        
+
         # Inverse relationship: higher multiplier = fewer grids = wider spacing
         adjusted = int(self._original_num_grids / self._spacing_multiplier)
-        
+
         # Ensure minimum of 3 grids and maximum of 2x original
         min_grids = 3
         max_grids = self._original_num_grids * 2
         adjusted = max(min_grids, min(adjusted, max_grids))
-        
+
         if adjusted != self._original_num_grids:
             self.logger.info(
                 f"Grid count adjusted for volatility: {self._original_num_grids} -> {adjusted} "
                 f"(multiplier: {self._spacing_multiplier:.2f}x)"
             )
-        
+
         return adjusted
-    
+
     def get_grid_spacing_percent(self) -> float:
         """
         Calculate the current grid spacing as a percentage.
-        
+
         Returns:
             Average spacing between grids as percentage
         """
-        if not hasattr(self, 'price_grids') or len(self.price_grids) < 2:
+        if not hasattr(self, "price_grids") or len(self.price_grids) < 2:
             return 0.0
-        
+
         total_spacing = 0.0
         for i in range(1, len(self.price_grids)):
             spacing = (self.price_grids[i] - self.price_grids[i-1]) / self.price_grids[i-1]
             total_spacing += spacing
-        
+
         return (total_spacing / (len(self.price_grids) - 1)) * 100
-    
+
     def get_grid_info(self) -> dict:
         """
         Get comprehensive grid information for monitoring/dashboard.
-        
+
         Returns:
             Dictionary with grid configuration details
         """
         return {
-            "num_grids": len(self.price_grids) if hasattr(self, 'price_grids') else 0,
-            "grid_bottom": min(self.price_grids) if hasattr(self, 'price_grids') and self.price_grids else 0,
-            "grid_top": max(self.price_grids) if hasattr(self, 'price_grids') and self.price_grids else 0,
-            "central_price": self.central_price if hasattr(self, 'central_price') else 0,
+            "num_grids": len(self.price_grids) if hasattr(self, "price_grids") else 0,
+            "grid_bottom": min(self.price_grids) if hasattr(self, "price_grids") and self.price_grids else 0,
+            "grid_top": max(self.price_grids) if hasattr(self, "price_grids") and self.price_grids else 0,
+            "central_price": self.central_price if hasattr(self, "central_price") else 0,
             "spacing_multiplier": self._spacing_multiplier,
             "avg_spacing_percent": self.get_grid_spacing_percent(),
             "strategy_type": self.strategy_type.value if self.strategy_type else None,
-            "buy_grids_count": len(self.sorted_buy_grids) if hasattr(self, 'sorted_buy_grids') else 0,
-            "sell_grids_count": len(self.sorted_sell_grids) if hasattr(self, 'sorted_sell_grids') else 0,
+            "buy_grids_count": len(self.sorted_buy_grids) if hasattr(self, "sorted_buy_grids") else 0,
+            "sell_grids_count": len(self.sorted_sell_grids) if hasattr(self, "sorted_sell_grids") else 0,
         }

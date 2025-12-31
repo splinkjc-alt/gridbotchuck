@@ -6,7 +6,6 @@ import asyncio
 from collections import deque
 import logging
 import time
-from typing import Dict
 
 
 class RateLimiter:
@@ -58,7 +57,7 @@ class RateLimiter:
             # Record this call
             self.call_times.append(time.time())
 
-    def get_stats(self) -> Dict[str, any]:
+    def get_stats(self) -> dict[str, any]:
         """Get rate limiter statistics."""
         now = time.time()
         recent_calls = sum(1 for t in self.call_times if t > now - self.time_window)
@@ -120,7 +119,7 @@ class ExchangeRateLimiter:
         limiter = self.limiters.get(endpoint_type, self.limiters["private"])
         await limiter.acquire(f"{self.exchange_name}/{endpoint_type}")
 
-    def get_stats(self) -> Dict[str, Dict]:
+    def get_stats(self) -> dict[str, dict]:
         """Get statistics for all rate limiters."""
         return {
             endpoint: limiter.get_stats()

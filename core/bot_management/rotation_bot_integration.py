@@ -11,10 +11,10 @@ import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from core.bot_management.event_bus import EventBus
-    from core.bot_management.profit_rotation_manager import ProfitRotationManager
-    from core.bot_management.grid_trading_bot import GridTradingBot
     from config.config_manager import ConfigManager
+    from core.bot_management.event_bus import EventBus
+    from core.bot_management.grid_trading_bot import GridTradingBot
+    from core.bot_management.profit_rotation_manager import ProfitRotationManager
 
 
 class RotationBotIntegration:

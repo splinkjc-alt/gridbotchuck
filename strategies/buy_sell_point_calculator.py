@@ -22,7 +22,7 @@ class BuySellPointCalculator:
         self,
         data: pd.DataFrame,
         num_grids: int = 8,
-        current_price: float = None,
+        current_price: float | None = None,
     ) -> dict[str, list[float]]:
         """
         Calculates optimized entry (buy) points using price levels and technical indicators.
@@ -42,12 +42,12 @@ class BuySellPointCalculator:
         # Calculate technical indicators
         rsi = self._calculate_rsi(data["close"], period=14)
         macd_line, signal_line = self._calculate_macd(data["close"])
-        bb_upper, bb_middle, bb_lower = self._calculate_bollinger_bands(data["close"], period=20)
+        bb_upper, _bb_middle, bb_lower = self._calculate_bollinger_bands(data["close"], period=20)
 
         current_price = current_price or data["close"].iloc[-1]
         price_high = data["high"].max()
         price_low = data["low"].min()
-        price_range = price_high - price_low
+        price_high - price_low
 
         # Determine trend
         trend = self._determine_trend(rsi.iloc[-1], macd_line.iloc[-1], signal_line.iloc[-1])
