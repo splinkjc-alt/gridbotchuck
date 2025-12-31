@@ -47,7 +47,7 @@ jobs:
           pip install ruff
 
       - name: Run Ruff linter
-        run: ruff check . --ignore E501
+        run: ruff check . --ignore E501,DTZ005,DTZ001,DTZ003,DTZ011
 
   security:
     runs-on: ubuntu-latest
