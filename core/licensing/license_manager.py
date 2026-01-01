@@ -107,8 +107,8 @@ class LicenseManager:
             import uuid
 
             identifiers.append(str(uuid.getnode()))  # MAC address
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Could not get MAC address for machine ID: {e}")
 
         combined = "|".join(identifiers)
         return hashlib.sha256(combined.encode()).hexdigest()[:32]

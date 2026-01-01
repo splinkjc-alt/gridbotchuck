@@ -16,6 +16,7 @@ Interactive command-line launcher for GridBot Chuck with menu options:
 import asyncio
 from datetime import datetime
 import json
+import logging
 import os
 from pathlib import Path
 import sys
@@ -31,6 +32,10 @@ from config.trading_mode import TradingMode
 from core.services.exchange_service_factory import ExchangeServiceFactory
 from strategies.auto_portfolio_manager import run_auto_portfolio
 from strategies.pair_scanner import run_smart_scan
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 
 # ANSI color codes
@@ -210,8 +215,8 @@ async def run_smart_scan_menu():
         # Cleanup
         await exchange_service.close_connection()
 
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Error during smart scan: {e}")
     finally:
         # Remove temp config
         if temp_config_path.exists():
@@ -281,9 +286,9 @@ async def run_auto_portfolio_menu(
         await exchange_service.close_connection()
 
     except KeyboardInterrupt:
-        pass
-    except Exception:
-        pass
+        logger.info("Auto-portfolio interrupted by user")
+    except Exception as e:
+        logger.error(f"Error during auto-portfolio: {e}")
     finally:
         if temp_config_path.exists():
             temp_config_path.unlink()
@@ -335,8 +340,9 @@ def main():
     try:
         asyncio.run(main_menu())
     except KeyboardInterrupt:
-        pass
-    except Exception:
+        logger.info("Launcher interrupted by user")
+    except Exception as e:
+        logger.error(f"Error in launcher: {e}")
         sys.exit(1)
 
 

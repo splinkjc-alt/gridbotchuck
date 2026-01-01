@@ -3,6 +3,8 @@ Grid Trading Bot - Taskbar Control Application
 Provides system tray icon for easy on/off control of the bot
 """
 
+from contextlib import suppress
+import logging
 from pathlib import Path
 import sys
 from threading import Event, Thread
@@ -12,6 +14,8 @@ import webbrowser
 from PIL import Image, ImageDraw
 import pystray
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 class BotTaskbarControl:
@@ -51,10 +55,9 @@ class BotTaskbarControl:
         draw.ellipse([margin, margin, size - margin, size - margin], fill=color, outline="black", width=2)
 
         # Draw text
-        try:
+        # Font loading might fail on some systems - suppress exception
+        with suppress(Exception):
             draw.text((size // 2 - 6, size // 2 - 8), text, fill="white")
-        except:
-            pass  # Font loading might fail on some systems
 
         return image
 
@@ -63,7 +66,8 @@ class BotTaskbarControl:
         try:
             response = requests.get(f"{self.api_url}/api/bot/status", timeout=2)
             return response.status_code == 200
-        except:
+        except Exception as e:
+            logger.debug(f"API not running or unreachable: {e}")
             return False
 
     def get_bot_status(self):
@@ -73,8 +77,8 @@ class BotTaskbarControl:
             if response.status_code == 200:
                 data = response.json()
                 return data.get("status", "unknown")
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"Could not get bot status: {e}")
         return "unknown"
 
     def start_bot(self):
