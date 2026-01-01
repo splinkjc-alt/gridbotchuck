@@ -25,6 +25,8 @@ class TestGridTradingStrategy:
         grid_manager = Mock(spec=GridManager)
         order_manager = Mock(spec=OrderManager)
         balance_tracker = Mock(spec=BalanceTracker)
+        balance_tracker.crypto_balance = 0.0
+        balance_tracker.balance = 0.0
         trading_performance_analyzer = Mock(spec=TradingPerformanceAnalyzer)
         plotter = Mock(spec=Plotter)
         event_bus = Mock(spec=EventBus)

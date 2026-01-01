@@ -58,6 +58,7 @@ class TestOrderManager:
         grid_manager.can_place_order.side_effect = lambda level, side: side == OrderSide.BUY
         order_validator.adjust_and_validate_buy_quantity.return_value = 0.01
         balance_tracker.balance = 1000
+        balance_tracker.get_total_balance_value.return_value = 10000
         order_execution_strategy.execute_limit_order = AsyncMock(return_value=Mock())
 
         await manager.initialize_grid_orders(49500)
@@ -178,6 +179,7 @@ class TestOrderManager:
         grid_manager.can_place_order.return_value = True
         grid_manager.get_order_size_for_grid_level.return_value = 0.1
         order_validator.adjust_and_validate_buy_quantity.return_value = 0.1
+        balance_tracker.balance = 5000
         balance_tracker.get_total_balance_value.return_value = 50000
         order_execution_strategy.execute_limit_order.side_effect = OrderExecutionFailedError(
             "Test error",
@@ -207,6 +209,7 @@ class TestOrderManager:
         grid_manager.can_place_order.return_value = True
         order_validator.adjust_and_validate_buy_quantity.side_effect = ValueError("Insufficient balance")
         balance_tracker.balance = 0  # Simulate insufficient balance
+        balance_tracker.get_total_balance_value.return_value = 10000
         order_execution_strategy.execute_limit_order = AsyncMock()
 
         await manager.initialize_grid_orders(49500)
@@ -290,6 +293,8 @@ class TestOrderManager:
         quantity = 0.01
 
         order_validator.adjust_and_validate_buy_quantity.return_value = quantity
+        balance_tracker.balance = 1000
+        balance_tracker.get_total_balance_value.return_value = 10000
         order_execution_strategy.execute_limit_order = AsyncMock(return_value=None)  # Make it an AsyncMock
 
         await manager._place_buy_order(sell_grid_level, buy_grid_level, quantity)
