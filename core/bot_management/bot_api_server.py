@@ -48,9 +48,9 @@ class BotAPIServer:
         # Create app with middlewares
         self.app = web.Application(
             middlewares=[
-                security_headers_middleware,
-                create_rate_limit_middleware(self.rate_limiter),
                 create_api_auth_middleware(self.api_auth),
+                create_rate_limit_middleware(self.rate_limiter),
+                security_headers_middleware,
             ]
         )
         
