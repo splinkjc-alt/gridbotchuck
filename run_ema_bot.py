@@ -137,8 +137,8 @@ class EMACrossoverBot:
                                     "entry_time": datetime.now(),
                                 }
                                 self.logger.info(f"  {pair}: {amount:.4f} (~${value:.2f})")
-                        except:
-                            pass
+                        except Exception as e:
+                            self.logger.debug(f"Could not fetch ticker for {pair}: {e}")
 
             usd = balance["total"].get("USD", 0)
             self.logger.info(f"  USD: ${usd:.2f}")
