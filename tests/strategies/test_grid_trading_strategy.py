@@ -287,12 +287,14 @@ class TestGridTradingStrategy:
 
     @pytest.mark.asyncio
     async def test_initialize_grid_orders_once_first_time(self, setup_strategy):
-        create_strategy, _, _, grid_manager, order_manager, _, _, _, _ = setup_strategy
+        create_strategy, _, _, grid_manager, order_manager, balance_tracker, _, _, _ = setup_strategy
         strategy = create_strategy()
 
         grid_manager.get_trigger_price.return_value = 15000
         order_manager.perform_initial_purchase = AsyncMock(return_value=True)
         order_manager.initialize_grid_orders = AsyncMock()
+        balance_tracker.sync_balances_from_exchange = AsyncMock(return_value=True)
+        balance_tracker.crypto_balance = 0.1  # Simulate crypto after purchase
 
         result = await strategy._initialize_grid_orders_once(
             current_price=15100,
@@ -472,11 +474,13 @@ class TestGridTradingStrategy:
 
     @pytest.mark.asyncio
     async def test_initialize_grid_orders_once_trigger_price_equals_last_price(self, setup_strategy):
-        create_strategy, _, _, _, order_manager, _, _, _, _ = setup_strategy
+        create_strategy, _, _, _, order_manager, balance_tracker, _, _, _ = setup_strategy
         strategy = create_strategy()
 
-        order_manager.perform_initial_purchase = AsyncMock()
+        order_manager.perform_initial_purchase = AsyncMock(return_value=True)
         order_manager.initialize_grid_orders = AsyncMock()
+        balance_tracker.sync_balances_from_exchange = AsyncMock(return_value=True)
+        balance_tracker.crypto_balance = 0.1  # Simulate crypto after purchase
 
         result = await strategy._initialize_grid_orders_once(
             current_price=15000,

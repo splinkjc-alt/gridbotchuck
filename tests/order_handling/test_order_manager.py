@@ -208,7 +208,7 @@ class TestOrderManager:
         grid_manager.grid_levels = {49000: Mock()}
         grid_manager.can_place_order.return_value = True
         order_validator.adjust_and_validate_buy_quantity.side_effect = ValueError("Insufficient balance")
-        balance_tracker.balance = 0  # Simulate insufficient balance
+        balance_tracker.balance = 1500  # Enough to pass reserve check but not for order
         balance_tracker.get_total_balance_value.return_value = 10000
         order_execution_strategy.execute_limit_order = AsyncMock()
 
