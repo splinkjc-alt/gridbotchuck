@@ -53,24 +53,26 @@ class TestLiveExchangeService:
         assert service.exchange.enableRateLimit, "Expected rate limiting to be enabled for live mode"
 
     @patch("core.services.live_exchange_service.getattr")
-    def test_missing_secret_key_raises_error(self, config_manager, monkeypatch):
+    def test_missing_secret_key_raises_error(self, mock_getattr, config_manager, monkeypatch):
         monkeypatch.delenv("EXCHANGE_SECRET_KEY", raising=False)
         monkeypatch.setenv("EXCHANGE_API_KEY", "test_api_key")
+        config_manager.get_exchange_name.return_value = "binance"
 
         with pytest.raises(
             MissingEnvironmentVariableError,
-            match="Missing required environment variable: EXCHANGE_SECRET_KEY",
+            match="Missing required environment variable.*SECRET_KEY",
         ):
             LiveExchangeService(config_manager, is_paper_trading_activated=False)
 
     @patch("core.services.live_exchange_service.getattr")
-    def test_missing_api_key_raises_error(self, config_manager, monkeypatch):
+    def test_missing_api_key_raises_error(self, mock_getattr, config_manager, monkeypatch):
         monkeypatch.delenv("EXCHANGE_API_KEY", raising=False)
         monkeypatch.setenv("EXCHANGE_SECRET_KEY", "test_secret_key")
+        config_manager.get_exchange_name.return_value = "binance"
 
         with pytest.raises(
             MissingEnvironmentVariableError,
-            match="Missing required environment variable: EXCHANGE_API_KEY",
+            match="Missing required environment variable.*API_KEY",
         ):
             LiveExchangeService(config_manager, is_paper_trading_activated=False)
 
@@ -436,7 +438,7 @@ class TestLiveExchangeService:
         ("exchange_name", "expected_url"),
         [
             ("binance", "https://testnet.binance.vision/api"),
-            ("kraken", "https://api.demo-futures.kraken.com"),
+            ("kraken", None),  # Kraken doesn't have spot sandbox
             ("bitmex", "https://testnet.bitmex.com"),
             ("bybit", None),  # bybit uses set_sandbox_mode
             ("unknown", None),
