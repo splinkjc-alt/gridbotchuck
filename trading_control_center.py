@@ -164,13 +164,25 @@ def chat_with_claude(user_message):
     # Simple keyword-based responses
     msg_lower = user_message.lower()
     if "crypto" in msg_lower or "bitcoin" in msg_lower:
-        return "The crypto bot is scanning 20 pairs every 60 seconds with RSI < 45 threshold. Currently waiting for oversold opportunities!"
+        return (
+            "The crypto bot is scanning 20 pairs every 60 seconds with RSI < 45 threshold. "
+            "Currently waiting for oversold opportunities!"
+        )
     elif "stock" in msg_lower:
-        return "Stock bot is sleeping - market closed for the weekend. It will automatically wake up and start trading Monday morning at 9:30 AM ET!"
+        return (
+            "Stock bot is sleeping - market closed for the weekend. "
+            "It will automatically wake up and start trading Monday morning at 9:30 AM ET!"
+        )
     elif "grid" in msg_lower or "dag" in msg_lower:
-        return "GridBot Chuck is running smoothly on DAG/USD with grid trading strategy. Making small consistent profits!"
+        return (
+            "GridBot Chuck is running smoothly on DAG/USD with grid trading strategy. "
+            "Making small consistent profits!"
+        )
     elif "status" in msg_lower or "how" in msg_lower:
-        return "All 3 bots are running perfectly! Crypto bot: Active (0 trades yet). Stock bot: Sleeping (weekend). GridBot: Active and profitable."
+        return (
+            "All 3 bots are running perfectly! Crypto bot: Active (0 trades yet). "
+            "Stock bot: Sleeping (weekend). GridBot: Active and profitable."
+        )
     else:
         import random
         return random.choice(responses)

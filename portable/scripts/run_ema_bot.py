@@ -341,10 +341,7 @@ class EMACrossoverBot:
                 market = await self.exchange.load_markets()
                 if pair in market:
                     amount_precision = market[pair].get("precision", {}).get("amount", 8)
-                    if isinstance(amount_precision, int):
-                        qty = round(qty, amount_precision)
-                    else:
-                        qty = round(qty, 4)  # Default to 4 decimals
+                    qty = round(qty, amount_precision) if isinstance(amount_precision, int) else round(qty, 4)
             except Exception:
                 qty = round(qty, 4)  # Fallback
 

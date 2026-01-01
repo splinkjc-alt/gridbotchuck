@@ -110,7 +110,10 @@ class EMACrossoverBot:
                 for order in orders:
                     try:
                         await self.exchange.cancel_order(order["id"], order["symbol"])
-                        self.logger.info(f"  Cancelled: {order['side']} {order['amount']} {order['symbol']} @ ${order['price']}")
+                        self.logger.info(
+                            f"  Cancelled: {order['side']} {order['amount']} "
+                            f"{order['symbol']} @ ${order['price']}"
+                        )
                     except Exception as e:
                         self.logger.warning(f"  Failed to cancel {order['id']}: {e}")
             else:
@@ -185,7 +188,10 @@ class EMACrossoverBot:
 
                     # Log significant signals
                     if sig["action"] in ("BUY", "SAFE_BUY"):
-                        self.logger.info(f"  [BUY] {pair}: {sig['action']} - spread {sig['spread']:.2f}%, delta {sig['spread_change']:+.3f}%")
+                        self.logger.info(
+                            f"  [BUY] {pair}: {sig['action']} - spread {sig['spread']:.2f}%, "
+                            f"delta {sig['spread_change']:+.3f}%"
+                        )
                     elif sig["action"] == "SELL":
                         self.logger.info(f"  [SELL] {pair}: SELL signal")
 
