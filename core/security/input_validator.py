@@ -90,10 +90,16 @@ class InputValidator:
         Raises:
             ValueError: If value is not a valid percentage
         """
-        num = InputValidator.validate_positive_number(value, name)
+        try:
+            num = float(value)
+        except (TypeError, ValueError):
+            raise ValueError(f"{name} must be a number")
         
         if num < 0 or num > 100:
             raise ValueError(f"{name} must be between 0 and 100")
+        
+        if not isinstance(num, (int, float)) or num != num:  # Check for NaN
+            raise ValueError(f"{name} must be a valid number")
         
         return num
     

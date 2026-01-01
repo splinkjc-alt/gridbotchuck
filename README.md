@@ -356,7 +356,48 @@ SELECT * FROM orders;
 
 ---
 
-## 🔒 Risk Management
+## 🔒 Security & Risk Management
+
+**GridBot Chuck takes security seriously.** Your API keys control real money.
+
+### Quick Security Setup (5 Minutes)
+
+1. **Protect API Keys**
+   ```bash
+   cp .env.example .env
+   chmod 600 .env  # Make it private
+   ```
+
+2. **Generate Dashboard API Key**
+   ```bash
+   python -c "import secrets; print(secrets.token_urlsafe(32))"
+   ```
+   Add to `.env`:
+   ```env
+   GRIDBOT_API_KEY=your-generated-key-here
+   ```
+
+3. **Exchange Security**
+   - ❌ **NEVER** use API keys with withdrawal permissions
+   - ✅ **ALWAYS** enable IP whitelisting on exchange
+   - ✅ **ALWAYS** enable 2FA on exchange account
+   - ✅ **ALWAYS** start with paper trading
+
+### Security Features
+
+**Built-in Protections:**
+- ✅ API Authentication (required for all endpoints)
+- ✅ Rate Limiting (60 req/min per IP)
+- ✅ SQL Injection Protection (parameterized queries)
+- ✅ XSS Protection (Content Security Policy)
+- ✅ Path Traversal Protection
+- ✅ Input Validation (all user inputs)
+- ✅ CORS Restrictions (localhost only by default)
+- ✅ Security Headers (CSP, X-Frame-Options, etc.)
+
+**Read Full Documentation:**
+- [SECURITY_QUICKSTART.md](SECURITY_QUICKSTART.md) - 5-minute setup guide
+- [SECURITY.md](SECURITY.md) - Complete security policy
 
 ### Built-in Safety Features
 
