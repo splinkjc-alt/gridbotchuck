@@ -65,5 +65,5 @@ class TestAPIAuth:
         # Generated keys should be different
         assert auth1.api_key != auth2.api_key
         
-        # Should be URL-safe
-        assert "/" not in auth1.api_key or "+" not in auth1.api_key
+        # Should be URL-safe (no / or + characters)
+        assert "/" not in auth1.api_key and "+" not in auth1.api_key

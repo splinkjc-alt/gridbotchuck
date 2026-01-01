@@ -3,7 +3,6 @@ API Authentication and Authorization middleware.
 Provides API key-based authentication for the REST API server.
 """
 
-import hashlib
 import logging
 import os
 import secrets
@@ -60,10 +59,7 @@ class APIAuth:
         if not provided_key:
             return False
         
-        return secrets.compare_digest(
-            hashlib.sha256(provided_key.encode()).digest(),
-            hashlib.sha256(self.api_key.encode()).digest()
-        )
+        return secrets.compare_digest(provided_key, self.api_key)
     
     @staticmethod
     def auth_required(handler):
