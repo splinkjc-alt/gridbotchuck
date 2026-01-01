@@ -6,7 +6,7 @@ Automatically detects stuck markets and switches to better performing pairs.
 import asyncio
 import contextlib
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from core.bot_management.multi_pair_manager import MultiPairManager, PairStatus
@@ -143,7 +143,7 @@ class EnhancedMultiPairManager(MultiPairManager):
             # Check if we're in cooldown period
             last_switch = self.last_switch_time.get(pair)
             if last_switch:
-                time_since_switch = datetime.now() - last_switch
+                time_since_switch = datetime.now(UTC) - last_switch
                 if time_since_switch.total_seconds() < self.switch_cooldown:
                     remaining = self.switch_cooldown - time_since_switch.total_seconds()
                     self.logger.debug(
@@ -223,7 +223,7 @@ class EnhancedMultiPairManager(MultiPairManager):
 
             if success:
                 # Record switch time
-                self.last_switch_time[new_pair] = datetime.now()
+                self.last_switch_time[new_pair] = datetime.now(UTC)
 
                 # Publish event
                 await self.event_bus.publish(
@@ -232,7 +232,7 @@ class EnhancedMultiPairManager(MultiPairManager):
                         "old_pair": old_pair,
                         "new_pair": new_pair,
                         "reason": reason,
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     },
                 )
 
@@ -274,7 +274,7 @@ class EnhancedMultiPairManager(MultiPairManager):
                 # Add switch history
                 last_switch = self.last_switch_time.get(pair)
                 if last_switch:
-                    time_since_switch = datetime.now() - last_switch
+                    time_since_switch = datetime.now(UTC) - last_switch
                     pair_status["time_since_switch_minutes"] = time_since_switch.total_seconds() / 60
 
         return base_status
@@ -284,7 +284,7 @@ class EnhancedMultiPairManager(MultiPairManager):
         top_performers = self.performance_monitor.get_top_performers(n=10)
 
         return {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "active_pairs": list(self.active_pairs.keys()),
             "top_performers": [
                 {

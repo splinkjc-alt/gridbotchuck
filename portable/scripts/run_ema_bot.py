@@ -6,7 +6,8 @@ Reads settings from config/ema_settings.json if available.
 """
 
 import asyncio
-from datetime import datetime
+import contextlib
+from datetime import UTC, datetime
 import json
 import logging
 import os
@@ -21,9 +22,9 @@ portable_root = script_dir.parent
 # Add script directory to path
 sys.path.insert(0, str(script_dir))
 
-import ccxt.async_support as ccxt
-from dotenv import load_dotenv
-import pandas as pd
+import ccxt.async_support as ccxt  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
+import pandas as pd  # noqa: E402
 
 # Load env from config folder
 env_path = portable_root / "config" / ".env"
@@ -47,15 +48,12 @@ def load_ema_settings():
 
     settings_file = portable_root / "config" / "ema_settings.json"
     if settings_file.exists():
-        try:
-            with open(settings_file) as f:
-                loaded = json.load(f)
-                # Merge with defaults
-                for key in defaults:
-                    if key in loaded:
-                        defaults[key] = loaded[key]
-        except Exception:
-            pass
+        with contextlib.suppress(Exception), open(settings_file) as f:
+            loaded = json.load(f)
+            # Merge with defaults
+            for key in defaults:
+                if key in loaded:
+                    defaults[key] = loaded[key]
     else:
         pass
 
@@ -155,6 +153,8 @@ class EMACrossoverBot:
                     self.logger.error(f"Cycle error: {e}")
                     await asyncio.sleep(30)
 
+        except Exception:
+            pass
         finally:
             await self.shutdown()
 
@@ -195,7 +195,7 @@ class EMACrossoverBot:
                     pair = f"{currency}/USD"
                     if pair in self.candidate_pairs:
                         # Get current price
-                        try:
+                        with contextlib.suppress(Exception):
                             ticker = await self.exchange.fetch_ticker(pair)
                             price = ticker["last"]
                             value = amount * price
@@ -203,11 +203,9 @@ class EMACrossoverBot:
                                 self.positions[pair] = {
                                     "qty": amount,
                                     "entry_price": price,  # Assume current price as entry
-                                    "entry_time": datetime.now(),
+                                    "entry_time": datetime.now(UTC),
                                 }
                                 self.logger.info(f"  {pair}: {amount:.4f} (~${value:.2f})")
-                        except:
-                            pass
 
             usd = balance["total"].get("USD", 0)
             self.logger.info(f"  USD: ${usd:.2f}")
@@ -218,7 +216,7 @@ class EMACrossoverBot:
 
     async def run_cycle(self):
         """Run one analysis cycle."""
-        self.logger.info(f"\n--- Cycle at {datetime.now().strftime('%H:%M:%S')} ---")
+        self.logger.info(f"\n--- Cycle at {datetime.now(UTC).strftime('%H:%M:%S')} ---")
 
         # Analyze all pairs
         signals = await self.scan_all_pairs()
@@ -347,7 +345,7 @@ class EMACrossoverBot:
                         qty = round(qty, amount_precision)
                     else:
                         qty = round(qty, 4)  # Default to 4 decimals
-            except:
+            except Exception:
                 qty = round(qty, 4)  # Fallback
 
             self.logger.info(f">>> BUYING {qty:.4f} {pair} @ ${price:.4f} (${position_value:.2f})")
@@ -359,7 +357,7 @@ class EMACrossoverBot:
                 self.positions[pair] = {
                     "qty": qty,
                     "entry_price": price,
-                    "entry_time": datetime.now(),
+                    "entry_time": datetime.now(UTC),
                 }
                 self.logger.info(f"[OK] BUY FILLED: {pair}")
 

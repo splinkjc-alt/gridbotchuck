@@ -17,8 +17,9 @@ Configuration:
 """
 
 import asyncio
+import contextlib
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 import logging
 
@@ -162,7 +163,7 @@ class PaperTrade:
         # Track significant price movements (>1% from entry)
         price_change_pct = abs((current_price / self.entry_price - 1) * 100)
         if price_change_pct >= 1.0:
-            self.last_significant_move_time = datetime.now()
+            self.last_significant_move_time = datetime.now(UTC)
 
         # 1. Check EMA-based trailing stop (NEW!)
         if ema_9 is not None and current_price < ema_9:
@@ -182,7 +183,7 @@ class PaperTrade:
 
         # 4. Check time-based exit (NEW!)
         # If no significant movement (>1%) in 6 hours, close position
-        time_since_last_move = datetime.now() - self.last_significant_move_time
+        time_since_last_move = datetime.now(UTC) - self.last_significant_move_time
         if time_since_last_move.total_seconds() > (6 * 3600):  # 6 hours
             self.close_trade(current_price, TradeStatus.STOPPED_OUT)
             return True
@@ -191,7 +192,7 @@ class PaperTrade:
 
     def close_trade(self, exit_price: float, status: TradeStatus):
         """Close the trade."""
-        self.exit_time = datetime.now()
+        self.exit_time = datetime.now(UTC)
         self.exit_price = exit_price
         self.status = status
 
@@ -347,13 +348,11 @@ class DayTradingAssistant:
     def _load_candidate_pairs(self) -> list[str]:
         """Load candidate pairs from config."""
         # Try to get from market_scanner config
-        try:
+        with contextlib.suppress(Exception):
             scanner_config = self.config_manager.config.get("market_scanner", {})
             pairs = scanner_config.get("candidate_pairs", [])
             if pairs:
                 return pairs
-        except:
-            pass
 
         # Default list of active crypto pairs
         return [
@@ -540,7 +539,7 @@ class DayTradingAssistant:
 
         return TradeOpportunity(
             opportunity_id=opportunity_id,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(UTC),
             pair=pair,
             analysis=analysis,
             patterns=patterns,
@@ -565,7 +564,7 @@ class DayTradingAssistant:
             trade_id=f"T{self.next_trade_id:04d}",
             opportunity_id=opportunity.opportunity_id,
             pair=opportunity.pair,
-            entry_time=datetime.now(),
+            entry_time=datetime.now(UTC),
             entry_price=opportunity.suggested_entry,
             position_size_dollars=opportunity.suggested_position_size,
             quantity=quantity,

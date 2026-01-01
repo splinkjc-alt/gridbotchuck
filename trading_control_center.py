@@ -12,7 +12,7 @@ Run: streamlit run trading_control_center.py
 Access: http://localhost:8501 (works on phone too!)
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 import time
 
@@ -368,5 +368,5 @@ with tab4:
 
 # ==================== FOOTER ====================
 st.markdown("---")
-st.caption(f"🤖 Trading Control Center | Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+st.caption(f"🤖 Trading Control Center | Last updated: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')}")
 st.caption("💡 Tip: Add this page to your Android home screen for quick access!")

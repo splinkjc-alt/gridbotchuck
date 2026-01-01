@@ -10,7 +10,7 @@ This strategy:
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 import logging
 
@@ -361,7 +361,7 @@ class EMACrossoverStrategy:
                 status = self.monitored_coins.get(pair, CoinStatus(pair=pair, last_signal=CrossoverSignal.BUY))
                 status.position_held = True
                 status.entry_price = price
-                status.entry_time = datetime.now()
+                status.entry_time = datetime.now(UTC)
                 status.quantity = quantity
                 status.last_signal = CrossoverSignal.BUY
 

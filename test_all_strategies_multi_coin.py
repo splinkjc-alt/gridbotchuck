@@ -2,7 +2,7 @@
 Multi-Coin Strategy Tester
 Tests different strategy options across multiple coins to find best approach.
 """
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import ccxt
 import pandas as pd
@@ -89,7 +89,7 @@ def backtest_strategy(df: pd.DataFrame, strategy: Strategy) -> Strategy:
 def test_coin(exchange, pair: str, hours_lookback: int = 24) -> dict:
     """Test all strategies on a single coin."""
     try:
-        since = exchange.parse8601((datetime.now() - timedelta(hours=hours_lookback)).isoformat())
+        since = exchange.parse8601((datetime.now(UTC) - timedelta(hours=hours_lookback)).isoformat())
         ohlcv = exchange.fetch_ohlcv(pair, "5m", since=since, limit=1000)
 
         df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])

@@ -302,7 +302,7 @@ class StockTradingAssistant:
             "stop": stop,
             "target": target,
             "shares": shares,
-            "opened_at": datetime.now()
+            "opened_at": datetime.now(datetime.UTC)
         }
 
     async def monitor_open_trades(self):

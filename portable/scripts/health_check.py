@@ -14,8 +14,8 @@ script_dir = Path(__file__).parent
 portable_root = script_dir.parent
 sys.path.insert(0, str(script_dir))
 
-import ccxt.async_support as ccxt
-from dotenv import load_dotenv
+import ccxt.async_support as ccxt  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
 
 # Load env from config folder
 env_path = portable_root / "config" / ".env"
@@ -63,7 +63,7 @@ async def main():
                         value = amount * price
                         if value > 0.01:
                             total_value += value
-                    except:
+                    except Exception:
                         if amount > 0.01:
                             pass
 
@@ -79,9 +79,9 @@ async def main():
             pass
 
 
+
     except Exception:
         pass
-
     finally:
         await exchange.close()
 

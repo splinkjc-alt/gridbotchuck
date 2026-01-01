@@ -13,7 +13,7 @@ Premium features:
 Run: streamlit run trading_control_center_enhanced.py
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import os
 import time
 
@@ -322,7 +322,7 @@ def create_performance_chart():
 def create_price_chart(pair="BTC/USD"):
     """Create live price chart"""
     # Placeholder - replace with real price data
-    times = pd.date_range(start=datetime.now() - timedelta(hours=24), periods=100, freq="15min")
+    times = pd.date_range(start=datetime.now(UTC) - timedelta(hours=24), periods=100, freq="15min")
     prices = [45000 + i*10 + (i%10)*50 for i in range(100)]
 
     fig = go.Figure(data=[go.Candlestick(
@@ -545,7 +545,7 @@ with tab6:
 st.markdown("---")
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.caption(f"🤖 Last update: {datetime.now().strftime('%H:%M:%S')}")
+    st.caption(f"🤖 Last update: {datetime.now(UTC).strftime('%H:%M:%S')}")
 with col2:
     if st.checkbox("🔄 Auto-refresh (10s)"):
         time.sleep(10)

@@ -3,7 +3,8 @@ GridBot Pro - License Manager
 Validates and manages software licenses for commercial distribution.
 """
 
-from datetime import datetime, timedelta
+import contextlib
+from datetime import UTC, datetime, timedelta
 import hashlib
 import hmac
 import json
@@ -103,12 +104,10 @@ class LicenseManager:
         ]
 
         # Try to get more hardware-specific info
-        try:
+        with contextlib.suppress(Exception):
             import uuid
 
             identifiers.append(str(uuid.getnode()))  # MAC address
-        except Exception:
-            pass
 
         combined = "|".join(identifiers)
         return hashlib.sha256(combined.encode()).hexdigest()[:32]
@@ -139,13 +138,13 @@ class LicenseManager:
         if expiry_days is None:
             expiry_days = self.FEATURE_LIMITS.get(license_type, {}).get("expiry_days", 365)
 
-        expiry_date = datetime.now() + timedelta(days=expiry_days)
+        expiry_date = datetime.now(UTC) + timedelta(days=expiry_days)
 
         license_data = {
             "type": license_type,
             "email": customer_email,
             "machine_id": machine_id,
-            "issued": datetime.now().isoformat(),
+            "issued": datetime.now(UTC).isoformat(),
             "expires": expiry_date.isoformat(),
             "version": "2.0",
         }
@@ -203,7 +202,7 @@ class LicenseManager:
 
                     # Check expiration
                     expires = datetime.fromisoformat(data.get("expires", "2000-01-01"))
-                    if expires < datetime.now():
+                    if expires < datetime.now(UTC):
                         logger.warning("License has expired!")
                         self._set_trial_mode()
                         return
