@@ -276,7 +276,8 @@ class EMACrossoverBot:
                         qty = round(qty, amount_precision)
                     else:
                         qty = round(qty, 4)  # Default to 4 decimals
-            except:
+            except Exception as e:
+                self.logger.debug(f"Could not load market precision for {pair}: {e}")
                 qty = round(qty, 4)  # Fallback
 
             self.logger.info(f">>> BUYING {qty:.4f} {pair} @ ${price:.4f} (${position_value:.2f})")
