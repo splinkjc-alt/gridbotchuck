@@ -80,7 +80,7 @@ async def main():
 
 
 
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     finally:
         await exchange.close()

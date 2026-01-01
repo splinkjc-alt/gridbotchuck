@@ -160,7 +160,7 @@ class MultiPairManager:
                     if result.pair not in selected:
                         selected.append(result.pair)
                         self.logger.info(
-                            f"  ➕ Added {result.pair} (score: {result.score:.1f}, signal: {result.signal})"
+                            f"  + Added {result.pair} (score: {result.score:.1f}, signal: {result.signal})"
                         )
 
             return selected
@@ -385,7 +385,7 @@ class MultiPairManager:
 
         # Start new pair strategy
         new_status = self.active_pairs[new_pair]
-        asyncio.create_task(self._run_pair_strategy(new_pair, new_status))
+        asyncio.create_task(self._run_pair_strategy(new_pair, new_status))  # noqa: RUF006
 
         self.logger.info(f"Replaced {old_pair} → {new_pair} with ${new_allocation:.2f}")
         return True

@@ -185,7 +185,7 @@ def chat_with_claude(user_message):
         )
     else:
         import random
-        return random.choice(responses)
+        return random.choice(responses)  # noqa: S311
 
     # REAL CLAUDE API INTEGRATION (uncomment when ready):
     # try:

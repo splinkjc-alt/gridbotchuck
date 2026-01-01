@@ -17,6 +17,7 @@ Smart Prioritization:
 
 import asyncio
 from collections.abc import Callable
+import contextlib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
@@ -297,10 +298,8 @@ class AutoPortfolioManager:
                 self._print_status()
 
                 # Wait for next cycle
-                try:
+                with contextlib.suppress(TimeoutError):  # Normal timeout, continue loop
                     await asyncio.wait_for(self._stop_event.wait(), timeout=self.scan_interval)
-                except TimeoutError:
-                    pass  # Normal timeout, continue loop
 
             except Exception as e:
                 self.logger.error(f"Error in scan cycle: {e}", exc_info=True)

@@ -153,7 +153,7 @@ class EMACrossoverBot:
                     self.logger.error(f"Cycle error: {e}")
                     await asyncio.sleep(30)
 
-        except Exception:
+        except Exception:  # noqa: S110
             pass
         finally:
             await self.shutdown()

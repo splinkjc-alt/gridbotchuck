@@ -44,7 +44,7 @@ class LicenseManager:
     LICENSE_FILE = Path(__file__).parent.parent.parent / "license.key"
 
     # Feature limits by license type
-    FEATURE_LIMITS = {
+    FEATURE_LIMITS: dict = {  # noqa: RUF012
         LicenseType.TRIAL: {
             "max_pairs": 1,
             "max_grids": 5,

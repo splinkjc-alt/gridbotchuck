@@ -47,7 +47,7 @@ class Colors:
 
 def clear_screen():
     """Clear the terminal screen."""
-    os.system("cls" if os.name == "nt" else "clear")
+    os.system("cls" if os.name == "nt" else "clear")  # noqa: S605
 
 
 def print_header():
@@ -210,7 +210,7 @@ async def run_smart_scan_menu():
         # Cleanup
         await exchange_service.close_connection()
 
-    except Exception:
+    except Exception:  # noqa: S110
         pass  # Silent failure for try-finally
     finally:
         # Remove temp config

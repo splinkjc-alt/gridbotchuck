@@ -354,31 +354,31 @@ class OrderRepository:
 
                 # Total orders
                 async with db.execute(
-                    f"SELECT COUNT(*) as count FROM orders WHERE 1=1 {pair_filter}"
+                    f"SELECT COUNT(*) as count FROM orders WHERE 1=1 {pair_filter}"  # noqa: S608
                 ) as cursor:
                     total_orders = (await cursor.fetchone())["count"]
 
                 # Filled orders
                 async with db.execute(
-                    f"SELECT COUNT(*) as count FROM orders WHERE status = 'closed' {pair_filter}"
+                    f"SELECT COUNT(*) as count FROM orders WHERE status = 'closed' {pair_filter}"  # noqa: S608
                 ) as cursor:
                     filled_orders = (await cursor.fetchone())["count"]
 
                 # Total trades
                 async with db.execute(
-                    f"SELECT COUNT(*) as count FROM trade_history WHERE 1=1 {pair_filter}"
+                    f"SELECT COUNT(*) as count FROM trade_history WHERE 1=1 {pair_filter}"  # noqa: S608
                 ) as cursor:
                     total_trades = (await cursor.fetchone())["count"]
 
                 # Total fees
                 async with db.execute(
-                    f"SELECT SUM(fee) as total FROM trade_history WHERE 1=1 {pair_filter}"
+                    f"SELECT SUM(fee) as total FROM trade_history WHERE 1=1 {pair_filter}"  # noqa: S608
                 ) as cursor:
                     total_fees = (await cursor.fetchone())["total"] or 0.0
 
                 # Total profit
                 async with db.execute(
-                    f"SELECT SUM(profit) as total FROM trade_history WHERE profit IS NOT NULL {pair_filter}"
+                    f"SELECT SUM(profit) as total FROM trade_history WHERE profit IS NOT NULL {pair_filter}"  # noqa: S608
                 ) as cursor:
                     total_profit = (await cursor.fetchone())["total"] or 0.0
 

@@ -211,8 +211,8 @@ def main():
     """Main entry point"""
     try:
         # Check if pystray and pillow are installed
-        from PIL import Image
-        import pystray
+        from PIL import Image  # noqa: F401
+        import pystray  # noqa: F401
     except ImportError:
         return 1
 
