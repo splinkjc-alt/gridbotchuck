@@ -29,6 +29,7 @@ python optimization/asset_optimizer.py --optimize-all
 |------|---------|
 | `adaptive_scanner.py` | Multi-asset scanner using per-coin optimal configs |
 | `signal_logger.py` | Tracks signal accuracy (BUY/SELL predictions vs outcomes) |
+| `discord_poster.py` | Posts signals/promos to Discord |
 | `optimization/asset_optimizer.py` | Backtests to find best timeframe/indicators per asset |
 | `optimization/optimal_configs.json` | Saved optimal settings per asset |
 | `optimization/indicator_combos.py` | Available indicator combinations |
@@ -117,6 +118,21 @@ python optimization/asset_optimizer.py --optimize-all
 ```bash
 python signal_logger.py --recent 20
 ```
+
+### Post to Discord
+```bash
+python discord_poster.py --signal   # Current signals
+python discord_poster.py --promo    # Promotional post
+python discord_poster.py --stats    # Accuracy stats
+```
+
+## Discord Integration
+
+- **Webhook**: Stored in `.env` as `DISCORD_WEBHOOK_URL`
+- **Auto-posting**: Windows Task Scheduler
+  - Signals: Every 4 hours
+  - Promo: Daily at 12:00 PM
+- **Task names**: "GridBot Discord Signals", "GridBot Discord Promo"
 
 ## GitHub
 
