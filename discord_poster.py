@@ -38,7 +38,7 @@ def post_to_discord(content: str = None, embed: dict = None):
         print("Get it from: Discord Server Settings > Integrations > Webhooks")
         return False
 
-    payload = {}
+    payload = {"thread_name": "GridBot Chuck Signals"}
     if content:
         payload["content"] = content
     if embed:
