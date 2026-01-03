@@ -55,6 +55,7 @@ omit = [
 line-length = 120
 target-version = "py312"
 src = ["core", "strategies", "config", "utils", "tests"]
+exclude = ["backups", "*.bak", "*.backup", ".venv", "venv", "__pycache__"]
 
 [tool.ruff.lint]
 select = [
@@ -92,6 +93,24 @@ docstring-code-format = true
 [tool.ruff.lint.isort]
 known-first-party = ["core", "strategies", "config", "utils"]
 force-sort-within-sections = true
+
+[tool.ruff.lint.per-file-ignores]
+# CLI scripts intentionally use print() for console output
+"adaptive_scanner.py" = ["T201"]
+"family_scanner.py" = ["T201"]
+"stock_trading_assistant.py" = ["T201"]
+"optimization/asset_optimizer.py" = ["T201"]
+"run_all_backtests.py" = ["T201"]
+"run_optimization.py" = ["T201"]
+"tools/cli_tools.py" = ["T201"]
+"tools/health_check.py" = ["T201"]
+"market_diagnostics.py" = ["T201"]
+"multi_pair_runner.py" = ["T201"]
+"pair_validator.py" = ["T201"]
+"simple_adaptive_scanner.py" = ["T201"]
+"triple_threat_trader.py" = ["T201"]
+"triple_threat_trader_coinbase.py" = ["T201"]
+"main.py" = ["T201"]
 
 [build-system]
 requires = ["setuptools>=42", "wheel"]

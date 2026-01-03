@@ -7,7 +7,7 @@ import pytest
 def setup_test_environment():
     """Create necessary directories for tests."""
     os.makedirs("logs", exist_ok=True)
-    yield
+    return
     # Cleanup could go here if needed
 
 

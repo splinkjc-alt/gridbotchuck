@@ -11,16 +11,15 @@ Timeframes: 5m, 15m, 30m, 1h
 """
 
 import asyncio
-import json
-import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import json
 from pathlib import Path
-from typing import Any
 
 import ccxt
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 
 # Technical indicators
 def calculate_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
@@ -123,9 +122,9 @@ class GridBacktester:
         if not all_candles:
             return pd.DataFrame()
 
-        df = pd.DataFrame(all_candles, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-        df.set_index('timestamp', inplace=True)
+        df = pd.DataFrame(all_candles, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+        df.set_index("timestamp", inplace=True)
         return df
 
     def simulate_grid(self, df: pd.DataFrame, num_grids: int = 6,
@@ -134,7 +133,7 @@ class GridBacktester:
         if df.empty:
             return self._empty_result("hedged_grid")
 
-        close_prices = df['close']
+        close_prices = df["close"]
         mid_price = close_prices.iloc[0]
 
         # Set grid range
@@ -152,8 +151,8 @@ class GridBacktester:
         balance_history = [balance]
 
         # Track active orders at each grid level
-        active_buys = {level: True for level in grid_levels[:num_grids//2]}
-        active_sells = {level: False for level in grid_levels[num_grids//2:]}
+        active_buys = dict.fromkeys(grid_levels[:num_grids // 2], True)
+        active_sells = dict.fromkeys(grid_levels[num_grids // 2:], False)
 
         position_size = balance / (num_grids // 2) * 0.9  # 90% of balance per grid
 
@@ -170,10 +169,10 @@ class GridBacktester:
                         balance -= position_size
                         crypto_balance += crypto_amount
                         trades.append({
-                            'type': 'buy',
-                            'price': price,
-                            'amount': crypto_amount,
-                            'value': position_size
+                            "type": "buy",
+                            "price": price,
+                            "amount": crypto_amount,
+                            "value": position_size
                         })
                         active_buys[level] = False
                         # Set corresponding sell
@@ -191,10 +190,10 @@ class GridBacktester:
                         crypto_balance -= sell_amount
                         balance += sell_value
                         trades.append({
-                            'type': 'sell',
-                            'price': price,
-                            'amount': sell_amount,
-                            'value': sell_value
+                            "type": "sell",
+                            "price": price,
+                            "amount": sell_amount,
+                            "value": sell_value
                         })
                         active_sells[level] = False
                         # Reset corresponding buy
@@ -224,7 +223,7 @@ class GridBacktester:
             max_drawdown = max(max_drawdown, drawdown)
 
         # Trade stats
-        winning = [t for t in trades if t['type'] == 'sell' and t['value'] > t.get('cost', t['value'] * 0.99)]
+        winning = [t for t in trades if t["type"] == "sell" and t["value"] > t.get("cost", t["value"] * 0.99)]
 
         return BacktestResult(
             bot_name="GridBot Chuck",
@@ -236,7 +235,7 @@ class GridBacktester:
             initial_balance=self.initial_balance,
             final_balance=round(final_balance, 2),
             total_trades=len(trades),
-            winning_trades=len([t for t in trades if t['type'] == 'sell']),
+            winning_trades=len([t for t in trades if t["type"] == "sell"]),
             losing_trades=0,
             profit_loss=round(profit_loss, 2),
             profit_loss_pct=round(profit_loss_pct, 2),
@@ -253,21 +252,21 @@ class GridBacktester:
         if df.empty:
             return self._empty_result("indicator_enhanced")
 
-        close = df['close']
+        close = df["close"]
 
         # Calculate indicators
         indicators_used = []
 
         if use_rsi:
-            df['rsi'] = calculate_rsi(close)
+            df["rsi"] = calculate_rsi(close)
             indicators_used.append("RSI(14)")
 
         if use_bb:
-            df['bb_upper'], df['bb_mid'], df['bb_lower'] = calculate_bollinger_bands(close)
+            df["bb_upper"], df["bb_mid"], df["bb_lower"] = calculate_bollinger_bands(close)
             indicators_used.append("Bollinger(20,2)")
 
         if use_macd:
-            df['macd'], df['macd_signal'], df['macd_hist'] = calculate_macd(close)
+            df["macd"], df["macd_signal"], df["macd_hist"] = calculate_macd(close)
             indicators_used.append("MACD(12,26,9)")
 
         # Enhanced grid simulation with indicator filters
@@ -282,28 +281,28 @@ class GridBacktester:
 
             # Buy conditions
             buy_signal = True
-            if use_rsi and df['rsi'].iloc[i] > 40:  # Only buy when oversold
+            if use_rsi and df["rsi"].iloc[i] > 40:  # Only buy when oversold
                 buy_signal = False
-            if use_bb and price > df['bb_lower'].iloc[i]:  # Only buy near lower band
+            if use_bb and price > df["bb_lower"].iloc[i]:  # Only buy near lower band
                 buy_signal = False
 
             # Sell conditions
             sell_signal = True
-            if use_rsi and df['rsi'].iloc[i] < 60:  # Only sell when overbought
+            if use_rsi and df["rsi"].iloc[i] < 60:  # Only sell when overbought
                 sell_signal = False
-            if use_bb and price < df['bb_upper'].iloc[i]:  # Only sell near upper band
+            if use_bb and price < df["bb_upper"].iloc[i]:  # Only sell near upper band
                 sell_signal = False
 
             if buy_signal and balance >= position_size:
                 crypto_amount = position_size / price
                 balance -= position_size
                 crypto_balance += crypto_amount
-                trades.append({'type': 'buy', 'price': price})
+                trades.append({"type": "buy", "price": price})
 
             elif sell_signal and crypto_balance > 0:
                 sell_value = crypto_balance * price
                 balance += sell_value
-                trades.append({'type': 'sell', 'price': price, 'value': sell_value})
+                trades.append({"type": "sell", "price": price, "value": sell_value})
                 crypto_balance = 0
 
             total_value = balance + (crypto_balance * price)
@@ -322,7 +321,7 @@ class GridBacktester:
             initial_balance=self.initial_balance,
             final_balance=round(final_balance, 2),
             total_trades=len(trades),
-            winning_trades=len([t for t in trades if t['type'] == 'sell']),
+            winning_trades=len([t for t in trades if t["type"] == "sell"]),
             losing_trades=0,
             profit_loss=round(profit_loss, 2),
             profit_loss_pct=round((profit_loss / self.initial_balance) * 100, 2),
@@ -386,15 +385,15 @@ class BearishBacktester(GridBacktester):
         if df.empty:
             return self._empty_result("bearish_grid")
 
-        close = df['close']
-        high = df['high']
-        low = df['low']
+        close = df["close"]
+        high = df["high"]
+        low = df["low"]
 
         # Calculate indicators
-        df['rsi'] = calculate_rsi(close)
-        df['ema_20'] = calculate_ema(close, 20)
-        df['ema_50'] = calculate_ema(close, 50)
-        df['atr'] = calculate_atr(high, low, close)
+        df["rsi"] = calculate_rsi(close)
+        df["ema_20"] = calculate_ema(close, 20)
+        df["ema_50"] = calculate_ema(close, 50)
+        df["atr"] = calculate_atr(high, low, close)
 
         balance = self.initial_balance
         crypto_balance = 0.0
@@ -407,9 +406,9 @@ class BearishBacktester(GridBacktester):
 
         for i in range(50, len(df)):
             price = close.iloc[i]
-            rsi = df['rsi'].iloc[i]
-            ema_20 = df['ema_20'].iloc[i]
-            ema_50 = df['ema_50'].iloc[i]
+            rsi = df["rsi"].iloc[i]
+            ema_20 = df["ema_20"].iloc[i]
+            ema_50 = df["ema_50"].iloc[i]
 
             # Bearish bias: only trade when EMA20 < EMA50 (downtrend)
             is_bearish = ema_20 < ema_50
@@ -420,7 +419,7 @@ class BearishBacktester(GridBacktester):
                     # Stop loss hit
                     sell_value = crypto_balance * price
                     balance += sell_value
-                    trades.append({'type': 'stop_loss', 'price': price, 'pnl': sell_value - (crypto_balance * entry_price)})
+                    trades.append({"type": "stop_loss", "price": price, "pnl": sell_value - (crypto_balance * entry_price)})
                     crypto_balance = 0
                     entry_price = None
 
@@ -430,14 +429,14 @@ class BearishBacktester(GridBacktester):
                 balance -= position_size
                 crypto_balance += crypto_amount
                 entry_price = price
-                trades.append({'type': 'buy', 'price': price})
+                trades.append({"type": "buy", "price": price})
 
             # Sell on any bounce (quick exit in bearish market)
             elif crypto_balance > 0 and rsi > 50:
                 sell_value = crypto_balance * price
                 pnl = sell_value - (crypto_balance * entry_price) if entry_price else 0
                 balance += sell_value
-                trades.append({'type': 'sell', 'price': price, 'pnl': pnl})
+                trades.append({"type": "sell", "price": price, "pnl": pnl})
                 crypto_balance = 0
                 entry_price = None
 
@@ -447,8 +446,8 @@ class BearishBacktester(GridBacktester):
         final_balance = balance + (crypto_balance * close.iloc[-1])
         profit_loss = final_balance - self.initial_balance
 
-        winning = len([t for t in trades if t.get('pnl', 0) > 0])
-        losing = len([t for t in trades if t.get('pnl', 0) < 0])
+        winning = len([t for t in trades if t.get("pnl", 0) > 0])
+        losing = len([t for t in trades if t.get("pnl", 0) < 0])
 
         return BacktestResult(
             bot_name="Growler",
@@ -503,30 +502,30 @@ class MeanReversionBacktester:
                 # Simulate win rate based on timeframe
                 # Shorter timeframes = more noise = lower win rate
                 timeframe_win_rates = {
-                    '5m': 0.45,
-                    '15m': 0.52,
-                    '30m': 0.55,
-                    '1h': 0.58
+                    "5m": 0.45,
+                    "15m": 0.52,
+                    "30m": 0.55,
+                    "1h": 0.58
                 }
                 win_rate = timeframe_win_rates.get(self.timeframe, 0.50)
 
                 if np.random.random() < win_rate:
                     # Winner: +4%
                     profit = entry * 0.04
-                    trades.append({'type': 'win', 'pnl': profit})
+                    trades.append({"type": "win", "pnl": profit})
                     balance += profit
                 else:
                     # Loser: -3%
                     loss = entry * 0.03
-                    trades.append({'type': 'loss', 'pnl': -loss})
+                    trades.append({"type": "loss", "pnl": -loss})
                     balance -= loss
 
                 balance_history.append(balance)
 
         final_balance = balance
         profit_loss = final_balance - self.initial_balance
-        winning = len([t for t in trades if t['pnl'] > 0])
-        losing = len([t for t in trades if t['pnl'] < 0])
+        winning = len([t for t in trades if t["pnl"] > 0])
+        losing = len([t for t in trades if t["pnl"] < 0])
 
         return BacktestResult(
             bot_name="Sleeping Marketbot",
@@ -543,7 +542,7 @@ class MeanReversionBacktester:
             profit_loss=round(profit_loss, 2),
             profit_loss_pct=round((profit_loss / self.initial_balance) * 100, 2),
             max_drawdown=round(max((max(balance_history) - min(balance_history)) / max(balance_history) * 100, 0), 2),
-            sharpe_ratio=round(np.mean([t['pnl'] for t in trades]) / max(np.std([t['pnl'] for t in trades]), 0.01), 2),
+            sharpe_ratio=round(np.mean([t["pnl"] for t in trades]) / max(np.std([t["pnl"] for t in trades]), 0.01), 2),
             win_rate=round((winning / max(len(trades), 1)) * 100, 1),
             avg_trade_profit=round(profit_loss / max(len(trades), 1), 2),
             indicators_used=["RSI(14)", "Bollinger(20,2)", "Volume Ratio"]
@@ -606,7 +605,7 @@ async def main():
     print("Timeframes: 5m, 15m, 30m, 1h")
     print("="*80)
 
-    timeframes = ['5m', '15m', '30m', '1h']
+    timeframes = ["5m", "15m", "30m", "1h"]
     all_results = []
 
     # GridBot Chuck - BTC/USD
@@ -672,7 +671,7 @@ async def main():
         for r in all_results
     ]
 
-    with open(results_file, 'w') as f:
+    with open(results_file, "w") as f:
         json.dump(results_data, f, indent=2)
 
     print(f"\n\nResults saved to: {results_file}")

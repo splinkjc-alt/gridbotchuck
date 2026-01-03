@@ -13,16 +13,14 @@ Usage:
 
 import argparse
 import asyncio
-import json
 from dataclasses import dataclass
-from datetime import datetime, time
-from pathlib import Path
-from typing import Optional
+from datetime import UTC, datetime, time
+import json
 import logging
+from pathlib import Path
 
 import ccxt
 import pandas as pd
-import numpy as np
 import pytz
 
 # Try importing yfinance for stocks
@@ -95,19 +93,19 @@ class Opportunity:
 # ============== DEFAULT CONFIG ==============
 
 DEFAULT_CONFIG = {
-    'best_timeframe': '30m',
-    'strategy': 'grid',
-    'indicator_combo': 'rsi_bb',
-    'indicators': ['RSI(14)', 'Bollinger(20,2)'],
-    'params': {
-        'rsi_period': 14,
-        'rsi_buy': 35,
-        'rsi_sell': 65,
-        'bb_period': 20,
-        'bb_std': 2.0
+    "best_timeframe": "30m",
+    "strategy": "grid",
+    "indicator_combo": "rsi_bb",
+    "indicators": ["RSI(14)", "Bollinger(20,2)"],
+    "params": {
+        "rsi_period": 14,
+        "rsi_buy": 35,
+        "rsi_sell": 65,
+        "bb_period": 20,
+        "bb_std": 2.0
     },
-    'profit_pct': 0.0,
-    'win_rate': 0.0
+    "profit_pct": 0.0,
+    "win_rate": 0.0
 }
 
 
@@ -116,25 +114,25 @@ DEFAULT_CONFIG = {
 class AdaptiveScanner:
     """Scans multiple assets using their optimal configurations."""
 
-    def __init__(self, watchlist_file: str = None, configs_file: str = None):
+    def __init__(self, watchlist_file: str | None = None, configs_file: str | None = None):
         self.exchange = ccxt.kraken()
         self.et_tz = pytz.timezone("US/Eastern")
 
         # Load watchlist
-        watchlist_path = watchlist_file or Path(__file__).parent / 'config' / 'watchlist.json'
+        watchlist_path = watchlist_file or Path(__file__).parent / "config" / "watchlist.json"
         if Path(watchlist_path).exists():
-            with open(watchlist_path, 'r') as f:
+            with open(watchlist_path) as f:
                 data = json.load(f)
-            self.crypto_watchlist = data.get('crypto', [])
-            self.stock_watchlist = data.get('stocks', [])
+            self.crypto_watchlist = data.get("crypto", [])
+            self.stock_watchlist = data.get("stocks", [])
         else:
-            self.crypto_watchlist = ['BTC/USD', 'ETH/USD', 'ADA/USD']
+            self.crypto_watchlist = ["BTC/USD", "ETH/USD", "ADA/USD"]
             self.stock_watchlist = []
 
         # Load optimal configs
-        configs_path = configs_file or Path(__file__).parent / 'optimization' / 'optimal_configs.json'
+        configs_path = configs_file or Path(__file__).parent / "optimization" / "optimal_configs.json"
         if Path(configs_path).exists():
-            with open(configs_path, 'r') as f:
+            with open(configs_path) as f:
                 self.configs = json.load(f)
         else:
             self.configs = {}
@@ -149,51 +147,51 @@ class AdaptiveScanner:
         """Fetch OHLCV data for symbol."""
         try:
             candles = self.exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
-            df = pd.DataFrame(candles, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+            df = pd.DataFrame(candles, columns=["timestamp", "open", "high", "low", "close", "volume"])
             return df
         except Exception as e:
             log.error(f"Error fetching {symbol}: {e}")
             return pd.DataFrame()
 
-    async def scan_crypto(self, symbol: str) -> Optional[Opportunity]:
+    async def scan_crypto(self, symbol: str) -> Opportunity | None:
         """Scan a single crypto asset using its optimal config."""
         config = self.get_config(symbol)
-        timeframe = config.get('best_timeframe', '30m')
-        strategy = config.get('strategy', 'grid')
-        params = config.get('params', DEFAULT_CONFIG['params'])
+        timeframe = config.get("best_timeframe", "30m")
+        strategy = config.get("strategy", "grid")
+        params = config.get("params", DEFAULT_CONFIG["params"])
 
         df = self.fetch_data(symbol, timeframe)
         if df.empty:
             return None
 
-        close = df['close']
+        close = df["close"]
         current_price = close.iloc[-1]
 
         # Calculate indicators
-        rsi = calculate_rsi(close, params.get('rsi_period', 14))
+        rsi = calculate_rsi(close, params.get("rsi_period", 14))
         current_rsi = rsi.iloc[-1]
 
-        indicators = {'RSI': round(current_rsi, 1)}
+        indicators = {"RSI": round(current_rsi, 1)}
 
         # Calculate additional indicators if in config
-        if 'bb_period' in params:
-            bb_upper, bb_mid, bb_lower = calculate_bollinger_bands(
-                close, params['bb_period'], params.get('bb_std', 2.0)
+        if "bb_period" in params:
+            bb_upper, _bb_mid, bb_lower = calculate_bollinger_bands(
+                close, params["bb_period"], params.get("bb_std", 2.0)
             )
             bb_pos = ((current_price - bb_lower.iloc[-1]) /
                       (bb_upper.iloc[-1] - bb_lower.iloc[-1])) * 100
-            indicators['BB_pos'] = round(bb_pos, 1)
+            indicators["BB_pos"] = round(bb_pos, 1)
 
-        if 'ema_fast' in params:
-            ema_fast = calculate_ema(close, params['ema_fast']).iloc[-1]
-            ema_slow = calculate_ema(close, params['ema_slow']).iloc[-1]
-            indicators['EMA_trend'] = 'UP' if ema_fast > ema_slow else 'DOWN'
+        if "ema_fast" in params:
+            ema_fast = calculate_ema(close, params["ema_fast"]).iloc[-1]
+            ema_slow = calculate_ema(close, params["ema_slow"]).iloc[-1]
+            indicators["EMA_trend"] = "UP" if ema_fast > ema_slow else "DOWN"
 
-        if 'macd_fast' in params:
+        if "macd_fast" in params:
             macd, macd_signal = calculate_macd(
-                close, params['macd_fast'], params['macd_slow'], params['macd_signal']
+                close, params["macd_fast"], params["macd_slow"], params["macd_signal"]
             )
-            indicators['MACD'] = 'BULL' if macd.iloc[-1] > macd_signal.iloc[-1] else 'BEAR'
+            indicators["MACD"] = "BULL" if macd.iloc[-1] > macd_signal.iloc[-1] else "BEAR"
 
         # Generate signal based on strategy
         signal, strength, reasons = self._generate_signal(strategy, params, indicators, current_rsi)
@@ -205,87 +203,87 @@ class AdaptiveScanner:
             signal=signal,
             strength=strength,
             price=current_price,
-            reason=' | '.join(reasons) if reasons else 'Neutral',
+            reason=" | ".join(reasons) if reasons else "Neutral",
             indicators=indicators,
-            timestamp=datetime.now()
+            timestamp=datetime.now(tz=UTC)
         )
 
     def _generate_signal(self, strategy: str, params: dict, indicators: dict, rsi: float) -> tuple:
         """Generate trading signal based on strategy and indicators."""
-        signal = 'WAIT'
+        signal = "WAIT"
         strength = 0
         reasons = []
 
-        rsi_buy = params.get('rsi_buy', 35)
-        rsi_sell = params.get('rsi_sell', 65)
+        rsi_buy = params.get("rsi_buy", 35)
+        rsi_sell = params.get("rsi_sell", 65)
 
-        if strategy == 'grid':
+        if strategy == "grid":
             # Grid: buy oversold, sell overbought
             if rsi < rsi_buy:
                 strength += 50
-                reasons.append(f'RSI oversold ({rsi:.1f})')
+                reasons.append(f"RSI oversold ({rsi:.1f})")
 
-            if 'BB_pos' in indicators and indicators['BB_pos'] < 20:
+            if "BB_pos" in indicators and indicators["BB_pos"] < 20:
                 strength += 30
-                reasons.append(f'Near lower BB')
+                reasons.append("Near lower BB")
 
             if rsi > rsi_sell:
-                signal = 'SELL'
+                signal = "SELL"
                 strength = 60
-                reasons = [f'RSI overbought ({rsi:.1f})']
+                reasons = [f"RSI overbought ({rsi:.1f})"]
             elif strength >= 60:
-                signal = 'BUY'
+                signal = "BUY"
             elif strength >= 40:
-                signal = 'WATCH'
+                signal = "WATCH"
 
-        elif strategy == 'mean_reversion':
+        elif strategy == "mean_reversion":
             # Mean reversion: extreme oversold only
             if rsi < 25:
-                signal = 'BUY'
+                signal = "BUY"
                 strength = 80
-                reasons.append(f'Extreme oversold ({rsi:.1f})')
+                reasons.append(f"Extreme oversold ({rsi:.1f})")
             elif rsi < 35:
-                signal = 'WATCH'
+                signal = "WATCH"
                 strength = 50
-                reasons.append(f'Oversold ({rsi:.1f})')
+                reasons.append(f"Oversold ({rsi:.1f})")
             elif rsi > 75:
-                signal = 'SELL'
+                signal = "SELL"
                 strength = 70
-                reasons.append(f'Overbought ({rsi:.1f})')
+                reasons.append(f"Overbought ({rsi:.1f})")
 
-        elif strategy == 'momentum':
+        elif strategy == "momentum":
             # Momentum: follow trend
-            trend = indicators.get('EMA_trend', 'UP')
-            macd = indicators.get('MACD', 'BULL')
+            trend = indicators.get("EMA_trend", "UP")
+            macd = indicators.get("MACD", "BULL")
 
-            if trend == 'UP' and macd == 'BULL' and rsi > 50 and rsi < 70:
-                signal = 'BUY'
+            if trend == "UP" and macd == "BULL" and rsi > 50 and rsi < 70:
+                signal = "BUY"
                 strength = 65
-                reasons.append('Uptrend + MACD bullish')
-            elif trend == 'DOWN' or rsi > 75:
-                signal = 'SELL'
+                reasons.append("Uptrend + MACD bullish")
+            elif trend == "DOWN" or rsi > 75:
+                signal = "SELL"
                 strength = 55
-                reasons.append('Trend reversal')
-            elif trend == 'UP' and rsi > 45:
-                signal = 'WATCH'
+                reasons.append("Trend reversal")
+            elif trend == "UP" and rsi > 45:
+                signal = "WATCH"
                 strength = 40
-                reasons.append('Trend developing')
+                reasons.append("Trend developing")
 
         return signal, min(strength, 100), reasons
 
-    async def scan_stock(self, symbol: str) -> Optional[Opportunity]:
+    async def scan_stock(self, symbol: str) -> Opportunity | None:
         """Scan a single stock."""
         if not YFINANCE_AVAILABLE:
             return Opportunity(
                 symbol=symbol,
-                timeframe='N/A',
-                strategy='N/A',
-                signal='DISABLED',
+                timeframe="N/A",
+                strategy="N/A",
+                signal="DISABLED",
                 strength=0,
                 price=0,
-                reason='yfinance not installed',
+                reason="yfinance not installed",
                 indicators={},
-                timestamp=datetime.now()
+                timestamp=datetime.now(tz=UTC)
             )
 
         # Check market hours
@@ -293,14 +291,14 @@ class AdaptiveScanner:
         if now.weekday() > 4:
             return Opportunity(
                 symbol=symbol,
-                timeframe='N/A',
-                strategy='mean_reversion',
-                signal='SLEEPING',
+                timeframe="N/A",
+                strategy="mean_reversion",
+                signal="SLEEPING",
                 strength=0,
                 price=0,
-                reason=f'Weekend',
-                indicators={'market': 'CLOSED'},
-                timestamp=datetime.now()
+                reason="Weekend",
+                indicators={"market": "CLOSED"},
+                timestamp=datetime.now(tz=UTC)
             )
 
         market_open = time(9, 30)
@@ -308,54 +306,54 @@ class AdaptiveScanner:
         if not (market_open <= now.time() <= market_close):
             return Opportunity(
                 symbol=symbol,
-                timeframe='N/A',
-                strategy='mean_reversion',
-                signal='SLEEPING',
+                timeframe="N/A",
+                strategy="mean_reversion",
+                signal="SLEEPING",
                 strength=0,
                 price=0,
                 reason=f'Market closed ({now.strftime("%I:%M %p ET")})',
-                indicators={'market': 'CLOSED'},
-                timestamp=datetime.now()
+                indicators={"market": "CLOSED"},
+                timestamp=datetime.now(tz=UTC)
             )
 
         try:
             ticker = yf.Ticker(symbol)
-            df = ticker.history(period='5d', interval='30m')
+            df = ticker.history(period="5d", interval="30m")
 
             if df.empty:
                 return None
 
-            close = df['Close']
+            close = df["Close"]
             current_price = close.iloc[-1]
             rsi = calculate_rsi(close).iloc[-1]
 
-            signal = 'WAIT'
+            signal = "WAIT"
             strength = 0
             reasons = []
 
             if rsi < 30:
-                signal = 'BUY'
+                signal = "BUY"
                 strength = 70
-                reasons.append(f'Oversold ({rsi:.1f})')
+                reasons.append(f"Oversold ({rsi:.1f})")
             elif rsi < 40:
-                signal = 'WATCH'
+                signal = "WATCH"
                 strength = 45
-                reasons.append(f'RSI low ({rsi:.1f})')
+                reasons.append(f"RSI low ({rsi:.1f})")
             elif rsi > 70:
-                signal = 'SELL'
+                signal = "SELL"
                 strength = 60
-                reasons.append(f'Overbought ({rsi:.1f})')
+                reasons.append(f"Overbought ({rsi:.1f})")
 
             return Opportunity(
                 symbol=symbol,
-                timeframe='30m',
-                strategy='mean_reversion',
+                timeframe="30m",
+                strategy="mean_reversion",
                 signal=signal,
                 strength=strength,
                 price=current_price,
-                reason=' | '.join(reasons) if reasons else 'Neutral',
-                indicators={'RSI': round(rsi, 1)},
-                timestamp=datetime.now()
+                reason=" | ".join(reasons) if reasons else "Neutral",
+                indicators={"RSI": round(rsi, 1)},
+                timestamp=datetime.now(tz=UTC)
             )
 
         except Exception as e:
@@ -408,42 +406,42 @@ class AdaptiveScanner:
         print("-" * 80)
 
         for symbol, config in sorted(self.configs.items()):
-            tf = config.get('best_timeframe', '?')
-            strategy = config.get('strategy', '?')
-            indicators = ', '.join(config.get('indicators', [])[:3])
-            profit = config.get('profit_pct', 0)
+            tf = config.get("best_timeframe", "?")
+            strategy = config.get("strategy", "?")
+            indicators = ", ".join(config.get("indicators", [])[:3])
+            profit = config.get("profit_pct", 0)
             print(f"{symbol:<12} {tf:<5} {strategy:<16} {indicators:<35} {profit:>+7.2f}%")
 
         print("=" * 80)
 
     def print_opportunity(self, opp: Opportunity):
         """Print a single opportunity."""
-        if opp.signal == 'BUY':
-            signal_str = '>>> BUY <<<'
-        elif opp.signal == 'SELL':
-            signal_str = '<<< SELL >>>'
-        elif opp.signal == 'WATCH':
-            signal_str = '~~~ WATCH ~~~'
-        elif opp.signal == 'SLEEPING':
-            signal_str = 'zzz SLEEP zzz'
+        if opp.signal == "BUY":
+            signal_str = ">>> BUY <<<"
+        elif opp.signal == "SELL":
+            signal_str = "<<< SELL >>>"
+        elif opp.signal == "WATCH":
+            signal_str = "~~~ WATCH ~~~"
+        elif opp.signal == "SLEEPING":
+            signal_str = "zzz SLEEP zzz"
         else:
-            signal_str = '... WAIT ...'
+            signal_str = "... WAIT ..."
 
         # Format price
         if opp.price > 1000:
-            price_str = f'${opp.price:,.0f}'
+            price_str = f"${opp.price:,.0f}"
         elif opp.price > 1:
-            price_str = f'${opp.price:.2f}'
+            price_str = f"${opp.price:.2f}"
         else:
-            price_str = f'${opp.price:.4f}'
+            price_str = f"${opp.price:.4f}"
 
         config_str = f"{opp.timeframe}/{opp.strategy}"
 
         print(f"{opp.symbol:<12} | {config_str:<20} | {signal_str:<14} | {opp.strength:>3}% | {price_str:>12}")
 
-        if opp.reason and opp.signal in ['BUY', 'SELL', 'WATCH']:
+        if opp.reason and opp.signal in ["BUY", "SELL", "WATCH"]:
             print(f"{'':12} | Reason: {opp.reason}")
-            ind_str = ' | '.join([f'{k}:{v}' for k, v in opp.indicators.items()])
+            ind_str = " | ".join([f"{k}:{v}" for k, v in opp.indicators.items()])
             print(f"{'':12} | {ind_str}")
 
         print("-" * 80)
@@ -456,21 +454,21 @@ class AdaptiveScanner:
         while True:
             try:
                 scan_count += 1
-                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                now = datetime.now(tz=UTC).strftime("%Y-%m-%d %H:%M:%S")
                 print(f"\n[Scan #{scan_count}] {now}")
                 print("-" * 80)
 
                 opportunities = await self.scan_all()
 
                 # Sort by signal priority then strength
-                priority = {'BUY': 0, 'SELL': 1, 'WATCH': 2, 'SLEEPING': 3, 'WAIT': 4, 'DISABLED': 5}
+                priority = {"BUY": 0, "SELL": 1, "WATCH": 2, "SLEEPING": 3, "WAIT": 4, "DISABLED": 5}
                 opportunities.sort(key=lambda x: (priority.get(x.signal, 6), -x.strength))
 
                 for opp in opportunities:
                     self.print_opportunity(opp)
 
                 # Alert on actionable signals
-                actionable = [o for o in opportunities if o.signal in ['BUY', 'SELL']]
+                actionable = [o for o in opportunities if o.signal in ["BUY", "SELL"]]
                 if actionable:
                     print("\n" + "!" * 80)
                     print("  OPPORTUNITIES DETECTED!")
@@ -492,11 +490,11 @@ class AdaptiveScanner:
 # ============== CLI ==============
 
 async def main():
-    parser = argparse.ArgumentParser(description='Adaptive Multi-Asset Scanner')
-    parser.add_argument('--show-configs', action='store_true', help='Show current optimal configs')
-    parser.add_argument('--optimize', action='store_true', help='Run optimization before scanning')
-    parser.add_argument('--watchlist', type=str, help='Path to watchlist.json')
-    parser.add_argument('--configs', type=str, help='Path to optimal_configs.json')
+    parser = argparse.ArgumentParser(description="Adaptive Multi-Asset Scanner")
+    parser.add_argument("--show-configs", action="store_true", help="Show current optimal configs")
+    parser.add_argument("--optimize", action="store_true", help="Run optimization before scanning")
+    parser.add_argument("--watchlist", type=str, help="Path to watchlist.json")
+    parser.add_argument("--configs", type=str, help="Path to optimal_configs.json")
 
     args = parser.parse_args()
 

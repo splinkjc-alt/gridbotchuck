@@ -13,7 +13,6 @@ Runs continuously, alerts when opportunities found.
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, time
-from typing import Optional
 import logging
 
 import ccxt
@@ -97,13 +96,13 @@ class GridBotScanner:
         self.pair = "BTC/USD"
         self.timeframe = "30m"
 
-    async def scan(self) -> Optional[Opportunity]:
+    async def scan(self) -> Opportunity | None:
         """Scan for grid entry opportunity."""
         try:
             # Fetch recent candles
             candles = self.exchange.fetch_ohlcv(self.pair, self.timeframe, limit=100)
-            df = pd.DataFrame(candles, columns=['ts', 'open', 'high', 'low', 'close', 'volume'])
-            close = df['close']
+            df = pd.DataFrame(candles, columns=["ts", "open", "high", "low", "close", "volume"])
+            close = df["close"]
 
             current_price = close.iloc[-1]
             current_rsi = rsi(close)
@@ -130,7 +129,7 @@ class GridBotScanner:
                 reasons.append(f"Below mid BB ({bb_pos:.0f}%)")
 
             # Price volatility check
-            price_range = (df['high'].max() - df['low'].min()) / df['close'].mean() * 100
+            price_range = (df["high"].max() - df["low"].min()) / df["close"].mean() * 100
             if price_range > 3:
                 strength += 20
                 reasons.append(f"Good volatility ({price_range:.1f}%)")
@@ -169,12 +168,12 @@ class GrowlerScanner:
         self.pair = "ADA/USD"
         self.timeframe = "30m"
 
-    async def scan(self) -> Optional[Opportunity]:
+    async def scan(self) -> Opportunity | None:
         """Scan for bearish scalp opportunity."""
         try:
             candles = self.exchange.fetch_ohlcv(self.pair, self.timeframe, limit=100)
-            df = pd.DataFrame(candles, columns=['ts', 'open', 'high', 'low', 'close', 'volume'])
-            close = df['close']
+            df = pd.DataFrame(candles, columns=["ts", "open", "high", "low", "close", "volume"])
+            close = df["close"]
 
             current_price = close.iloc[-1]
             current_rsi = rsi(close)
@@ -191,7 +190,7 @@ class GrowlerScanner:
 
             if is_bearish:
                 strength += 30
-                reasons.append(f"Bearish trend (EMA20 < EMA50)")
+                reasons.append("Bearish trend (EMA20 < EMA50)")
 
                 # Oversold bounce opportunity in downtrend
                 if current_rsi < 30:
@@ -242,7 +241,7 @@ class StockScanner:
         market_close = time(16, 0)
         return market_open <= now.time() <= market_close
 
-    async def scan(self) -> Optional[Opportunity]:
+    async def scan(self) -> Opportunity | None:
         """Scan for mean reversion opportunities."""
         if not YFINANCE_AVAILABLE:
             return Opportunity(
@@ -281,7 +280,7 @@ class StockScanner:
                     if df.empty or len(df) < 20:
                         continue
 
-                    close = df['Close']
+                    close = df["Close"]
                     current_price = close.iloc[-1]
                     current_rsi = rsi(close)
                     bb_pos, _, _, _ = bollinger_position(close)
@@ -299,10 +298,10 @@ class StockScanner:
 
                     if bb_pos < 15:
                         score += 40
-                        reasons.append(f"At lower BB")
+                        reasons.append("At lower BB")
                     elif bb_pos < 30:
                         score += 20
-                        reasons.append(f"Near lower BB")
+                        reasons.append("Near lower BB")
 
                     if score > best_score:
                         best_score = score
@@ -369,13 +368,13 @@ class FamilyScanner:
         """Print a single opportunity."""
         # Color codes (for terminals that support it)
         if opp.signal == "BUY":
-            signal_str = f">>> BUY <<<"
+            signal_str = ">>> BUY <<<"
         elif opp.signal == "WATCH":
-            signal_str = f"~~~ WATCH ~~~"
+            signal_str = "~~~ WATCH ~~~"
         elif opp.signal == "SLEEPING":
-            signal_str = f"zzz SLEEP zzz"
+            signal_str = "zzz SLEEP zzz"
         else:
-            signal_str = f"... WAIT ..."
+            signal_str = "... WAIT ..."
 
         print(f"{opp.bot:20} | {opp.pair:10} | {signal_str:15} | Str: {opp.strength:3}%")
         if opp.reason and opp.signal in ["BUY", "WATCH"]:
