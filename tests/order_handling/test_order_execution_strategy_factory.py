@@ -10,6 +10,9 @@ from core.order_handling.execution_strategy.backtest_order_execution_strategy im
 from core.order_handling.execution_strategy.live_order_execution_strategy import (
     LiveOrderExecutionStrategy,
 )
+from core.order_handling.execution_strategy.paper_order_execution_strategy import (
+    PaperOrderExecutionStrategy,
+)
 from core.order_handling.execution_strategy.order_execution_strategy_factory import (
     OrderExecutionStrategyFactory,
 )
@@ -43,11 +46,11 @@ class TestOrderExecutionStrategyFactory:
 
         assert isinstance(
             strategy,
-            LiveOrderExecutionStrategy,
-        ), "Expected LiveOrderExecutionStrategy instance for paper trading mode"
+            PaperOrderExecutionStrategy,
+        ), "Expected PaperOrderExecutionStrategy instance for paper trading mode"
         assert (
             strategy.exchange_service == exchange_service
-        ), "Expected exchange_service to be set correctly in LiveOrderExecutionStrategy"
+        ), "Expected exchange_service to be set correctly in PaperOrderExecutionStrategy"
 
     def test_create_backtest_strategy(self, config_manager, exchange_service):
         config_manager.get_trading_mode.return_value = TradingMode.BACKTEST

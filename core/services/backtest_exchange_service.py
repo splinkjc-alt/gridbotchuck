@@ -197,3 +197,17 @@ class BacktestExchangeService(ExchangeInterface):
 
     async def close_connection(self) -> None:
         self.logger.info("[BACKTEST] Closing WebSocket connection...")
+
+    async def fetch_ohlcv_simple(
+        self,
+        pair: str,
+        timeframe: str,
+        limit: int = 100,
+    ) -> pd.DataFrame:
+        raise NotImplementedError("fetch_ohlcv_simple is not used in backtesting")
+
+    async def get_available_pairs(
+        self,
+        quote_currency: str = "USD",
+    ) -> list[str]:
+        raise NotImplementedError("get_available_pairs is not used in backtesting")

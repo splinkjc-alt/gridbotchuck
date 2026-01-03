@@ -2,6 +2,10 @@ import pytest
 
 from core.order_handling.order import Order, OrderSide, OrderStatus, OrderType
 
+# Currency constants for tests
+USD = "USD"
+BTC = "BTC"
+
 
 class TestOrder:
     @pytest.fixture
