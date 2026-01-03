@@ -13,6 +13,7 @@ from core.services.exceptions import (
     UnsupportedExchangeError,
     UnsupportedTimeframeError,
 )
+from strategies.spacing_type import SpacingType
 
 
 @pytest.fixture(autouse=True)
@@ -28,7 +29,7 @@ class TestGridTradingBot:
         mock_config.get_trading_mode.return_value = TradingMode.LIVE
         mock_config.get_initial_balance.return_value = 1000
         mock_config.get_exchange_name.return_value = "binance"
-        mock_config.get_spacing_type.return_value = "arithmetic"
+        mock_config.get_spacing_type.return_value = SpacingType.ARITHMETIC
         mock_config.get_top_range.return_value = 2000
         mock_config.get_bottom_range.return_value = 1500
         mock_config.get_num_grids.return_value = 10
@@ -263,10 +264,12 @@ class TestGridTradingBot:
         bot.strategy.restart = AsyncMock()
         bot.order_status_tracker.start_tracking = Mock()
         bot._stop = AsyncMock()
+        bot.initialize = AsyncMock()
 
         await bot.restart()
 
         bot._stop.assert_awaited_once()
+        bot.initialize.assert_awaited_once()
         bot.strategy.restart.assert_awaited_once()
         bot.order_status_tracker.start_tracking.assert_called_once()
 
@@ -276,10 +279,12 @@ class TestGridTradingBot:
         bot._stop = AsyncMock()
         bot.strategy.restart = AsyncMock()
         bot.order_status_tracker.start_tracking = Mock()
+        bot.initialize = AsyncMock()
 
         await bot.restart()
 
         bot._stop.assert_not_awaited()
+        bot.initialize.assert_awaited_once()
         bot.strategy.restart.assert_awaited_once()
         bot.order_status_tracker.start_tracking.assert_called_once()
 

@@ -92,11 +92,11 @@ class TestOrder:
                 {"id": "trade1", "price": 1950.0, "amount": 1.0},
                 {"id": "trade2", "price": 1950.0, "amount": 2.0},
             ],
-            fee={"currency": USD, "cost": 5.0},
+            fee={"currency": "USD", "cost": 5.0},
             cost=5850.0,
         )
         assert order.is_filled() is True
-        assert order.fee == {"currency": USD, "cost": 5.0}
+        assert order.fee == {"currency": "USD", "cost": 5.0}
         assert order.trades == [
             {"id": "trade1", "price": 1950.0, "amount": 1.0},
             {"id": "trade2", "price": 1950.0, "amount": 2.0},

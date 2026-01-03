@@ -66,7 +66,9 @@ class TestGridManager:
         grid_manager.initialize_grids_and_levels()
         current_price = 2000
         total_balance = 10000  # Mocked initial balance
-        expected_order_size = total_balance / len(grid_manager.grid_levels) / current_price
+        # Expected uses buy_percent_of_total (20%) from config
+        buy_percent = 20.0
+        expected_order_size = (total_balance * (buy_percent / 100.0)) / current_price
         result = grid_manager.get_order_size_for_grid_level(total_balance, current_price)
         assert result == expected_order_size
 

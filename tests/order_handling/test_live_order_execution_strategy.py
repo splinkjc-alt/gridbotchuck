@@ -146,6 +146,7 @@ class TestLiveOrderExecutionStrategy:
 
     async def test_retry_cancel_order(self, setup_strategy):
         strategy, exchange_service = setup_strategy
+        strategy.max_retries = 2  # Set to allow retry
         order_id = "test-order-id"
         pair = "BTC/usd"
 

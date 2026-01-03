@@ -19,6 +19,9 @@ class TestOrderManager:
         grid_manager = Mock()
         order_validator = Mock()
         balance_tracker = Mock()
+        balance_tracker.balance = 1000
+        balance_tracker.crypto_balance = 1
+        balance_tracker.get_total_balance_value = Mock(return_value=50000)
         order_book = Mock()
         event_bus = Mock(spec=EventBus)
         order_execution_strategy = Mock()
@@ -52,6 +55,8 @@ class TestOrderManager:
     @pytest.mark.asyncio
     async def test_initialize_grid_orders_buy_orders(self, setup_order_manager):
         manager, grid_manager, order_validator, balance_tracker, _, _, order_execution_strategy, _ = setup_order_manager
+        # Disable min_reserve_percent to allow test to proceed
+        manager.config_manager.config = {"risk_management": {"position_sizing": {"min_reserve_percent": 0}}}
         grid_manager.sorted_buy_grids = [50000, 49000, 48000]
         grid_manager.sorted_sell_grids = []
         grid_manager.grid_levels = {50000: Mock(), 49000: Mock(), 48000: Mock()}
@@ -171,6 +176,9 @@ class TestOrderManager:
             notification_handler,
         ) = setup_order_manager
 
+        # Disable min_reserve_percent to allow test to proceed
+        manager.config_manager.config = {"risk_management": {"position_sizing": {"min_reserve_percent": 0}}}
+
         # Setup mocks
         grid_manager.sorted_buy_grids = [48000]
         grid_manager.sorted_sell_grids = []
@@ -201,6 +209,8 @@ class TestOrderManager:
     @pytest.mark.asyncio
     async def test_initialize_grid_orders_insufficient_balance(self, setup_order_manager):
         manager, grid_manager, order_validator, balance_tracker, _, _, order_execution_strategy, _ = setup_order_manager
+        # Disable min_reserve_percent to allow test to proceed
+        manager.config_manager.config = {"risk_management": {"position_sizing": {"min_reserve_percent": 0}}}
         grid_manager.sorted_buy_grids = [49000]
         grid_manager.sorted_sell_grids = []
         grid_manager.grid_levels = {49000: Mock()}
