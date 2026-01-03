@@ -23,6 +23,14 @@ import ccxt
 import pandas as pd
 import pytz
 
+# Signal logging for accuracy tracking
+try:
+    from signal_logger import log_signal
+    SIGNAL_LOGGING = True
+except ImportError:
+    SIGNAL_LOGGING = False
+    log_signal = None
+
 # Try importing yfinance for stocks
 try:
     import yfinance as yf
@@ -474,6 +482,18 @@ class AdaptiveScanner:
                     print("  OPPORTUNITIES DETECTED!")
                     for opp in actionable:
                         print(f"  -> {opp.symbol}: {opp.signal} @ {opp.price:.4f} (Strength: {opp.strength}%)")
+                        # Log signal for accuracy tracking
+                        if SIGNAL_LOGGING:
+                            log_signal(
+                                symbol=opp.symbol,
+                                signal=opp.signal,
+                                strength=opp.strength,
+                                price=opp.price,
+                                rsi=opp.indicators.get("RSI"),
+                                indicators=opp.indicators,
+                                timeframe=opp.timeframe,
+                                strategy=opp.strategy,
+                            )
                     print("!" * 80)
 
                 print(f"\nNext scan in {self.scan_interval}s... (Ctrl+C to stop)")
