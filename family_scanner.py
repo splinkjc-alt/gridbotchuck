@@ -106,7 +106,7 @@ class GridBotScanner:
 
             current_price = close.iloc[-1]
             current_rsi = rsi(close)
-            bb_pos, bb_upper, bb_mid, bb_lower = bollinger_position(close)
+            bb_pos, bb_upper, _bb_mid, bb_lower = bollinger_position(close)
 
             # Grid opportunity scoring
             signal = "WAIT"
@@ -182,7 +182,7 @@ class GrowlerScanner:
 
             # Bearish trend detection
             is_bearish = ema_20 < ema_50
-            trend_strength = abs(ema_20 - ema_50) / ema_50 * 100
+            abs(ema_20 - ema_50) / ema_50 * 100
 
             signal = "WAIT"
             strength = 0

@@ -223,7 +223,7 @@ class GridBacktester:
             max_drawdown = max(max_drawdown, drawdown)
 
         # Trade stats
-        winning = [t for t in trades if t["type"] == "sell" and t["value"] > t.get("cost", t["value"] * 0.99)]
+        [t for t in trades if t["type"] == "sell" and t["value"] > t.get("cost", t["value"] * 0.99)]
 
         return BacktestResult(
             bot_name="GridBot Chuck",
@@ -414,14 +414,13 @@ class BearishBacktester(GridBacktester):
             is_bearish = ema_20 < ema_50
 
             # Check stop loss
-            if entry_price and crypto_balance > 0:
-                if price <= entry_price * (1 - stop_loss_pct):
-                    # Stop loss hit
-                    sell_value = crypto_balance * price
-                    balance += sell_value
-                    trades.append({"type": "stop_loss", "price": price, "pnl": sell_value - (crypto_balance * entry_price)})
-                    crypto_balance = 0
-                    entry_price = None
+            if entry_price and crypto_balance > 0 and price <= entry_price * (1 - stop_loss_pct):
+                # Stop loss hit
+                sell_value = crypto_balance * price
+                balance += sell_value
+                trades.append({"type": "stop_loss", "price": price, "pnl": sell_value - (crypto_balance * entry_price)})
+                crypto_balance = 0
+                entry_price = None
 
             # Buy on oversold in downtrend (counter-trend scalp)
             if is_bearish and rsi < 30 and balance >= position_size and crypto_balance == 0:
@@ -491,7 +490,7 @@ class MeanReversionBacktester:
         # Simulate 30 days of trading
         np.random.seed(42)  # Reproducible results
 
-        for day in range(30):
+        for _day in range(30):
             # Simulate finding 2-3 opportunities per day
             opportunities = np.random.randint(1, 4)
 
@@ -585,7 +584,7 @@ def compare_results(results: list[BacktestResult]):
     print("BEST CONFIGURATION PER BOT")
     print("="*80)
 
-    bots = set(r.bot_name for r in results)
+    bots = {r.bot_name for r in results}
     for bot in bots:
         bot_results = [r for r in results if r.bot_name == bot]
         best = max(bot_results, key=lambda x: x.profit_loss_pct)

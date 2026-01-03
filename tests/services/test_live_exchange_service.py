@@ -48,7 +48,7 @@ class TestLiveExchangeService:
         assert isinstance(service, LiveExchangeService)
         assert service.exchange_name == "binance"
         assert service.api_key == "test_api_key"
-        assert service.secret_key == "test_secret_key"  # noqa: S105
+        assert service.secret_key == "test_secret_key"
         assert service.exchange == mock_exchange_instance
         assert service.exchange.enableRateLimit, "Expected rate limiting to be enabled for live mode"
 

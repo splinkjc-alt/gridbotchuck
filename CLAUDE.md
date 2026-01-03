@@ -99,27 +99,32 @@ D:\gridbotchuck\
 ## Common Tasks
 
 ### Check scanner status
+
 ```bash
 python adaptive_scanner.py --show-configs
 ```
 
 ### Validate signal accuracy
+
 ```bash
 python signal_logger.py --validate
 python signal_logger.py --summary
 ```
 
 ### Re-optimize after market changes
+
 ```bash
 python optimization/asset_optimizer.py --optimize-all
 ```
 
 ### View recent signals
+
 ```bash
 python signal_logger.py --recent 20
 ```
 
 ### Post to Discord
+
 ```bash
 python discord_poster.py --signal   # Current signals
 python discord_poster.py --promo    # Promotional post
@@ -136,7 +141,7 @@ python discord_poster.py --stats    # Accuracy stats
 
 ## GitHub
 
-Repository: https://github.com/splinkjc-alt/gridbotchuck
+Repository: <https://github.com/splinkjc-alt/gridbotchuck>
 
 ## Related Projects
 
@@ -150,6 +155,7 @@ Repository: https://github.com/splinkjc-alt/gridbotchuck
 ### Last Session: Jan 2, 2026
 
 **What was done:**
+
 1. ✅ Created backup at `backups/backup_2026-01-02/`
 2. ✅ Fixed GitHub CI test failures:
    - Updated `pyproject.toml` for pytest-asyncio 0.26+ (`[tool.pytest_asyncio]` section)
@@ -164,11 +170,13 @@ Repository: https://github.com/splinkjc-alt/gridbotchuck
    - Kotlin source files already exist in `mobile/android/`
 
 **Remaining work:**
+
 - 20 test failures in `tests/` are mock configuration issues (not critical, tests pass on core logic)
 - Android build may need package structure adjustments in `mobile/android/*.kt`
 - Desktop Electron app in `desktop/` is functional but not integrated into CI
 
 **Key commands:**
+
 ```bash
 # Run tests
 pytest tests/ -v --tb=short

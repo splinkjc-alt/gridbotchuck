@@ -100,7 +100,7 @@ class DashboardLauncher:
             return
 
         try:
-            self.bot_process = subprocess.Popen(  # noqa: S603
+            self.bot_process = subprocess.Popen(
                 command,
                 cwd=str(Path(command[1]).resolve().parent),
                 shell=False,
