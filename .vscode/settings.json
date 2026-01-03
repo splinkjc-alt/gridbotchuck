@@ -1,30 +1,33 @@
 {
-  "python.testing.autoTestDiscoverOnSaveEnabled": true,
-  "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true,
-  "python.testing.pytestArgs": [
-    "tests"
-  ],
-  "python.defaultInterpreterPath": "./.venv/bin/python",
-  "python.analysis.autoImportCompletions": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll": "explicit"
-  },
-  "editor.formatOnSave": true,
-  "editor.insertSpaces": true,
-  "editor.tabSize": 2,
-  "editor.detectIndentation": false,
-  "editor.rulers": [
-    120
-  ],
-  "[python]": {
-    "editor.defaultFormatter": "charliermarsh.ruff",
-    "editor.tabSize": 4
-  },
-  "files.watcherExclude": {
-    "**/.venv/**": true,
-    "**/__pycache__/**": true,
-    "**/.pytest_cache/**": true
-  },
-  "liveServer.settings.port": 8081
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+    "python.terminal.activateEnvironment": true,
+
+    "editor.formatOnSave": true,
+    "editor.rulers": [120],
+    "editor.tabSize": 4,
+
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        }
+    },
+
+    "ruff.path": ["${workspaceFolder}/.venv/Scripts/ruff.exe"],
+    "ruff.lint.args": ["--config", "${workspaceFolder}/pyproject.toml"],
+    "ruff.format.args": ["--config", "${workspaceFolder}/pyproject.toml"],
+
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        ".venv": false,
+        "backups": true
+    },
+
+    "files.associations": {
+        "*.json": "jsonc"
+    },
+
+    "terminal.integrated.cwd": "${workspaceFolder}"
 }

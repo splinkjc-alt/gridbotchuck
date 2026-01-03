@@ -1,0 +1,66 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Adaptive Scanner",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/adaptive_scanner.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Adaptive Scanner (Show Configs)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/adaptive_scanner.py",
+            "args": ["--show-configs"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Optimize All Assets",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/optimization/asset_optimizer.py",
+            "args": ["--optimize-all"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Signal Logger (Summary)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/signal_logger.py",
+            "args": ["--summary"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Signal Logger (Validate)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/signal_logger.py",
+            "args": ["--validate"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "GridBot Chuck",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": ["--config", "config/config.json"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Run Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
