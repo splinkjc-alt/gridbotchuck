@@ -1,0 +1,26 @@
+{
+  "crypto": [
+    "BTC/USD",
+    "ETH/USD",
+    "ADA/USD",
+    "SOL/USD",
+    "XRP/USD",
+    "DOGE/USD",
+    "AVAX/USD",
+    "POL/USD",
+    "DOT/USD",
+    "LINK/USD",
+    "ATOM/USD",
+    "UNI/USD",
+    "LTC/USD",
+    "NEAR/USD",
+    "APT/USD"
+  ],
+  "stocks": [
+    "TSLA",
+    "NVDA",
+    "AMD",
+    "TQQQ",
+    "SOXL"
+  ]
+}

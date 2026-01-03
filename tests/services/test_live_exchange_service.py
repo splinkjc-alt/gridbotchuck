@@ -52,25 +52,27 @@ class TestLiveExchangeService:
         assert service.exchange == mock_exchange_instance
         assert service.exchange.enableRateLimit, "Expected rate limiting to be enabled for live mode"
 
-    @patch("core.services.live_exchange_service.getattr")
     def test_missing_secret_key_raises_error(self, config_manager, monkeypatch):
         monkeypatch.delenv("EXCHANGE_SECRET_KEY", raising=False)
+        monkeypatch.delenv("BINANCE_SECRET_KEY", raising=False)
         monkeypatch.setenv("EXCHANGE_API_KEY", "test_api_key")
+        monkeypatch.setenv("BINANCE_API_KEY", "test_api_key")
 
         with pytest.raises(
             MissingEnvironmentVariableError,
-            match="Missing required environment variable: EXCHANGE_SECRET_KEY",
+            match="Missing required environment variable: BINANCE_SECRET_KEY or EXCHANGE_SECRET_KEY",
         ):
             LiveExchangeService(config_manager, is_paper_trading_activated=False)
 
-    @patch("core.services.live_exchange_service.getattr")
     def test_missing_api_key_raises_error(self, config_manager, monkeypatch):
         monkeypatch.delenv("EXCHANGE_API_KEY", raising=False)
+        monkeypatch.delenv("BINANCE_API_KEY", raising=False)
         monkeypatch.setenv("EXCHANGE_SECRET_KEY", "test_secret_key")
+        monkeypatch.setenv("BINANCE_SECRET_KEY", "test_secret_key")
 
         with pytest.raises(
             MissingEnvironmentVariableError,
-            match="Missing required environment variable: EXCHANGE_API_KEY",
+            match="Missing required environment variable: BINANCE_API_KEY or EXCHANGE_API_KEY",
         ):
             LiveExchangeService(config_manager, is_paper_trading_activated=False)
 

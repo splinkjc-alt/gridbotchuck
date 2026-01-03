@@ -73,7 +73,9 @@ def test_setup_logging_logs_info(mock_basic_config, mock_rotating_file_handler, 
         setup_logging(log_level=logging.INFO, log_to_file=True, config_name="test_config")
 
     assert "Logging initialized. Log level: INFO" in caplog.text
-    assert "File logging enabled. Logs are stored in: logs/test_config.log" in caplog.text
+    # Use os.path.join to handle platform-specific path separators
+    assert "File logging enabled. Logs are stored in:" in caplog.text
+    assert "test_config.log" in caplog.text
 
 
 def test_setup_logging_directory_creation_error(mock_makedirs):

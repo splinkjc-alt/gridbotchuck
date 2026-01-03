@@ -1,0 +1,321 @@
+{
+  "BTC/USD": {
+    "best_timeframe": "1h",
+    "strategy": "grid",
+    "indicator_combo": "rsi_bb",
+    "indicators": [
+      "RSI(14)",
+      "Bollinger(20,2)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 35,
+      "rsi_sell": 65,
+      "bb_period": 20,
+      "bb_std": 2.0
+    },
+    "profit_pct": 10.24,
+    "win_rate": 100.0,
+    "max_drawdown": 1.61,
+    "sharpe_ratio": 0.58,
+    "total_trades": 61,
+    "last_optimized": "2026-01-02 19:40"
+  },
+  "ETH/USD": {
+    "best_timeframe": "30m",
+    "strategy": "grid",
+    "indicator_combo": "rsi_only",
+    "indicators": [
+      "RSI(14)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 30,
+      "rsi_sell": 70
+    },
+    "profit_pct": 5.26,
+    "win_rate": 100.0,
+    "max_drawdown": 3.83,
+    "sharpe_ratio": -0.01,
+    "total_trades": 34,
+    "last_optimized": "2026-01-02 19:41"
+  },
+  "ADA/USD": {
+    "best_timeframe": "30m",
+    "strategy": "grid",
+    "indicator_combo": "rsi_only",
+    "indicators": [
+      "RSI(14)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 30,
+      "rsi_sell": 70
+    },
+    "profit_pct": 3.81,
+    "win_rate": 100.0,
+    "max_drawdown": 5.53,
+    "sharpe_ratio": -0.11,
+    "total_trades": 50,
+    "last_optimized": "2026-01-02 19:41"
+  },
+  "SOL/USD": {
+    "best_timeframe": "1h",
+    "strategy": "grid",
+    "indicator_combo": "rsi_bb",
+    "indicators": [
+      "RSI(14)",
+      "Bollinger(20,2)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 35,
+      "rsi_sell": 65,
+      "bb_period": 20,
+      "bb_std": 2.0
+    },
+    "profit_pct": 15.95,
+    "win_rate": 100.0,
+    "max_drawdown": 2.53,
+    "sharpe_ratio": 0.8,
+    "total_trades": 64,
+    "last_optimized": "2026-01-02 19:41"
+  },
+  "XRP/USD": {
+    "best_timeframe": "1h",
+    "strategy": "grid",
+    "indicator_combo": "rsi_ema",
+    "indicators": [
+      "RSI(14)",
+      "EMA(20)",
+      "EMA(50)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 35,
+      "rsi_sell": 65,
+      "ema_fast": 20,
+      "ema_slow": 50
+    },
+    "profit_pct": 6.83,
+    "win_rate": 100.0,
+    "max_drawdown": 8.11,
+    "sharpe_ratio": 0.14,
+    "total_trades": 64,
+    "last_optimized": "2026-01-02 19:41"
+  },
+  "DOGE/USD": {
+    "best_timeframe": "1h",
+    "strategy": "grid",
+    "indicator_combo": "rsi_bb",
+    "indicators": [
+      "RSI(14)",
+      "Bollinger(20,2)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 35,
+      "rsi_sell": 65,
+      "bb_period": 20,
+      "bb_std": 2.0
+    },
+    "profit_pct": 11.1,
+    "win_rate": 100.0,
+    "max_drawdown": 5.7,
+    "sharpe_ratio": 0.42,
+    "total_trades": 77,
+    "last_optimized": "2026-01-02 19:41"
+  },
+  "AVAX/USD": {
+    "best_timeframe": "30m",
+    "strategy": "grid",
+    "indicator_combo": "rsi_bb",
+    "indicators": [
+      "RSI(14)",
+      "Bollinger(20,2)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 35,
+      "rsi_sell": 65,
+      "bb_period": 20,
+      "bb_std": 2.0
+    },
+    "profit_pct": 7.93,
+    "win_rate": 100.0,
+    "max_drawdown": 3.12,
+    "sharpe_ratio": 0.31,
+    "total_trades": 62,
+    "last_optimized": "2026-01-02 19:41"
+  },
+  "MATIC/USD": {
+    "best_timeframe": "30m",
+    "strategy": "grid",
+    "indicator_combo": "rsi_bb",
+    "indicators": [
+      "RSI(14)",
+      "Bollinger(20,2)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 35,
+      "rsi_sell": 65,
+      "bb_period": 20,
+      "bb_std": 2.0
+    },
+    "profit_pct": 0.0,
+    "win_rate": 0.0,
+    "last_optimized": null
+  },
+  "DOT/USD": {
+    "best_timeframe": "30m",
+    "strategy": "grid",
+    "indicator_combo": "rsi_only",
+    "indicators": [
+      "RSI(14)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 30,
+      "rsi_sell": 70
+    },
+    "profit_pct": 10.78,
+    "win_rate": 100.0,
+    "max_drawdown": 4.68,
+    "sharpe_ratio": 0.47,
+    "total_trades": 57,
+    "last_optimized": "2026-01-02 19:42"
+  },
+  "LINK/USD": {
+    "best_timeframe": "1h",
+    "strategy": "grid",
+    "indicator_combo": "rsi_bb",
+    "indicators": [
+      "RSI(14)",
+      "Bollinger(20,2)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 35,
+      "rsi_sell": 65,
+      "bb_period": 20,
+      "bb_std": 2.0
+    },
+    "profit_pct": 17.93,
+    "win_rate": 100.0,
+    "max_drawdown": 6.49,
+    "sharpe_ratio": 0.71,
+    "total_trades": 68,
+    "last_optimized": "2026-01-02 19:42"
+  },
+  "ATOM/USD": {
+    "best_timeframe": "30m",
+    "strategy": "grid",
+    "indicator_combo": "rsi_only",
+    "indicators": [
+      "RSI(14)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 30,
+      "rsi_sell": 70
+    },
+    "profit_pct": 10.82,
+    "win_rate": 100.0,
+    "max_drawdown": 3.5,
+    "sharpe_ratio": 0.61,
+    "total_trades": 45,
+    "last_optimized": "2026-01-02 19:42"
+  },
+  "UNI/USD": {
+    "best_timeframe": "1h",
+    "strategy": "grid",
+    "indicator_combo": "rsi_ema",
+    "indicators": [
+      "RSI(14)",
+      "EMA(20)",
+      "EMA(50)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 35,
+      "rsi_sell": 65,
+      "ema_fast": 20,
+      "ema_slow": 50
+    },
+    "profit_pct": 15.91,
+    "win_rate": 100.0,
+    "max_drawdown": 9.74,
+    "sharpe_ratio": 0.53,
+    "total_trades": 78,
+    "last_optimized": "2026-01-02 19:42"
+  },
+  "LTC/USD": {
+    "best_timeframe": "30m",
+    "strategy": "grid",
+    "indicator_combo": "rsi_bb",
+    "indicators": [
+      "RSI(14)",
+      "Bollinger(20,2)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 35,
+      "rsi_sell": 65,
+      "bb_period": 20,
+      "bb_std": 2.0
+    },
+    "profit_pct": 7.9,
+    "win_rate": 100.0,
+    "max_drawdown": 2.05,
+    "sharpe_ratio": 0.33,
+    "total_trades": 59,
+    "last_optimized": "2026-01-02 19:42"
+  },
+  "NEAR/USD": {
+    "best_timeframe": "30m",
+    "strategy": "grid",
+    "indicator_combo": "rsi_ema",
+    "indicators": [
+      "RSI(14)",
+      "EMA(20)",
+      "EMA(50)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 35,
+      "rsi_sell": 65,
+      "ema_fast": 20,
+      "ema_slow": 50
+    },
+    "profit_pct": 12.53,
+    "win_rate": 100.0,
+    "max_drawdown": 3.23,
+    "sharpe_ratio": 0.53,
+    "total_trades": 68,
+    "last_optimized": "2026-01-02 19:43"
+  },
+  "APT/USD": {
+    "best_timeframe": "1h",
+    "strategy": "grid",
+    "indicator_combo": "rsi_ema",
+    "indicators": [
+      "RSI(14)",
+      "EMA(20)",
+      "EMA(50)"
+    ],
+    "params": {
+      "rsi_period": 14,
+      "rsi_buy": 35,
+      "rsi_sell": 65,
+      "ema_fast": 20,
+      "ema_slow": 50
+    },
+    "profit_pct": 22.93,
+    "win_rate": 100.0,
+    "max_drawdown": 8.96,
+    "sharpe_ratio": 0.75,
+    "total_trades": 80,
+    "last_optimized": "2026-01-02 19:43"
+  }
+}

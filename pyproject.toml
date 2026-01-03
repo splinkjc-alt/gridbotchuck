@@ -34,7 +34,6 @@ issues = "https://github.com/jordantete/grid_trading_bot/issues"
 discussions = "https://github.com/jordantete/grid_trading_bot/discussions"
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
@@ -45,6 +44,9 @@ markers = [
     "asyncio: mark a test as an async test",
     "timeout: mark a test with a timeout"
 ]
+
+[tool.pytest_asyncio]
+mode = "auto"
 
 [tool.coverage.run]
 omit = [
