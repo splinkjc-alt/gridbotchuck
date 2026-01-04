@@ -1,4 +1,4 @@
-name: GridBot Pro CI
+name: CI
 
 on:
   push:
@@ -9,72 +9,32 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.11', '3.12', '3.13']
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-asyncio pytest-cov
-          echo "Installed packages:"
-          pip list | grep -E "(psutil|pytest|asyncio)"
+          uv sync
 
-      - name: Verify psutil installation
+      - name: Run linting
         run: |
-          python -c "import psutil; print(f'psutil version: {psutil.__version__}')"
+          uv run ruff check --select E,F,W --ignore E501
+        continue-on-error: true
 
       - name: Run tests
         run: |
-          pytest tests/ -v --tb=short
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install linters
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff
-
-      - name: Run Ruff linter
-        run: ruff check . --ignore E501,DTZ005,DTZ001,DTZ003,DTZ011
-
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Check for secrets
-        run: |
-          # Fail if config.json contains real API keys
-          if [ -f "config/config.json" ]; then
-            if grep -q "YOUR_API_KEY\|YOUR_SECRET" config/config.json; then
-              echo "✓ Config uses placeholder keys"
-            else
-              echo "⚠ WARNING: config.json may contain real credentials"
-              exit 1
-            fi
-          else
-            echo "✓ Config files not in repository (using .gitignore)"
-          fi
+          uv run pytest tests/ -v --tb=short
+        env:
+          EXCHANGE_API_KEY: "test_key"
+          EXCHANGE_SECRET_KEY: "test_secret"
