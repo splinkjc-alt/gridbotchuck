@@ -22,8 +22,8 @@
     "spacing": "geometric",
     "num_grids": 6,
     "range": {
-      "bottom": 0.30,
-      "top": 0.38
+      "bottom": 0.35,
+      "top": 0.42
     }
   },
   "risk_management": {
@@ -94,7 +94,7 @@
     "log_to_file": true
   },
   "api": {
-    "enabled": false,
+    "enabled": true,
     "port": 8081
   }
 }

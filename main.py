@@ -62,8 +62,11 @@ async def run_bot(
     bot_controller = BotController(bot, event_bus)
     health_check = HealthCheck(bot, notification_handler, event_bus)
 
+    # Get API port from config if available, otherwise use default
+    config_api_port = config_manager.config.get("api", {}).get("port", api_port)
+
     # Initialize API server for web control
-    api_integration = BotAPIIntegration(bot, event_bus, config_manager, port=api_port)
+    api_integration = BotAPIIntegration(bot, event_bus, config_manager, port=config_api_port)
     await api_integration.start()
 
     if profile:

@@ -43,6 +43,8 @@ def init_db():
             price_1h REAL,
             price_4h REAL,
             price_24h REAL,
+            outcome_1h TEXT,
+            outcome_4h TEXT,
             outcome TEXT,
             profit_pct REAL
         )
@@ -50,6 +52,17 @@ def init_db():
     conn.execute("CREATE INDEX IF NOT EXISTS idx_timestamp ON signals(timestamp)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_symbol ON signals(symbol)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_signal ON signals(signal)")
+
+    # Add new columns if they don't exist (for existing databases)
+    try:
+        conn.execute("ALTER TABLE signals ADD COLUMN outcome_1h TEXT")
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    try:
+        conn.execute("ALTER TABLE signals ADD COLUMN outcome_4h TEXT")
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+
     conn.commit()
     conn.close()
 
@@ -88,8 +101,13 @@ def log_signal(
     conn.close()
 
 
-def validate_signals(exchange: ccxt.Exchange | None = None):
-    """Check outcomes for signals that are old enough."""
+def validate_signals(exchange: ccxt.Exchange | None = None, hours: int = 24):
+    """Check outcomes for signals that are old enough.
+
+    Args:
+        exchange: CCXT exchange instance
+        hours: Minimum age of signals to validate (1, 4, or 24)
+    """
     if exchange is None:
         exchange = ccxt.kraken()
 
@@ -97,25 +115,42 @@ def validate_signals(exchange: ccxt.Exchange | None = None):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
 
-    # Get signals older than 24h that haven't been validated
-    cutoff = (datetime.now(tz=UTC) - timedelta(hours=24)).isoformat()
-    signals = conn.execute(
-        """
-        SELECT * FROM signals
-        WHERE outcome_checked = 0 AND timestamp < ?
-        AND signal IN ('BUY', 'SELL')
-        """,
-        (cutoff,),
-    ).fetchall()
+    # Map hours to column names
+    price_col = f"price_{hours}h" if hours in [1, 4] else "price_24h"
+    outcome_col = f"outcome_{hours}h" if hours in [1, 4] else "outcome"
 
-    print(f"Validating {len(signals)} signals...")
+    # Get signals older than specified hours that haven't been validated for this timeframe
+    cutoff = (datetime.now(tz=UTC) - timedelta(hours=hours)).isoformat()
+
+    # For 1h/4h, check if that specific price column is NULL
+    # For 24h, check outcome_checked = 0
+    if hours == 24:
+        signals = conn.execute(
+            """
+            SELECT * FROM signals
+            WHERE outcome_checked = 0 AND timestamp < ?
+            AND signal IN ('BUY', 'SELL')
+            """,
+            (cutoff,),
+        ).fetchall()
+    else:
+        signals = conn.execute(
+            f"""
+            SELECT * FROM signals
+            WHERE {price_col} IS NULL AND timestamp < ?
+            AND signal IN ('BUY', 'SELL')
+            """,
+            (cutoff,),
+        ).fetchall()
+
+    print(f"Validating {len(signals)} signals for {hours}h outcome...")
     validated = 0
+    correct_count = 0
 
     for sig in signals:
         symbol = sig["symbol"]
         signal_type = sig["signal"]
         entry_price = sig["price"]
-        signal_time = datetime.fromisoformat(sig["timestamp"])
 
         try:
             # Fetch current price
@@ -133,15 +168,28 @@ def validate_signals(exchange: ccxt.Exchange | None = None):
                 # SELL is correct if price went DOWN
                 outcome = "CORRECT" if price_change_pct < 0 else "WRONG"
 
-            # Update the record
-            conn.execute(
-                """
-                UPDATE signals
-                SET outcome_checked = 1, price_24h = ?, outcome = ?, profit_pct = ?
-                WHERE id = ?
-                """,
-                (current_price, outcome, price_change_pct, sig["id"]),
-            )
+            if outcome == "CORRECT":
+                correct_count += 1
+
+            # Update the record based on timeframe
+            if hours == 24:
+                conn.execute(
+                    """
+                    UPDATE signals
+                    SET outcome_checked = 1, price_24h = ?, outcome = ?, profit_pct = ?
+                    WHERE id = ?
+                    """,
+                    (current_price, outcome, price_change_pct, sig["id"]),
+                )
+            else:
+                conn.execute(
+                    f"""
+                    UPDATE signals
+                    SET {price_col} = ?, {outcome_col} = ?
+                    WHERE id = ?
+                    """,
+                    (current_price, outcome, sig["id"]),
+                )
             validated += 1
             print(f"  {symbol} {signal_type} @ ${entry_price:.4f} -> ${current_price:.4f} ({price_change_pct:+.2f}%) = {outcome}")
 
@@ -150,7 +198,24 @@ def validate_signals(exchange: ccxt.Exchange | None = None):
 
     conn.commit()
     conn.close()
-    print(f"\nValidated {validated} signals")
+
+    accuracy = (correct_count / validated * 100) if validated > 0 else 0
+    print(f"\nValidated {validated} signals for {hours}h timeframe")
+    print(f"Accuracy: {correct_count}/{validated} = {accuracy:.1f}%")
+
+
+def validate_all_timeframes(exchange: ccxt.Exchange | None = None):
+    """Validate signals for all timeframes (1h, 4h, 24h)."""
+    if exchange is None:
+        exchange = ccxt.kraken()
+
+    print("=" * 60)
+    print("VALIDATING ALL TIMEFRAMES")
+    print("=" * 60)
+
+    for hours in [1, 4, 24]:
+        print(f"\n--- {hours}h Validation ---")
+        validate_signals(exchange, hours=hours)
 
 
 def get_accuracy_stats() -> dict:
@@ -304,13 +369,22 @@ def print_recent(limit: int = 20):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Signal Logger")
     parser.add_argument("--summary", action="store_true", help="Show accuracy stats")
-    parser.add_argument("--validate", action="store_true", help="Validate old signals")
+    parser.add_argument("--validate", action="store_true", help="Validate signals (24h)")
+    parser.add_argument("--validate-all", action="store_true", help="Validate all timeframes (1h, 4h, 24h)")
+    parser.add_argument("--validate-1h", action="store_true", help="Validate 1h outcomes")
+    parser.add_argument("--validate-4h", action="store_true", help="Validate 4h outcomes")
     parser.add_argument("--recent", type=int, metavar="N", help="Show recent N signals")
 
     args = parser.parse_args()
 
-    if args.validate:
-        validate_signals()
+    if args.validate_all:
+        validate_all_timeframes()
+    elif args.validate_1h:
+        validate_signals(hours=1)
+    elif args.validate_4h:
+        validate_signals(hours=4)
+    elif args.validate:
+        validate_signals(hours=24)
     elif args.recent:
         print_recent(args.recent)
     elif args.summary:
