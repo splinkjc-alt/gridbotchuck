@@ -5,6 +5,7 @@ Shows current balances and open orders.
 """
 
 import asyncio
+import logging
 import os
 from pathlib import Path
 import sys
@@ -16,6 +17,10 @@ sys.path.insert(0, str(script_dir))
 
 import ccxt.async_support as ccxt
 from dotenv import load_dotenv
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 # Load env from config folder
 env_path = portable_root / "config" / ".env"
@@ -63,9 +68,9 @@ async def main():
                         value = amount * price
                         if value > 0.01:
                             total_value += value
-                    except:
+                    except Exception as e:
                         if amount > 0.01:
-                            pass
+                            logger.debug(f"Could not fetch ticker for {pair}: {e}")
 
 
         # Get open orders
@@ -79,8 +84,8 @@ async def main():
             pass
 
 
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Error during health check: {e}")
 
     finally:
         await exchange.close()

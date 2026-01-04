@@ -352,8 +352,8 @@ class DayTradingAssistant:
             pairs = scanner_config.get("candidate_pairs", [])
             if pairs:
                 return pairs
-        except:
-            pass
+        except Exception as e:
+            logging.debug(f"Could not load candidate pairs from config: {e}")
 
         # Default list of active crypto pairs
         return [
