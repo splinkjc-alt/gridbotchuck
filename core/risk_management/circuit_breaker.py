@@ -128,7 +128,10 @@ class CircuitBreaker:
         else:
             # In CLOSED state, reset failure count on success
             if self.failure_count > 0:
-                self.logger.debug(f"Circuit {self.name} success, resetting failure count from {self.failure_count} to 0")
+                self.logger.debug(
+                    f"Circuit {self.name} success, resetting failure count from "
+                    f"{self.failure_count} to 0"
+                )
                 self.failure_count = 0
 
     def _on_failure(self, error: Exception):

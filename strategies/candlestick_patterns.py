@@ -82,11 +82,11 @@ def detect_hammer(data: pd.DataFrame) -> bool:
         return False
 
     candle = data.iloc[-1]
-    o, h, l, c = candle["open"], candle["high"], candle["low"], candle["close"]
+    o, h, low, c = candle["open"], candle["high"], candle["low"], candle["close"]
 
     body = _get_body_size(o, c)
     upper_shadow = _get_upper_shadow(o, h, c)
-    lower_shadow = _get_lower_shadow(o, l, c)
+    lower_shadow = _get_lower_shadow(o, low, c)
 
     # Avoid division by zero
     if body == 0:
@@ -116,11 +116,11 @@ def detect_shooting_star(data: pd.DataFrame) -> bool:
         return False
 
     candle = data.iloc[-1]
-    o, h, l, c = candle["open"], candle["high"], candle["low"], candle["close"]
+    o, h, low, c = candle["open"], candle["high"], candle["low"], candle["close"]
 
     body = _get_body_size(o, c)
     upper_shadow = _get_upper_shadow(o, h, c)
-    lower_shadow = _get_lower_shadow(o, l, c)
+    lower_shadow = _get_lower_shadow(o, low, c)
 
     if body == 0:
         body = 0.0001
@@ -262,10 +262,10 @@ def detect_doji(data: pd.DataFrame) -> bool:
         return False
 
     candle = data.iloc[-1]
-    o, h, l, c = candle["open"], candle["high"], candle["low"], candle["close"]
+    o, h, low, c = candle["open"], candle["high"], candle["low"], candle["close"]
 
     body = _get_body_size(o, c)
-    full_range = h - l
+    full_range = h - low
 
     if full_range == 0:
         return False
@@ -286,12 +286,12 @@ def detect_dragonfly_doji(data: pd.DataFrame) -> bool:
         return False
 
     candle = data.iloc[-1]
-    o, h, l, c = candle["open"], candle["high"], candle["low"], candle["close"]
+    o, h, low, c = candle["open"], candle["high"], candle["low"], candle["close"]
 
     body = _get_body_size(o, c)
-    full_range = h - l
+    full_range = h - low
     upper_shadow = _get_upper_shadow(o, h, c)
-    lower_shadow = _get_lower_shadow(o, l, c)
+    lower_shadow = _get_lower_shadow(o, low, c)
 
     if full_range == 0:
         return False
@@ -312,11 +312,11 @@ def detect_hanging_man(data: pd.DataFrame) -> bool:
         return False
 
     candle = data.iloc[-1]
-    o, h, l, c = candle["open"], candle["high"], candle["low"], candle["close"]
+    o, h, low, c = candle["open"], candle["high"], candle["low"], candle["close"]
 
     body = _get_body_size(o, c)
     upper_shadow = _get_upper_shadow(o, h, c)
-    lower_shadow = _get_lower_shadow(o, l, c)
+    lower_shadow = _get_lower_shadow(o, low, c)
 
     if body == 0:
         body = 0.0001
@@ -519,12 +519,12 @@ def detect_spinning_top(data: pd.DataFrame) -> bool:
         return False
 
     candle = data.iloc[-1]
-    o, h, l, c = candle["open"], candle["high"], candle["low"], candle["close"]
+    o, h, low, c = candle["open"], candle["high"], candle["low"], candle["close"]
 
     body = _get_body_size(o, c)
     upper_shadow = _get_upper_shadow(o, h, c)
-    lower_shadow = _get_lower_shadow(o, l, c)
-    full_range = h - l
+    lower_shadow = _get_lower_shadow(o, low, c)
+    full_range = h - low
 
     if full_range == 0:
         return False

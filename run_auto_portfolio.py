@@ -141,7 +141,7 @@ async def main():
         def signal_handler(sig, frame):
             if not args.json:
                 pass
-            asyncio.create_task(manager.stop())
+            asyncio.create_task(manager.stop())  # noqa: RUF006
 
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)

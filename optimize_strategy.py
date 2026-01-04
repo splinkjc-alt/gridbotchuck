@@ -3,7 +3,7 @@ Strategy Optimizer - Test different indicator combos to find best profit.
 
 Tests 20+ strategies on historical data and ranks by performance.
 """
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import ccxt
 import pandas as pd
@@ -122,7 +122,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
     exchange = ccxt.kraken({"enableRateLimit": True})
 
     # Fetch data
-    since = exchange.parse8601((datetime.utcnow() - timedelta(hours=hours_lookback)).isoformat())
+    since = exchange.parse8601((datetime.now(UTC) - timedelta(hours=hours_lookback)).isoformat())
     ohlcv = exchange.fetch_ohlcv("XRP/USD", "5m", since=since, limit=1000)
 
     # Convert to DataFrame
@@ -285,7 +285,7 @@ def optimize_xrp_strategy(hours_lookback: int = 24, exchange_name: str = "kraken
 
     # Print results
 
-    for _i, result in enumerate(results, 1):
+    for _i, _result in enumerate(results, 1):
         pass
 
     # Show details of top 3 strategies

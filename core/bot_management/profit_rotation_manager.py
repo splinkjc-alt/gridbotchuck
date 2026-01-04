@@ -12,7 +12,7 @@ Key Features:
 import asyncio
 import contextlib
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -103,7 +103,7 @@ class ProfitRotationManager:
         self.running = False
         self.monitoring_task: asyncio.Task | None = None
         self.rotation_count_today = 0
-        self.last_rotation_reset = datetime.now().date()
+        self.last_rotation_reset = datetime.now(UTC).date()
 
     async def start(self, initial_pair: str, entry_value: float):
         """
@@ -150,7 +150,7 @@ class ProfitRotationManager:
         while self.running:
             try:
                 # Reset daily rotation counter
-                today = datetime.now().date()
+                today = datetime.now(UTC).date()
                 if today > self.last_rotation_reset:
                     self.rotation_count_today = 0
                     self.last_rotation_reset = today
@@ -210,7 +210,7 @@ class ProfitRotationManager:
             self.current_position.unrealized_pnl_percent = pnl_percent
             self.current_position.crypto_balance = crypto_balance
             self.current_position.quote_balance = quote_balance
-            self.current_position.timestamp = datetime.now()
+            self.current_position.timestamp = datetime.now(UTC)
 
             # Log status every 10th check (reduce spam)
             if asyncio.current_task().get_name().endswith("0"):
@@ -249,7 +249,7 @@ class ProfitRotationManager:
             exit_value = await self._close_position()
 
             # Record exit
-            self.recently_exited_pairs[self.current_position.pair] = datetime.now()
+            self.recently_exited_pairs[self.current_position.pair] = datetime.now(UTC)
             profit_realized = exit_value - self.current_position.entry_value
             profit_percent = (profit_realized / self.current_position.entry_value * 100)
 
@@ -265,7 +265,7 @@ class ProfitRotationManager:
                 if new_pair:
                     # Record rotation event
                     rotation = RotationEvent(
-                        timestamp=datetime.now(),
+                        timestamp=datetime.now(UTC),
                         from_pair=self.current_position.pair,
                         to_pair=new_pair,
                         profit_realized=profit_realized,
@@ -376,7 +376,7 @@ class ProfitRotationManager:
 
             # Filter and rank
             valid_candidates = []
-            cutoff_time = datetime.now() - timedelta(minutes=self.cooldown_minutes)
+            cutoff_time = datetime.now(UTC) - timedelta(minutes=self.cooldown_minutes)
 
             for analysis in results[:self.top_pairs_to_scan]:
                 # Skip if score too low
@@ -387,7 +387,7 @@ class ProfitRotationManager:
                 # Skip if recently exited (cooldown)
                 exit_time = self.recently_exited_pairs.get(analysis.pair)
                 if exit_time and exit_time > cutoff_time:
-                    remaining = (cutoff_time + timedelta(minutes=self.cooldown_minutes) - datetime.now()).seconds // 60
+                    remaining = (cutoff_time + timedelta(minutes=self.cooldown_minutes) - datetime.now(UTC)).seconds // 60
                     self.logger.debug(f"Skipping {analysis.pair}: cooldown active ({remaining}min remaining)")
                     continue
 
@@ -434,7 +434,7 @@ class ProfitRotationManager:
             {
                 "pair": pair,
                 "capital": capital,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
 

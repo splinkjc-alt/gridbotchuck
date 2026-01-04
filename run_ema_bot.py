@@ -5,7 +5,8 @@ Cancels existing orders and runs the EMA 9/20 crossover strategy.
 """
 
 import asyncio
-from datetime import datetime
+import contextlib
+from datetime import UTC, datetime
 import logging
 import os
 from pathlib import Path
@@ -88,6 +89,8 @@ class EMACrossoverBot:
                     self.logger.error(f"Cycle error: {e}")
                     await asyncio.sleep(30)
 
+        except Exception:  # noqa: S110
+            pass
         finally:
             await self.shutdown()
 
@@ -107,7 +110,10 @@ class EMACrossoverBot:
                 for order in orders:
                     try:
                         await self.exchange.cancel_order(order["id"], order["symbol"])
-                        self.logger.info(f"  Cancelled: {order['side']} {order['amount']} {order['symbol']} @ ${order['price']}")
+                        self.logger.info(
+                            f"  Cancelled: {order['side']} {order['amount']} "
+                            f"{order['symbol']} @ ${order['price']}"
+                        )
                     except Exception as e:
                         self.logger.warning(f"  Failed to cancel {order['id']}: {e}")
             else:
@@ -126,7 +132,7 @@ class EMACrossoverBot:
                     pair = f"{currency}/USD"
                     if pair in self.candidate_pairs:
                         # Get current price
-                        try:
+                        with contextlib.suppress(Exception):
                             ticker = await self.exchange.fetch_ticker(pair)
                             price = ticker["last"]
                             value = amount * price
@@ -134,11 +140,9 @@ class EMACrossoverBot:
                                 self.positions[pair] = {
                                     "qty": amount,
                                     "entry_price": price,  # Assume current price as entry
-                                    "entry_time": datetime.now(),
+                                    "entry_time": datetime.now(UTC),
                                 }
                                 self.logger.info(f"  {pair}: {amount:.4f} (~${value:.2f})")
-                        except:
-                            pass
 
             usd = balance["total"].get("USD", 0)
             self.logger.info(f"  USD: ${usd:.2f}")
@@ -149,7 +153,7 @@ class EMACrossoverBot:
 
     async def run_cycle(self):
         """Run one analysis cycle."""
-        self.logger.info(f"\n--- Cycle at {datetime.now().strftime('%H:%M:%S')} ---")
+        self.logger.info(f"\n--- Cycle at {datetime.now(UTC).strftime('%H:%M:%S')} ---")
 
         # Analyze all pairs
         signals = await self.scan_all_pairs()
@@ -184,7 +188,10 @@ class EMACrossoverBot:
 
                     # Log significant signals
                     if sig["action"] in ("BUY", "SAFE_BUY"):
-                        self.logger.info(f"  [BUY] {pair}: {sig['action']} - spread {sig['spread']:.2f}%, delta {sig['spread_change']:+.3f}%")
+                        self.logger.info(
+                            f"  [BUY] {pair}: {sig['action']} - spread {sig['spread']:.2f}%, "
+                            f"delta {sig['spread_change']:+.3f}%"
+                        )
                     elif sig["action"] == "SELL":
                         self.logger.info(f"  [SELL] {pair}: SELL signal")
 
@@ -272,11 +279,8 @@ class EMACrossoverBot:
                 market = await self.exchange.load_markets()
                 if pair in market:
                     amount_precision = market[pair].get("precision", {}).get("amount", 8)
-                    if isinstance(amount_precision, int):
-                        qty = round(qty, amount_precision)
-                    else:
-                        qty = round(qty, 4)  # Default to 4 decimals
-            except:
+                    qty = round(qty, amount_precision) if isinstance(amount_precision, int) else round(qty, 4)
+            except Exception:
                 qty = round(qty, 4)  # Fallback
 
             self.logger.info(f">>> BUYING {qty:.4f} {pair} @ ${price:.4f} (${position_value:.2f})")
@@ -288,7 +292,7 @@ class EMACrossoverBot:
                 self.positions[pair] = {
                     "qty": qty,
                     "entry_price": price,
-                    "entry_time": datetime.now(),
+                    "entry_time": datetime.now(UTC),
                 }
                 self.logger.info(f"[OK] BUY FILLED: {pair}")
 

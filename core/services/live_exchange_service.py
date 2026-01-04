@@ -384,7 +384,7 @@ class LiveExchangeService(ExchangeInterface):
             List of dicts with pair info sorted by % change descending
         """
         # Stablecoins and fiat-pegged tokens to exclude (no meaningful price movement)
-        EXCLUDED_BASES = {
+        EXCLUDED_BASES = {  # noqa: N806
             # USD Stablecoins
             "USDT",
             "USDC",

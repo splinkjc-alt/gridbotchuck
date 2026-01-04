@@ -18,9 +18,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from config.config_manager import ConfigManager
-from core.services.exchange_service_factory import ExchangeServiceFactory
-from strategies.ema_crossover_strategy import EMACrossoverStrategy
+from config.config_manager import ConfigManager  # noqa: E402
+from core.services.exchange_service_factory import ExchangeServiceFactory  # noqa: E402
+from strategies.ema_crossover_strategy import EMACrossoverStrategy  # noqa: E402
 
 
 async def main():

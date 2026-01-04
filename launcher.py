@@ -14,7 +14,7 @@ Interactive command-line launcher for GridBot Chuck with menu options:
 """
 
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 import json
 import os
 from pathlib import Path
@@ -47,7 +47,7 @@ class Colors:
 
 def clear_screen():
     """Clear the terminal screen."""
-    os.system("cls" if os.name == "nt" else "clear")
+    os.system("cls" if os.name == "nt" else "clear")  # noqa: S605
 
 
 def print_header():
@@ -109,7 +109,7 @@ def create_exchange_config(exchange_name: str) -> dict:
         "trading_settings": {
             "timeframe": "15m",
             "period": {
-                "start_date": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "start_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "end_date": None,
             },
             "initial_balance": 100,
@@ -210,8 +210,8 @@ async def run_smart_scan_menu():
         # Cleanup
         await exchange_service.close_connection()
 
-    except Exception:
-        pass
+    except Exception:  # noqa: S110
+        pass  # Silent failure for try-finally
     finally:
         # Remove temp config
         if temp_config_path.exists():
@@ -281,8 +281,6 @@ async def run_auto_portfolio_menu(
         await exchange_service.close_connection()
 
     except KeyboardInterrupt:
-        pass
-    except Exception:
         pass
     finally:
         if temp_config_path.exists():

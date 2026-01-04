@@ -77,7 +77,7 @@ class ExchangeRateLimiter:
     """
 
     # Default limits for common exchanges (conservative)
-    EXCHANGE_LIMITS = {
+    EXCHANGE_LIMITS: dict = {  # noqa: RUF012
         "kraken": {"public": (1, 1), "private": (15, 3), "orders": (10, 1)},  # (max_calls, window_seconds)
         "binance": {"public": (20, 1), "private": (10, 1), "orders": (10, 1)},
         "bybit": {"public": (50, 1), "private": (50, 1), "orders": (50, 1)},

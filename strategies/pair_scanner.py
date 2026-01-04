@@ -15,7 +15,7 @@ Scoring outputs:
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 import json
 import logging
 from pathlib import Path
@@ -117,7 +117,7 @@ class PairScanResult:
             "trading_settings": {
                 "timeframe": "15m",
                 "period": {
-                    "start_date": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "start_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
                     "end_date": None,  # Live trading
                 },
                 "initial_balance": initial_balance,
@@ -140,7 +140,7 @@ class PairScanResult:
                 "log_to_file": True,
             },
             "_scan_metadata": {
-                "scanned_at": datetime.utcnow().isoformat(),
+                "scanned_at": datetime.now(UTC).isoformat(),
                 "suitability_score": self.total_score,
                 "rank": self.rank,
             },
@@ -567,7 +567,7 @@ class PairScanner:
 
             # Generate filename
             pair_safe = result.pair.replace("/", "_")
-            filename = f"config_{pair_safe}_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
+            filename = f"config_{pair_safe}_{datetime.now(UTC).strftime('%Y%m%d_%H%M')}.json"
             filepath = output_path / filename
 
             with open(filepath, "w") as f:

@@ -264,7 +264,10 @@ class GridTradingBot:
                 # Update grid_strategy range (config uses 'grid_strategy.range.bottom/top')
                 self.config_manager.config["grid_strategy"]["range"]["bottom"] = new_lower
                 self.config_manager.config["grid_strategy"]["range"]["top"] = new_upper
-                self.logger.info(f"[AUTO-SELECT] Grid range: ${new_lower:.4f} - ${new_upper:.4f} (around ${current_price:.4f})")
+                self.logger.info(
+                    f"[AUTO-SELECT] Grid range: ${new_lower:.4f} - ${new_upper:.4f} "
+                    f"(around ${current_price:.4f})"
+                )
 
                 # Reinitialize grid manager with new prices
                 strategy_type = self.config_manager.get_strategy_type()

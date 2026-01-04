@@ -2,7 +2,7 @@
 Order Repository - SQLite persistence for order history.
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import json
 import logging
 from pathlib import Path
@@ -138,8 +138,8 @@ class OrderRepository:
                         order.average,
                         order.fee,
                         grid_level,
-                        order.created_at.isoformat() if order.created_at else datetime.now().isoformat(),
-                        datetime.now().isoformat(),
+                        order.created_at.isoformat() if order.created_at else datetime.now(UTC).isoformat(),
+                        datetime.now(UTC).isoformat(),
                         order.filled_at.isoformat() if order.filled_at else None,
                         json.dumps(metadata) if metadata else None,
                     ),
@@ -181,7 +181,7 @@ class OrderRepository:
                         order.fee,
                         profit,
                         balance_after,
-                        datetime.now().isoformat(),
+                        datetime.now(UTC).isoformat(),
                     ),
                 )
                 await db.commit()
@@ -354,31 +354,31 @@ class OrderRepository:
 
                 # Total orders
                 async with db.execute(
-                    f"SELECT COUNT(*) as count FROM orders WHERE 1=1 {pair_filter}"
+                    f"SELECT COUNT(*) as count FROM orders WHERE 1=1 {pair_filter}"  # noqa: S608
                 ) as cursor:
                     total_orders = (await cursor.fetchone())["count"]
 
                 # Filled orders
                 async with db.execute(
-                    f"SELECT COUNT(*) as count FROM orders WHERE status = 'closed' {pair_filter}"
+                    f"SELECT COUNT(*) as count FROM orders WHERE status = 'closed' {pair_filter}"  # noqa: S608
                 ) as cursor:
                     filled_orders = (await cursor.fetchone())["count"]
 
                 # Total trades
                 async with db.execute(
-                    f"SELECT COUNT(*) as count FROM trade_history WHERE 1=1 {pair_filter}"
+                    f"SELECT COUNT(*) as count FROM trade_history WHERE 1=1 {pair_filter}"  # noqa: S608
                 ) as cursor:
                     total_trades = (await cursor.fetchone())["count"]
 
                 # Total fees
                 async with db.execute(
-                    f"SELECT SUM(fee) as total FROM trade_history WHERE 1=1 {pair_filter}"
+                    f"SELECT SUM(fee) as total FROM trade_history WHERE 1=1 {pair_filter}"  # noqa: S608
                 ) as cursor:
                     total_fees = (await cursor.fetchone())["total"] or 0.0
 
                 # Total profit
                 async with db.execute(
-                    f"SELECT SUM(profit) as total FROM trade_history WHERE profit IS NOT NULL {pair_filter}"
+                    f"SELECT SUM(profit) as total FROM trade_history WHERE profit IS NOT NULL {pair_filter}"  # noqa: S608
                 ) as cursor:
                     total_profit = (await cursor.fetchone())["total"] or 0.0
 
@@ -403,7 +403,7 @@ class OrderRepository:
             days: Keep orders from last N days
         """
         try:
-            cutoff_date = datetime.now() - timedelta(days=days)
+            cutoff_date = datetime.now(UTC) - timedelta(days=days)
 
             async with aiosqlite.connect(self.db_path) as db:
                 await db.execute(

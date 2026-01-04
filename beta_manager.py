@@ -16,7 +16,7 @@ Usage:
 
 import argparse
 import csv
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import json
 from pathlib import Path
 import sys
@@ -58,7 +58,7 @@ class BetaManager:
         self.signups["signups"].append(
             {
                 "email": email,
-                "signup_date": datetime.now().isoformat(),
+                "signup_date": datetime.now(UTC).isoformat(),
                 "key_generated": False,
             }
         )
@@ -80,8 +80,8 @@ class BetaManager:
         # Record the key generation
         self.signups["generated_keys"][email] = {
             "key": key,
-            "generated_date": datetime.now().isoformat(),
-            "expires": (datetime.now() + timedelta(days=14)).isoformat(),
+            "generated_date": datetime.now(UTC).isoformat(),
+            "expires": (datetime.now(UTC) + timedelta(days=14)).isoformat(),
         }
 
         # Update signup record

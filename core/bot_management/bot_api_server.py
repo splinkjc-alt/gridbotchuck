@@ -793,7 +793,7 @@ class BotAPIServer:
             # Start in background
             import asyncio
 
-            asyncio.create_task(self.bot.multi_pair_manager.start())
+            asyncio.create_task(self.bot.multi_pair_manager.start())  # noqa: RUF006
 
             return web.json_response(
                 {
@@ -1491,7 +1491,7 @@ class BotAPIServer:
             # Start in background task
             import asyncio
 
-            asyncio.create_task(
+            asyncio.create_task(  # noqa: RUF006
                 manager.start(
                     quote_currency=quote_currency,
                     num_pairs=num_pairs,
