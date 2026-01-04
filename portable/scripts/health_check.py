@@ -5,6 +5,7 @@ Shows current balances and open orders.
 """
 
 import asyncio
+import logging
 import os
 from pathlib import Path
 import sys
@@ -63,9 +64,10 @@ async def main():
                         value = amount * price
                         if value > 0.01:
                             total_value += value
-                    except:
+                    except Exception:
+                        # Could not get price for this currency
                         if amount > 0.01:
-                            pass
+                            logging.debug(f"Could not get price for {currency}")
 
 
         # Get open orders
@@ -79,8 +81,8 @@ async def main():
             pass
 
 
-    except Exception:
-        pass
+    except Exception as e:
+        logging.error(f"Health check failed: {e}")
 
     finally:
         await exchange.close()

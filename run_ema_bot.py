@@ -137,8 +137,8 @@ class EMACrossoverBot:
                                     "entry_time": datetime.now(),
                                 }
                                 self.logger.info(f"  {pair}: {amount:.4f} (~${value:.2f})")
-                        except:
-                            pass
+                        except Exception as e:
+                            self.logger.debug(f"Could not get price for {pair}: {e}")
 
             usd = balance["total"].get("USD", 0)
             self.logger.info(f"  USD: ${usd:.2f}")
@@ -276,7 +276,8 @@ class EMACrossoverBot:
                         qty = round(qty, amount_precision)
                     else:
                         qty = round(qty, 4)  # Default to 4 decimals
-            except:
+            except Exception as e:
+                self.logger.debug(f"Could not load market precision for {pair}: {e}")
                 qty = round(qty, 4)  # Fallback
 
             self.logger.info(f">>> BUYING {qty:.4f} {pair} @ ${price:.4f} (${position_value:.2f})")

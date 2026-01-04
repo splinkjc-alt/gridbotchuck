@@ -16,6 +16,7 @@ Interactive command-line launcher for GridBot Chuck with menu options:
 import asyncio
 from datetime import datetime
 import json
+import logging
 import os
 from pathlib import Path
 import sys
@@ -210,8 +211,8 @@ async def run_smart_scan_menu():
         # Cleanup
         await exchange_service.close_connection()
 
-    except Exception:
-        pass
+    except Exception as e:
+        logging.error(f"Error in smart scan: {e}")
     finally:
         # Remove temp config
         if temp_config_path.exists():
@@ -281,9 +282,9 @@ async def run_auto_portfolio_menu(
         await exchange_service.close_connection()
 
     except KeyboardInterrupt:
-        pass
-    except Exception:
-        pass
+        logging.info("Auto-portfolio interrupted by user")
+    except Exception as e:
+        logging.error(f"Error in auto-portfolio: {e}")
     finally:
         if temp_config_path.exists():
             temp_config_path.unlink()
