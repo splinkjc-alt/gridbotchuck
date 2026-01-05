@@ -281,8 +281,8 @@ class EMACrossoverBot:
 
             self.logger.info(f">>> BUYING {qty:.4f} {pair} @ ${price:.4f} (${position_value:.2f})")
 
-            # Execute
-            order = await self.exchange.create_market_buy_order(pair, qty)
+            # Execute - Coinbase requires price for market buys
+            order = await self.exchange.create_order(pair, 'market', 'buy', qty, price)
 
             if order:
                 self.positions[pair] = {
@@ -310,8 +310,8 @@ class EMACrossoverBot:
 
             self.logger.info(f"<<< SELLING {qty:.4f} {pair} @ ${price:.4f} (P&L: ${pnl:.2f} / {pnl_pct:+.2f}%)")
 
-            # Execute
-            order = await self.exchange.create_market_sell_order(pair, qty)
+            # Execute - use create_order for Coinbase compatibility
+            order = await self.exchange.create_order(pair, 'market', 'sell', qty, price)
 
             if order:
                 del self.positions[pair]
