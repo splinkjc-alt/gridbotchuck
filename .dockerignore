@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Environment (user provides their own)
+.env
+.env.local
+
+# Logs and data (mounted as volumes)
+logs/
+data/
+*.log
+
+# Development
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Desktop app (not needed in container)
+desktop/
+portable/
+
+# Backups
+backups/
+*.bak
+
+# Docs
+*.md
+LICENSE
+
+# Tests
+tests/
+test_*.py
+
+# Monitoring configs (separate compose service)
+monitoring/

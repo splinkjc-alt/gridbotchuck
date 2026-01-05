@@ -1,4 +1,48 @@
 services:
+  # ============================================================
+  # TRADING BOTS
+  # ============================================================
+
+  # Chuck - BTC Grid Trading Bot
+  chuck:
+    build: .
+    container_name: gridbot-chuck
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    environment:
+      - LOG_LEVEL=INFO
+    command: ["python", "main.py", "--config", "config/config.json"]
+    networks:
+      - default
+
+  # Growler - ADA Grid Trading Bot
+  growler:
+    build: .
+    container_name: gridbot-growler
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    environment:
+      - LOG_LEVEL=INFO
+    command: ["python", "main.py", "--config", "config/config_growler_ada.json"]
+    profiles:
+      - full
+    networks:
+      - default
+
+  # ============================================================
+  # MONITORING (Grafana + Loki)
+  # ============================================================
+
   loki:
     image: grafana/loki:3.0.0
     container_name: loki
