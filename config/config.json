@@ -1,0 +1,89 @@
+{
+  "exchange": {
+    "name": "kraken",
+    "trading_fee": 0.0026,
+    "trading_mode": "live"
+  },
+  "pair": {
+    "base_currency": "BTC",
+    "quote_currency": "USD"
+  },
+  "trading_settings": {
+    "timeframe": "1h",
+    "period": {
+      "start_date": "2025-12-01T00:00:00Z",
+      "end_date": "2026-01-31T23:59:59Z"
+    },
+    "initial_balance": 1000
+  },
+  "grid_strategy": {
+    "type": "simple_grid",
+    "spacing": "geometric",
+    "num_grids": 6,
+    "range": {
+      "top": 93000,
+      "bottom": 90000
+    }
+  },
+  "risk_management": {
+    "take_profit": {
+      "enabled": false,
+      "threshold": 100000
+    },
+    "stop_loss": {
+      "enabled": false,
+      "threshold": 80000
+    }
+  },
+  "logging": {
+    "log_level": "INFO",
+    "log_to_file": true
+  },
+  "multi_timeframe_analysis": {
+    "enabled": true,
+    "timeframes": {
+      "trend": "1d",
+      "config": "4h",
+      "execution": "1h"
+    },
+    "trend_filter": {
+      "enabled": true,
+      "pause_on_strong_trend": false,
+      "strong_trend_threshold": 75,
+      "warn_on_moderate_trend": true,
+      "moderate_trend_threshold": 40
+    },
+    "volatility_spacing": {
+      "enabled": true,
+      "high_volatility_multiplier": 1.5,
+      "low_volatility_multiplier": 0.75,
+      "high_volatility_percentile": 80,
+      "low_volatility_percentile": 20
+    },
+    "range_validation": {
+      "enabled": true,
+      "auto_suggest_range": true,
+      "warn_if_price_outside_range": true
+    },
+    "analysis_interval_minutes": 30
+  },
+  "indicators": {
+    "rsi": {
+      "enabled": true,
+      "period": 14,
+      "overbought": 70,
+      "oversold": 30
+    },
+    "bollinger_bands": {
+      "enabled": true,
+      "period": 20,
+      "std_dev": 2
+    }
+  },
+  "api": {
+    "enabled": true,
+    "port": 8080
+  }
+}
+
+
