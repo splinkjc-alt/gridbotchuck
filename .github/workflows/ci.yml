@@ -25,16 +25,17 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --all-extras
+          uv pip install -r requirements.txt
+          uv pip install pytest pytest-asyncio pytest-cov ruff
 
       - name: Run linting
         run: |
-          uv run ruff check --select E,F,W --ignore E501
+          ruff check --select E,F,W --ignore E501
         continue-on-error: true
 
       - name: Run tests
         run: |
-          uv run pytest tests/ -v --tb=short
+          pytest tests/ -v --tb=short
         env:
           EXCHANGE_API_KEY: "test_key"
           EXCHANGE_SECRET_KEY: "test_secret"
