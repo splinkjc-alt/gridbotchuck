@@ -84,7 +84,7 @@ class StockTradingAssistant:
             # Leveraged ETFs (3x volatility)
             "TQQQ", "SOXL", "UPRO", "SPXL",
             # Meme/Volatile
-            "MARA", "RIOT", "COIN", "SQ", "SOFI",
+            "MARA", "RIOT", "COIN", "SHOP", "SOFI",
             # Large cap momentum
             "AAPL", "MSFT", "META", "GOOGL", "AMZN",
         ]

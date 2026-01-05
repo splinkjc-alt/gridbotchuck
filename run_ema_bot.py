@@ -185,7 +185,8 @@ class EMACrossoverBot:
                     # Log significant signals
                     if sig["action"] in ("BUY", "SAFE_BUY"):
                         self.logger.info(f"  [BUY] {pair}: {sig['action']} - spread {sig['spread']:.2f}%, delta {sig['spread_change']:+.3f}%")
-                    elif sig["action"] == "SELL":
+                    elif sig["action"] == "SELL" and pair in self.positions:
+                        # Only log SELL for positions we actually hold
                         self.logger.info(f"  [SELL] {pair}: SELL signal")
 
             except Exception as e:
@@ -301,6 +302,17 @@ class EMACrossoverBot:
             pos = self.positions.get(pair)
             if not pos:
                 return
+
+            # Get actual balance from exchange to avoid qty mismatch
+            try:
+                balance = await self.exchange.fetch_balance()
+                currency = pair.split("/")[0]
+                actual_qty = balance["total"].get(currency, 0)
+                if actual_qty > 0 and actual_qty != pos["qty"]:
+                    self.logger.info(f"Syncing qty: tracked {pos['qty']:.4f} -> actual {actual_qty:.4f}")
+                    pos["qty"] = actual_qty
+            except Exception as e:
+                self.logger.warning(f"Could not sync balance: {e}")
 
             qty = pos["qty"]
             entry = pos["entry_price"]
