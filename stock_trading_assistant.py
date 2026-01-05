@@ -399,7 +399,7 @@ async def main():
     assistant = StockTradingAssistant(
         api_key=api_key,
         secret_key=secret_key,
-        paper=True,  # Paper trading
+        paper=False,  # LIVE trading with real money
         threshold=60.0  # Mean reversion score threshold
     )
 
