@@ -1,0 +1,34 @@
+{
+  "name": "Crosskiller",
+  "description": "EMA 9/20 Crossover Momentum Strategy",
+  "exchange": {
+    "name": "coinbase",
+    "trading_fee": 0.006,
+    "trading_mode": "paper_trading"
+  },
+  "strategy": {
+    "type": "ema_crossover",
+    "ema_fast": 9,
+    "ema_slow": 20,
+    "timeframe": "15m"
+  },
+  "position_sizing": {
+    "max_positions": 2,
+    "position_size_percent": 20.0,
+    "min_reserve_percent": 10.0
+  },
+  "candidate_pairs": [
+    "UNI/USD", "SOL/USD", "XRP/USD", "ADA/USD", "DOGE/USD",
+    "AVAX/USD", "DOT/USD", "LINK/USD", "ATOM/USD",
+    "FIL/USD", "NEAR/USD", "APT/USD", "ARB/USD", "OP/USD",
+    "SUI/USD", "TIA/USD", "INJ/USD", "FET/USD"
+  ],
+  "logging": {
+    "log_level": "INFO",
+    "log_to_file": true
+  },
+  "api": {
+    "enabled": true,
+    "port": 8082
+  }
+}

@@ -39,6 +39,25 @@ services:
     networks:
       - default
 
+  # Crosskiller - EMA 9/20 Crossover Momentum Bot
+  crosskiller:
+    build: .
+    container_name: gridbot-crosskiller
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    environment:
+      - LOG_LEVEL=INFO
+    command: ["python", "run_ema_bot.py"]
+    profiles:
+      - full
+    networks:
+      - default
+
   # ============================================================
   # MONITORING (Grafana + Loki)
   # ============================================================
