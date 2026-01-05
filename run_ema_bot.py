@@ -55,10 +55,10 @@ class EMACrossoverBot:
         """Start the bot."""
         self.running = True
 
-        # Connect to exchange
-        self.exchange = ccxt.kraken({
-            "apiKey": os.getenv("EXCHANGE_API_KEY"),
-            "secret": os.getenv("EXCHANGE_SECRET_KEY"),
+        # Connect to Coinbase exchange
+        self.exchange = ccxt.coinbase({
+            "apiKey": os.getenv("COINBASE_API_KEY"),
+            "secret": os.getenv("COINBASE_PRIVATE_KEY"),
             "enableRateLimit": True,
         })
 
