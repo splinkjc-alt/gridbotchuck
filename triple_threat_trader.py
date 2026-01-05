@@ -17,7 +17,7 @@ Run: python triple_threat_trader.py
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 import logging
 
@@ -449,7 +449,7 @@ class TripleThreatTrader:
             "target": signal.target,
             "shares": shares,
             "position_size": position_size,
-            "opened_at": datetime.now(),
+            "opened_at": datetime.now(UTC),
             "risk_dollars": risk_dollars,
             "reward_dollars": reward_dollars
         }
@@ -514,7 +514,7 @@ class TripleThreatTrader:
 
         # Record trade
         trade["exit"] = exit_price
-        trade["closed_at"] = datetime.now()
+        trade["closed_at"] = datetime.now(UTC)
         trade["pnl_dollars"] = pnl_dollars
         trade["pnl_pct"] = pnl_pct
         trade["reason"] = reason

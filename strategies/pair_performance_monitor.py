@@ -4,7 +4,7 @@ Pair Performance Monitor - Detects stuck/underperforming pairs and suggests repl
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 
 from core.services.exchange_interface import ExchangeInterface
@@ -268,7 +268,7 @@ class PairPerformanceMonitor:
 
         # Check if no recent trades
         if last_trade_time:
-            time_since_trade = datetime.now() - last_trade_time
+            time_since_trade = datetime.now(UTC) - last_trade_time
             if time_since_trade > timedelta(hours=2):
                 self.logger.warning(f"⚠️ {pair} has no trades for {time_since_trade.total_seconds()/3600:.1f} hours")
                 return True

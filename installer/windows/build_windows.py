@@ -25,7 +25,7 @@ def print_step(message):
 
 def run_command(cmd, cwd=None):
     """Run a command and check for errors."""
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)  # noqa: S603
     if result.returncode != 0:
         sys.exit(1)
     return result.stdout

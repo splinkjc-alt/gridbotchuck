@@ -63,7 +63,7 @@ def analyze_btc_drop():
     # Check a few candles after (recovery)
     if lowest_idx < len(df) - 3:
         recovery_candles = df.loc[lowest_idx:lowest_idx+3]
-        for i, (idx, candle) in enumerate(recovery_candles.iterrows()):
+        for i, (_idx, candle) in enumerate(recovery_candles.iterrows()):
             if i > 0:  # Skip the bottom candle itself
                 ((candle["close"] - opportunity_candle["close"]) / opportunity_candle["close"] * 100)
 

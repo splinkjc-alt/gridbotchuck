@@ -165,15 +165,15 @@ async def main():
 
 
     if buy_now:
-        for r in buy_now:
+        for _r in buy_now:
             pass
 
     if safe_buy:
-        for r in safe_buy:
+        for _r in safe_buy:
             pass
 
     if sell_now:
-        for r in sell_now:
+        for _r in sell_now:
             pass
 
     if not buy_now and not safe_buy:
@@ -184,7 +184,7 @@ async def main():
     all_buys = [r for r in results if r["signal_type"] in ("BUY", "SAFE_BUY", "BULLISH")]
     if all_buys:
         top = sorted(all_buys, key=lambda x: (x["spread_change"], x["change_24h"]), reverse=True)[:5]
-        for _i, r in enumerate(top, 1):
+        for _i, _r in enumerate(top, 1):
             pass
 
 

@@ -17,8 +17,9 @@ Smart Prioritization:
 
 import asyncio
 from collections.abc import Callable
+import contextlib
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 import json
 import logging
@@ -278,7 +279,7 @@ class AutoPortfolioManager:
         while self._running and not self._stop_event.is_set():
             try:
                 self.state.scan_cycle += 1
-                self.state.last_scan_at = datetime.utcnow()
+                self.state.last_scan_at = datetime.now(UTC)
 
                 self.logger.info(f"\n{'=' * 60}")
                 self.logger.info(f"Scan Cycle {self.state.scan_cycle}")
@@ -297,10 +298,8 @@ class AutoPortfolioManager:
                 self._print_status()
 
                 # Wait for next cycle
-                try:
+                with contextlib.suppress(TimeoutError):  # Normal timeout, continue loop
                     await asyncio.wait_for(self._stop_event.wait(), timeout=self.scan_interval)
-                except TimeoutError:
-                    pass  # Normal timeout, continue loop
 
             except Exception as e:
                 self.logger.error(f"Error in scan cycle: {e}", exc_info=True)
@@ -404,7 +403,7 @@ class AutoPortfolioManager:
             grid_top=signal.grid_top,
             grid_bottom=signal.grid_bottom,
             num_grids=scan_result.suggested_num_grids if scan_result else 6,
-            entered_at=datetime.utcnow(),
+            entered_at=datetime.now(UTC),
         )
 
         # Update portfolio state
@@ -473,7 +472,7 @@ class AutoPortfolioManager:
             return False
 
         position.status = PositionStatus.CLOSED
-        position.closed_at = datetime.utcnow()
+        position.closed_at = datetime.now(UTC)
 
         # Update state
         self.state.active_positions -= 1

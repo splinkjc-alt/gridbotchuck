@@ -2,7 +2,7 @@
 Multi-Coin Strategy Tester
 Tests different strategy options across multiple coins to find best approach.
 """
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import ccxt
 import pandas as pd
@@ -86,10 +86,10 @@ def backtest_strategy(df: pd.DataFrame, strategy: Strategy) -> Strategy:
     return strategy
 
 
-def test_coin(exchange, pair: str, hours_lookback: int = 24) -> dict:
+def test_coin(exchange, pair: str, hours_lookback: int = 24) -> dict:  # noqa: PT028
     """Test all strategies on a single coin."""
     try:
-        since = exchange.parse8601((datetime.now() - timedelta(hours=hours_lookback)).isoformat())
+        since = exchange.parse8601((datetime.now(UTC) - timedelta(hours=hours_lookback)).isoformat())
         ohlcv = exchange.fetch_ohlcv(pair, "5m", since=since, limit=1000)
 
         df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
@@ -198,7 +198,7 @@ def test_all_coins():
 
     for result in coin_results:
 
-        for strategy_name, stats in result["strategies"].items():
+        for _strategy_name, stats in result["strategies"].items():
             if stats["trades"] > 0:
                 " <-- BEST" if stats["profit"] > 0 else ""
             else:
@@ -229,7 +229,7 @@ def test_all_coins():
     sorted_strategies = sorted(strategy_totals.items(), key=lambda x: x[1]["total_profit"], reverse=True)
 
 
-    for strategy_name, totals in sorted_strategies:
+    for _strategy_name, totals in sorted_strategies:
         total_trades = totals["total_trades"]
         (totals["total_wins"] / total_trades * 100) if total_trades > 0 else 0
         totals["coins_traded"]

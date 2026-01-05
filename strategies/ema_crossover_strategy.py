@@ -10,7 +10,7 @@ This strategy:
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 import logging
 
@@ -287,12 +287,18 @@ class EMACrossoverStrategy:
             # Check for crossover
             if prev_9 <= prev_20 and current_9 > current_20:
                 # Bullish crossover - EMA 9 crossed ABOVE EMA 20
-                self.logger.info(f"🟢 {pair}: BULLISH CROSSOVER - EMA 9 ({current_9:.4f}) crossed above EMA 20 ({current_20:.4f})")
+                self.logger.info(
+                    f"🟢 {pair}: BULLISH CROSSOVER - EMA 9 ({current_9:.4f}) crossed "
+                    f"above EMA 20 ({current_20:.4f})"
+                )
                 return CrossoverSignal.BUY
 
             elif prev_9 >= prev_20 and current_9 < current_20:
                 # Bearish crossover - EMA 9 crossed BELOW EMA 20
-                self.logger.info(f"🔴 {pair}: BEARISH CROSSOVER - EMA 9 ({current_9:.4f}) crossed below EMA 20 ({current_20:.4f})")
+                self.logger.info(
+                    f"🔴 {pair}: BEARISH CROSSOVER - EMA 9 ({current_9:.4f}) crossed "
+                    f"below EMA 20 ({current_20:.4f})"
+                )
                 return CrossoverSignal.SELL
 
             elif current_9 > current_20:
@@ -361,7 +367,7 @@ class EMACrossoverStrategy:
                 status = self.monitored_coins.get(pair, CoinStatus(pair=pair, last_signal=CrossoverSignal.BUY))
                 status.position_held = True
                 status.entry_price = price
-                status.entry_time = datetime.now()
+                status.entry_time = datetime.now(UTC)
                 status.quantity = quantity
                 status.last_signal = CrossoverSignal.BUY
 
