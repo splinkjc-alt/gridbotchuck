@@ -53,8 +53,10 @@ class BotTaskbarControl:
         # Draw text
         try:
             draw.text((size // 2 - 6, size // 2 - 8), text, fill="white")
-        except:
-            pass  # Font loading might fail on some systems
+        except Exception as e:
+            # Font loading might fail on some systems - this is acceptable
+            import logging
+            logging.debug(f"Failed to draw text on icon: {e}")
 
         return image
 
@@ -63,7 +65,7 @@ class BotTaskbarControl:
         try:
             response = requests.get(f"{self.api_url}/api/bot/status", timeout=2)
             return response.status_code == 200
-        except:
+        except requests.exceptions.RequestException:
             return False
 
     def get_bot_status(self):
@@ -73,8 +75,9 @@ class BotTaskbarControl:
             if response.status_code == 200:
                 data = response.json()
                 return data.get("status", "unknown")
-        except:
-            pass
+        except requests.exceptions.RequestException:
+            # API not reachable - return unknown status
+            return "unknown"
         return "unknown"
 
     def start_bot(self):
