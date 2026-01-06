@@ -35,7 +35,7 @@ class EMACrossoverBot:
         # Strategy params
         self.ema_fast = 9
         self.ema_slow = 20
-        self.max_positions = 2
+        self.max_positions = 3
         self.position_size_pct = 20.0  # 20% per trade
         self.min_reserve_pct = 10.0    # Keep 10% in reserve
 
