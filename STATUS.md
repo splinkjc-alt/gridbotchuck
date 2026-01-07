@@ -1,6 +1,6 @@
 # GridBot Chuck - Live Status
 
-> **Last Updated:** January 7, 2026 @ 2:00 AM EST
+> **Last Updated:** January 7, 2026 @ 8:50 AM EST
 > **Operator:** @splinkjc-alt
 > **Transparency Policy:** All wins AND losses reported honestly
 
@@ -14,10 +14,12 @@
 | Metric | Value |
 |--------|-------|
 | **Current Pair** | ADA/USD |
-| **Grid Score** | 70/100 |
-| **Volatility** | 1.0% |
+| **Current Price** | $0.4100 |
 | **Grid Range** | $0.38 - $0.44 |
-| **Current Price** | ~$0.41 |
+| **USD Balance** | $468.21 |
+| **Crypto Balance** | 121.71 ADA |
+| **Portfolio Value** | ~$907 |
+| **Uptime** | 6+ hours |
 | **Status** | Active - Healthy |
 
 ---
@@ -28,10 +30,9 @@
 | Metric | Value |
 |--------|-------|
 | **Current Pair** | PEPE/USD |
+| **Current Price** | $0.00000656 |
 | **Grid Score** | 75/100 |
-| **Volatility** | 1.4% |
-| **Current Price** | ~$0.00000673 |
-| **Portfolio Value** | ~$1,430 |
+| **Uptime** | 6+ hours |
 | **Status** | Active - Healthy |
 
 ---
@@ -41,22 +42,25 @@
 
 | Metric | Value |
 |--------|-------|
-| **USD Balance** | $1,150.71 |
-| **Max Positions** | 3 |
 | **Cycle Interval** | ~4 minutes |
+| **Max Positions** | 3 |
 | **Recent Trade** | Bought 34.5 UNI @ $6.01 |
+| **Uptime** | 6+ hours |
 | **Status** | Active - Scanning |
 
 ---
 
-### Sleeping Marketbot
+### Marketbot (Stock Trading)
 **Exchange:** Alpaca | **Mode:** LIVE | **Strategy:** Mean Reversion (RSI < 40)
 
 | Metric | Value |
 |--------|-------|
 | **Market Hours** | 9:30 AM - 4:00 PM ET |
 | **News Analysis** | Enabled (Alpha Vantage) |
-| **Status** | Sleeping (market closed) |
+| **Watchlist** | 19 stocks (TSLA, NVDA, AMD, etc.) |
+| **Target** | 4% bounce |
+| **Stop Loss** | 3% |
+| **Status** | Waiting for market open |
 
 ---
 
@@ -65,28 +69,11 @@
 | Rank | Pair | Score | Backtest Return | Notes |
 |------|------|-------|-----------------|-------|
 | 1 | VET/USD | 85 | 10.9% | High volatility (connection issues) |
-| 2 | PEPE/USD | 75 | 16.8% | Good volatility - Growler's pick |
+| 2 | PEPE/USD | 75 | 16.8% | Growler's pick |
 | 3 | CRV/USD | 75 | 12.6% | Consistent returns |
-| 4 | ADA/USD | 70 | 16.2% | Solid performer - Chuck's pick |
+| 4 | ADA/USD | 70 | 16.2% | Chuck's pick |
 | 5 | UNI/USD | 70 | 31.6% | High returns |
 | ... | BTC/USD | 50 | 0.0% | Too stable for grids |
-
----
-
-## Features
-
-### Smart Auto-Scanning
-Both Chuck and Growler can automatically:
-- Scan 17+ crypto pairs every 2 hours
-- Score pairs for grid trading suitability (volatility, mean reversion)
-- Switch to better pairs when found (10+ score improvement)
-- Avoid trading the same pair as each other
-
-### News Analyzer
-Marketbot analyzes financial news before market opens:
-- Sentiment analysis with 80+ financial terms
-- Tracks which news sources are accurate
-- Adjusts trading scores based on news sentiment
 
 ---
 
@@ -96,22 +83,29 @@ Marketbot analyzes financial news before market opens:
 |--------|-------|
 | **Total Bots Running** | 4 |
 | **Grid Bots** | 2 (Chuck, Growler) |
+| **EMA Bot** | 1 (Crosskiller) |
+| **Stock Bot** | 1 (Marketbot) |
 | **Exchanges** | Kraken, Coinbase, Alpaca |
 
 ---
 
 ## Operator Notes
 
-**January 7, 2026:**
+**January 7, 2026 (Morning):**
+- All 4 bots running stable for 6+ hours
+- Chuck on ADA/USD with ~$907 portfolio value
+- Marketbot waiting for 9:30 AM market open
+- Crosskiller holding UNI position
+
+**January 7, 2026 (Early AM):**
 - Chuck switched from VET/USD to ADA/USD due to Kraken WebSocket timeouts on VET
-- Growler running strong on PEPE/USD (~$1,430 portfolio value)
+- Growler running strong on PEPE/USD
 - Crosskiller actively trading - bought UNI position
 - All bots restarted fresh after wallet reset
 
 **January 6, 2026:**
 - Upgraded Chuck and Growler to smart auto-scanning mode
 - BTC scored only 50/100 - too stable for grid trading
-- VET/USD scored highest (85/100) - great volatility
 - Added Telegram notifications for pair switches
 - News analyzer integrated with Marketbot
 
@@ -131,4 +125,4 @@ This is a personal trading project for educational purposes. Past performance do
 
 ---
 
-*Last verified by operator: January 7, 2026*
+*Last verified by operator: January 7, 2026 @ 8:50 AM EST*
