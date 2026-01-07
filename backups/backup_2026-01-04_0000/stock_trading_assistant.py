@@ -26,13 +26,6 @@ import pandas as pd
 import pytz
 import yfinance as yf
 
-# News analyzer integration
-try:
-    from news_analyzer import NewsAnalyzer, NewsBacktester
-    NEWS_AVAILABLE = True
-except ImportError:
-    NEWS_AVAILABLE = False
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -49,8 +42,6 @@ class StockAnalysis:
     bb_position: float  # 0 = lower band, 100 = upper band
     volume_ratio: float  # Current volume vs average
     mean_reversion_score: float
-    news_sentiment: float = 0.0  # -1 to +1 from news analyzer
-    news_confidence: float = 0.0  # 0 to 1
 
 
 class StockTradingAssistant:
@@ -93,7 +84,7 @@ class StockTradingAssistant:
             # Leveraged ETFs (3x volatility)
             "TQQQ", "SOXL", "UPRO", "SPXL",
             # Meme/Volatile
-            "MARA", "RIOT", "COIN", "SHOP", "SOFI",
+            "MARA", "RIOT", "COIN", "SQ", "SOFI",
             # Large cap momentum
             "AAPL", "MSFT", "META", "GOOGL", "AMZN",
         ]
@@ -111,27 +102,11 @@ class StockTradingAssistant:
         # Eastern timezone for market hours
         self.et_tz = pytz.timezone("US/Eastern")
 
-        # News analyzer integration
-        self.news_analyzer = None
-        self.news_backtester = None
-        self.news_signals = {}  # Cache for pre-market news analysis
-        self.use_news = False
-
-        if NEWS_AVAILABLE:
-            try:
-                self.news_analyzer = NewsAnalyzer()
-                self.news_backtester = NewsBacktester()
-                self.use_news = True
-                logging.info("News analyzer ENABLED")
-            except Exception as e:
-                logging.warning(f"News analyzer disabled: {e}")
-
         logging.info("Stock Trading Assistant initialized")
         logging.info("Data source: Yahoo Finance (FREE)")
         logging.info(f"Paper trading: {paper}")
         logging.info(f"Watchlist: {len(self.watchlist)} stocks")
         logging.info(f"Threshold: {threshold}")
-        logging.info(f"News analysis: {'ENABLED' if self.use_news else 'DISABLED'}")
 
     def is_market_open(self) -> bool:
         """Check if market is currently open (9:30 AM - 4:00 PM ET)."""
@@ -147,86 +122,6 @@ class StockTradingAssistant:
         current_time = now_et.time()
 
         return market_open <= current_time <= market_close
-
-    def is_premarket(self) -> bool:
-        """Check if we're in pre-market hours (6:00 AM - 9:30 AM ET)."""
-        now_et = datetime.now(self.et_tz)
-
-        if now_et.weekday() > 4:  # Weekend
-            return False
-
-        premarket_start = time(6, 0)
-        market_open = time(9, 30)
-        current_time = now_et.time()
-
-        return premarket_start <= current_time < market_open
-
-    async def scan_premarket_news(self):
-        """
-        Scan news for all watchlist stocks before market opens.
-
-        Call this during pre-market hours to prepare for the trading day.
-        """
-        if not self.use_news or not self.news_analyzer:
-            return
-
-        logging.info("=" * 50)
-        logging.info("PRE-MARKET NEWS SCAN")
-        logging.info("=" * 50)
-
-        self.news_signals = {}
-
-        for symbol in self.watchlist:
-            try:
-                signal = self.news_analyzer.analyze_symbol(symbol, track=True)
-                self.news_signals[symbol] = signal
-
-                if signal.headline_count > 0:
-                    emoji = "+" if signal.score > 0.15 else ("-" if signal.score < -0.15 else "~")
-                    logging.info(
-                        f"  {symbol}: {emoji} {signal.sentiment} ({signal.score:+.2f}) "
-                        f"- {signal.headline_count} headlines - {signal.recommendation.upper()}"
-                    )
-
-                    # Log top headline
-                    if signal.top_headlines:
-                        logging.info(f"    -> {signal.top_headlines[0][:60]}...")
-
-            except Exception as e:
-                logging.error(f"Error analyzing news for {symbol}: {e}")
-
-        # Summary
-        bullish = sum(1 for s in self.news_signals.values() if s.sentiment == "bullish")
-        bearish = sum(1 for s in self.news_signals.values() if s.sentiment == "bearish")
-        logging.info("-" * 50)
-        logging.info(f"NEWS SUMMARY: {bullish} bullish, {bearish} bearish, {len(self.news_signals) - bullish - bearish} neutral")
-        logging.info("=" * 50)
-
-    def get_news_score_adjustment(self, symbol: str) -> tuple[float, float]:
-        """
-        Get news-based score adjustment for a symbol.
-
-        Returns:
-            (score_adjustment, confidence)
-            score_adjustment: -20 to +20 points
-            confidence: 0 to 1
-        """
-        if not self.use_news or symbol not in self.news_signals:
-            return 0.0, 0.0
-
-        signal = self.news_signals[symbol]
-
-        # Scale sentiment (-1 to +1) to score adjustment (-20 to +20)
-        adjustment = signal.score * 20
-
-        return adjustment, signal.confidence
-
-    def get_news_accuracy_report(self) -> str:
-        """Get accuracy report for news sources."""
-        if not self.news_backtester:
-            return "News analyzer not available"
-
-        return self.news_backtester.generate_backtest_report()
 
     def calculate_rsi(self, prices: pd.Series, period: int = 14) -> float:
         """Calculate RSI indicator."""
@@ -324,19 +219,13 @@ class StockTradingAssistant:
             if rsi < 25:
                 score += 10
 
-            # 5. News sentiment adjustment (+/- 20 points)
-            news_adj, news_conf = self.get_news_score_adjustment(symbol)
-            score += news_adj
-
             return StockAnalysis(
                 symbol=symbol,
                 price=current_price,
                 rsi=rsi,
                 bb_position=bb_position,
                 volume_ratio=volume_ratio,
-                mean_reversion_score=max(0, min(score, 100)),
-                news_sentiment=news_adj / 20 if news_adj else 0,  # Convert back to -1 to +1
-                news_confidence=news_conf
+                mean_reversion_score=min(score, 100)
             )
 
         except Exception as e:
@@ -363,22 +252,13 @@ class StockTradingAssistant:
                 continue
 
             # Filter: Oversold + meets threshold
-            # Also filter out strongly bearish news (avoid buying into bad news)
             if analysis.rsi < 40 and analysis.mean_reversion_score >= self.threshold:
-                # Skip if news is strongly bearish (unless oversold is extreme)
-                if analysis.news_sentiment < -0.5 and analysis.rsi > 30:
-                    logging.info(
-                        f"SKIPPED: {analysis.symbol} - Bearish news ({analysis.news_sentiment:.2f})"
-                    )
-                    continue
-
                 opportunities.append(analysis)
-                news_str = f", News: {analysis.news_sentiment:+.2f}" if analysis.news_confidence > 0 else ""
                 logging.info(
                     f"MEAN REVERSION: {analysis.symbol} - "
                     f"Price: ${analysis.price:.2f}, "
                     f"RSI: {analysis.rsi:.1f}, "
-                    f"Score: {analysis.mean_reversion_score:.1f}{news_str}"
+                    f"Score: {analysis.mean_reversion_score:.1f}"
                 )
 
         logging.info(f"Found {len(opportunities)} opportunities (score >= {self.threshold})")
@@ -471,31 +351,11 @@ class StockTradingAssistant:
         logging.info("Market hours: 9:30 AM - 4:00 PM ET")
         logging.info(f"Max concurrent trades: {max_concurrent_trades}")
 
-        # Track if we've done pre-market news scan today
-        last_news_scan_date = None
-
         while True:
             try:
-                now_et = datetime.now(self.et_tz)
-                today = now_et.date()
-
-                # Pre-market news scan (once per day)
-                if self.is_premarket() and last_news_scan_date != today:
-                    logging.info(f"Pre-market hours ({now_et.strftime('%I:%M %p ET')})")
-                    await self.scan_premarket_news()
-                    last_news_scan_date = today
-
-                    # Update backtest outcomes
-                    if self.news_backtester:
-                        updated = self.news_backtester.update_all_outcomes()
-                        if updated:
-                            logging.info(f"Updated {updated} news prediction outcomes")
-
-                    await asyncio.sleep(300)  # Wait 5 min
-                    continue
-
                 # Check if market is open
                 if not self.is_market_open():
+                    now_et = datetime.now(self.et_tz)
                     logging.info(f"Market closed ({now_et.strftime('%I:%M %p ET')}). Sleeping 5 min...")
                     await asyncio.sleep(300)  # 5 minutes
                     continue
@@ -539,7 +399,7 @@ async def main():
     assistant = StockTradingAssistant(
         api_key=api_key,
         secret_key=secret_key,
-        paper=False,  # LIVE trading with real money
+        paper=True,  # Paper trading
         threshold=60.0  # Mean reversion score threshold
     )
 

@@ -1,0 +1,54 @@
+{
+  "exchange": {
+    "name": "kraken",
+    "trading_fee": 0.0026,
+    "trading_mode": "live"
+  },
+  "pair": {
+    "base_currency": "PEPE",
+    "quote_currency": "USD"
+  },
+  "trading_settings": {
+    "timeframe": "1h",
+    "initial_balance": 100
+  },
+  "grid_strategy": {
+    "type": "simple_grid",
+    "spacing": "geometric",
+    "num_grids": 4,
+    "range": {
+      "top": 6.67e-06,
+      "bottom": 6.39e-06
+    }
+  },
+  "risk_management": {
+    "take_profit": {
+      "enabled": false
+    },
+    "stop_loss": {
+      "enabled": false
+    }
+  },
+  "logging": {
+    "log_level": "INFO",
+    "log_to_file": true
+  },
+  "multi_timeframe_analysis": {
+    "enabled": true,
+    "timeframes": {
+      "trend": "1d",
+      "config": "4h",
+      "execution": "1h"
+    }
+  },
+  "api": {
+    "enabled": true,
+    "port": 8083
+  },
+  "_auto_selected": {
+    "bot": "growler",
+    "score": 75,
+    "volatility_pct": 1.4149615571742933,
+    "selected_at": "2026-01-06T20:36:51.277534"
+  }
+}

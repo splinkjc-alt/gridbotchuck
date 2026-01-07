@@ -1,0 +1,16 @@
+{
+  "exchange": "kraken",
+  "pair": "VET/USD",
+  "strategy": "SIMPLE_GRID",
+  "grid_spacing": "GEOMETRIC",
+  "grid_count": 6,
+  "price_range": {
+    "low": 0.012573,
+    "high": 0.013529
+  },
+  "order_size_usd": 16.666666666666668,
+  "live_mode": true,
+  "auto_selected": true,
+  "selection_score": 80,
+  "selection_time": "2026-01-06T20:32:01.415234"
+}
