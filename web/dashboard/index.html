@@ -30,13 +30,25 @@
     <header class="header">
       <div class="header-content">
         <div class="brand">
-          <span class="brand-logo">📊</span>
+          <div class="brand-logo-container">
+            <img src="GridBotChuck.png" alt="GridBot Chuck" class="brand-logo-img">
+          </div>
           <div class="brand-text">
             <h1>GridBot <span class="pro-badge">CHUCK</span></h1>
             <span class="brand-tagline">Automated Grid Trading</span>
           </div>
         </div>
         <div class="header-right">
+          <!-- Live Status Button -->
+          <a href="https://github.com/splinkjc-alt/gridbotchuck/blob/main/STATUS.md" 
+             target="_blank" 
+             class="btn-status" 
+             title="View live bot status - Transparency Report">
+            <span class="status-icon">📊</span>
+            <span class="status-text">Live Status</span>
+            <span class="status-pulse"></span>
+          </a>
+
           <div class="live-price" id="live-price-display" data-tooltip="Real-time price of the selected trading pair"
             data-tooltip-pos="bottom">
             <span class="price-label">Live Price</span>
@@ -54,7 +66,7 @@
             <div class="account-menu" id="account-menu">
               <div class="account-header">
                 <div class="account-info">
-                  <span class="account-email" id="account-email">user@example.com</span>
+                  <span class="account-email" id="account-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="94e1e7f1e6d4f1ecf5f9e4f8f1baf7fbf9">[email&#160;protected]</a></span>
                   <span class="account-plan" id="account-plan">Pro Plan</span>
                 </div>
               </div>
@@ -935,13 +947,4 @@
         </div>
         <div class="footer-links">
           <a href="#" class="footer-link" onclick="showAbout()">About</a>
-          <a href="#" class="footer-link" onclick="showHelp()">Help</a>
-        </div>
-      </div>
-    </footer>
-  </div>
-
-  <script src="script.js"></script>
-</body>
-
-</html>
+          <a href="#" class="footer-link" onclick="showHelp()">Hel

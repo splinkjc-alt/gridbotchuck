@@ -14,9 +14,44 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import requests
+from dotenv import load_dotenv
+
 sys.path.insert(0, str(Path(__file__).parent))
+load_dotenv()
 
 from market_scanner.pair_backtester import PairBacktester
+
+
+def send_telegram(message: str):
+    """Send notification via Telegram."""
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
+
+    if not token:
+        return
+
+    if not chat_id:
+        try:
+            resp = requests.get(f"https://api.telegram.org/bot{token}/getUpdates", timeout=5)
+            data = resp.json()
+            if data.get("result"):
+                chat_id = str(data["result"][-1]["message"]["chat"]["id"])
+        except:
+            return
+
+    if not chat_id:
+        return
+
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        requests.post(url, json={
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "Markdown"
+        }, timeout=10)
+    except Exception as e:
+        logging.warning(f"Telegram notification failed: {e}")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -273,6 +308,14 @@ class SmartGrowler:
                         await self.start_bot(config_path)
 
                         logger.info(f"\n*** GROWLER NOW TRADING: {self.current_pair} ***\n")
+
+                        # Send notification
+                        send_telegram(
+                            f"🐕 *GROWLER* switched to *{self.current_pair}*\n"
+                            f"Score: {best['score']}/100\n"
+                            f"Volatility: {best['volatility']:.1f}%\n"
+                            f"Backtest Return: {best['return_pct']:.1f}%"
+                        )
 
                 if self.bot_process and self.bot_process.poll() is not None:
                     logger.warning("Growler process died, will restart on next scan")

@@ -3379,3 +3379,103 @@ section h3 {
   background: var(--primary-color);
   color: white;
 }
+/* ============================================
+   GridBot Chuck Mascot Logo
+   ============================================ */
+.brand-logo-container {
+  position: relative;
+  width: 50px;
+  height: 50px;
+}
+
+.brand-logo-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-color, #14b8a6);
+  box-shadow: 0 0 15px rgba(20, 184, 166, 0.4);
+  transition: all 0.3s ease;
+}
+
+.brand-logo-img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(20, 184, 166, 0.6);
+}
+
+/* ============================================
+   Live Status Button
+   ============================================ */
+.btn-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  color: #0a0e17;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+  border: 1px solid rgba(20, 184, 166, 0.5);
+}
+
+.btn-status:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(20, 184, 166, 0.5);
+  background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
+}
+
+.btn-status .status-icon {
+  font-size: 1rem;
+}
+
+.btn-status .status-text {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.status-pulse {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: #00ff88;
+  border-radius: 50%;
+  animation: status-blink 2s infinite;
+  box-shadow: 0 0 6px #00ff88;
+}
+
+@keyframes status-blink {
+  0%, 100% { 
+    opacity: 1; 
+    box-shadow: 0 0 4px #00ff88; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.6; 
+    box-shadow: 0 0 12px #00ff88, 0 0 20px rgba(0, 255, 136, 0.4); 
+    transform: scale(1.2);
+  }
+}
+
+/* Responsive - hide text on small screens */
+@media (max-width: 600px) {
+  .btn-status .status-text {
+    display: none;
+  }
+  
+  .btn-status {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .brand-logo-img {
+    width: 40px;
+    height: 40px;
+  }
+}
