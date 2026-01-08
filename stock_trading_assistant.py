@@ -21,6 +21,8 @@ import logging
 import os
 
 from alpaca.trading.client import TradingClient
+from alpaca.trading.requests import MarketOrderRequest, LimitOrderRequest
+from alpaca.trading.enums import OrderSide, TimeInForce
 from dotenv import load_dotenv
 import pandas as pd
 import pytz
@@ -32,6 +34,13 @@ try:
     NEWS_AVAILABLE = True
 except ImportError:
     NEWS_AVAILABLE = False
+
+# News-Market learning integration
+try:
+    from news_market_learner import NewsMarketLearner, fetch_live_news
+    LEARNER_AVAILABLE = True
+except ImportError:
+    LEARNER_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(
@@ -125,6 +134,15 @@ class StockTradingAssistant:
                 logging.info("News analyzer ENABLED")
             except Exception as e:
                 logging.warning(f"News analyzer disabled: {e}")
+
+        # News-Market learner (learns cause-effect patterns)
+        self.learner = None
+        if LEARNER_AVAILABLE:
+            try:
+                self.learner = NewsMarketLearner()
+                logging.info("News-Market LEARNER ENABLED")
+            except Exception as e:
+                logging.warning(f"News learner disabled: {e}")
 
         logging.info("Stock Trading Assistant initialized")
         logging.info("Data source: Yahoo Finance (FREE)")
@@ -382,11 +400,30 @@ class StockTradingAssistant:
                 )
 
         logging.info(f"Found {len(opportunities)} opportunities (score >= {self.threshold})")
+
+        # Record news snapshots for learning (cause-effect correlation)
+        if self.learner and LEARNER_AVAILABLE:
+            for analysis in results:
+                if analysis is None:
+                    continue
+                try:
+                    headlines = fetch_live_news(analysis.symbol)
+                    if headlines:
+                        self.learner.record_snapshot(analysis.symbol, headlines, analysis.price)
+                except Exception as e:
+                    pass  # Silent fail - learning is optional
+
+            # Periodically update outcomes
+            try:
+                self.learner.update_outcomes()
+            except Exception:
+                pass
+
         return opportunities
 
     async def open_paper_trade(self, analysis: StockAnalysis, position_size: float = 500.0):
         """
-        Open a paper trade for mean reversion opportunity.
+        Open a LIVE trade on Alpaca for mean reversion opportunity.
 
         Args:
             analysis: Stock analysis
@@ -407,26 +444,41 @@ class StockTradingAssistant:
         risk = (entry - stop) * shares
         reward = (target - entry) * shares
 
-        logging.info(
-            f"PAPER TRADE OPENED: {analysis.symbol}\n"
-            f"  Entry: ${entry:.2f}\n"
-            f"  Stop: ${stop:.2f} (-3%)\n"
-            f"  Target: ${target:.2f} (+4%)\n"
-            f"  Shares: {shares}\n"
-            f"  Risk: ${risk:.2f} | Reward: ${reward:.2f} (1:{reward/risk:.1f})"
-        )
+        # Submit LIVE order to Alpaca
+        try:
+            order_request = MarketOrderRequest(
+                symbol=analysis.symbol,
+                qty=shares,
+                side=OrderSide.BUY,
+                time_in_force=TimeInForce.DAY
+            )
+            order = self.trading_client.submit_order(order_request)
 
-        # Track position
-        self.open_trades[analysis.symbol] = {
-            "entry": entry,
-            "stop": stop,
-            "target": target,
-            "shares": shares,
-            "opened_at": datetime.now()
-        }
+            logging.info(
+                f"LIVE ORDER SUBMITTED: {analysis.symbol}\n"
+                f"  Order ID: {order.id}\n"
+                f"  Entry: ${entry:.2f}\n"
+                f"  Stop: ${stop:.2f} (-3%)\n"
+                f"  Target: ${target:.2f} (+4%)\n"
+                f"  Shares: {shares}\n"
+                f"  Risk: ${risk:.2f} | Reward: ${reward:.2f} (1:{reward/risk:.1f})"
+            )
+
+            # Track position
+            self.open_trades[analysis.symbol] = {
+                "entry": entry,
+                "stop": stop,
+                "target": target,
+                "shares": shares,
+                "order_id": str(order.id),
+                "opened_at": datetime.now()
+            }
+
+        except Exception as e:
+            logging.error(f"Failed to submit order for {analysis.symbol}: {e}")
 
     async def monitor_open_trades(self):
-        """Check open positions for stop/target hits."""
+        """Check open positions for stop/target hits and execute sells."""
         if not self.open_trades:
             return
 
@@ -440,25 +492,40 @@ class StockTradingAssistant:
                 current_price = analysis.price
                 entry = trade["entry"]
                 pnl_pct = ((current_price - entry) / entry) * 100
+                shares = trade["shares"]
 
                 # Check stop loss
                 if current_price <= trade["stop"]:
-                    logging.info(
-                        f"STOP LOSS HIT: {symbol} at ${current_price:.2f} "
-                        f"({pnl_pct:.1f}%)"
-                    )
-                    del self.open_trades[symbol]
+                    await self.close_position(symbol, shares, "STOP LOSS", current_price, pnl_pct)
 
                 # Check target
                 elif current_price >= trade["target"]:
-                    logging.info(
-                        f"TARGET HIT: {symbol} at ${current_price:.2f} "
-                        f"({pnl_pct:.1f}%)"
-                    )
-                    del self.open_trades[symbol]
+                    await self.close_position(symbol, shares, "TARGET HIT", current_price, pnl_pct)
 
             except Exception as e:
                 logging.error(f"Error monitoring {symbol}: {e}")
+
+    async def close_position(self, symbol: str, shares: int, reason: str, price: float, pnl_pct: float):
+        """Close a position by selling shares."""
+        try:
+            order_request = MarketOrderRequest(
+                symbol=symbol,
+                qty=shares,
+                side=OrderSide.SELL,
+                time_in_force=TimeInForce.DAY
+            )
+            order = self.trading_client.submit_order(order_request)
+
+            logging.info(
+                f"{reason}: {symbol} at ${price:.2f} ({pnl_pct:+.1f}%)\n"
+                f"  Sold {shares} shares\n"
+                f"  Order ID: {order.id}"
+            )
+
+            del self.open_trades[symbol]
+
+        except Exception as e:
+            logging.error(f"Failed to close position {symbol}: {e}")
 
     async def run(self, max_concurrent_trades: int = 3):
         """

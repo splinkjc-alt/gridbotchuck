@@ -1,6 +1,6 @@
 # GridBot Chuck - Live Status
 
-> **Last Updated:** January 7, 2026 @ 8:50 AM EST
+> **Last Updated:** January 7, 2026 @ 7:58 PM EST
 > **Operator:** @splinkjc-alt
 > **Transparency Policy:** All wins AND losses reported honestly
 
@@ -14,12 +14,11 @@
 | Metric | Value |
 |--------|-------|
 | **Current Pair** | ADA/USD |
-| **Current Price** | $0.4100 |
+| **Current Price** | $0.4030 |
 | **Grid Range** | $0.38 - $0.44 |
-| **USD Balance** | $468.21 |
-| **Crypto Balance** | 121.71 ADA |
-| **Portfolio Value** | ~$907 |
-| **Uptime** | 6+ hours |
+| **Crypto Balance** | 452.96 ADA |
+| **Open Orders** | 2 buys ($0.38, $0.391) |
+| **Uptime** | 18+ hours |
 | **Status** | Active - Healthy |
 
 ---
@@ -30,10 +29,24 @@
 | Metric | Value |
 |--------|-------|
 | **Current Pair** | PEPE/USD |
-| **Current Price** | $0.00000656 |
-| **Grid Score** | 75/100 |
-| **Uptime** | 6+ hours |
+| **Current Price** | $0.00000657 |
+| **Grid Range** | $0.0000062 - $0.0000070 |
+| **Crypto Balance** | 42.8M PEPE |
+| **Open Orders** | 2 buys ($0.0000062, $0.00000635) |
+| **Portfolio Value** | ~$1,536 |
+| **Uptime** | 18+ hours |
 | **Status** | Active - Healthy |
+
+---
+
+### Kraken Portfolio Summary
+
+| Asset | Amount | Value |
+|-------|--------|-------|
+| USD | $1,511.54 | $1,511.54 |
+| ADA | 452.96 | $182.54 |
+| PEPE | 42.8M | $281.58 |
+| **Total** | | **$1,975.66** |
 
 ---
 
@@ -44,8 +57,7 @@
 |--------|-------|
 | **Cycle Interval** | ~4 minutes |
 | **Max Positions** | 3 |
-| **Recent Trade** | Bought 34.5 UNI @ $6.01 |
-| **Uptime** | 6+ hours |
+| **Uptime** | 18+ hours |
 | **Status** | Active - Scanning |
 
 ---
@@ -55,12 +67,21 @@
 
 | Metric | Value |
 |--------|-------|
+| **Account Value** | $1,006.91 |
+| **Cash** | $20.23 |
 | **Market Hours** | 9:30 AM - 4:00 PM ET |
-| **News Analysis** | Enabled (Alpha Vantage) |
-| **Watchlist** | 19 stocks (TSLA, NVDA, AMD, etc.) |
+| **News Analysis** | Enabled |
+| **News-Market Learner** | Enabled (NEW) |
+| **Watchlist** | 19 stocks |
 | **Target** | 4% bounce |
 | **Stop Loss** | 3% |
-| **Status** | Waiting for market open |
+| **Status** | Market closed - holding positions |
+
+**Current Positions:**
+| Stock | Shares | Entry | Current | P/L |
+|-------|--------|-------|---------|-----|
+| MARA | 49 | $10.07 | $10.10 | +$1.47 (+0.30%) |
+| COIN | 2 | $243.16 | $245.89 | +$5.45 (+1.12%) |
 
 ---
 
@@ -86,21 +107,30 @@
 | **EMA Bot** | 1 (Crosskiller) |
 | **Stock Bot** | 1 (Marketbot) |
 | **Exchanges** | Kraken, Coinbase, Alpaca |
+| **Kraken Portfolio** | $1,975.66 |
+| **Alpaca Portfolio** | $1,006.91 |
 
 ---
 
 ## Operator Notes
 
+**January 7, 2026 (Evening):**
+- All 4 bots running stable for 18+ hours
+- Marketbot went LIVE with new Alpaca API keys
+- First live trades: MARA (49 shares), COIN (2 shares) - both in green
+- Added News-Market Learner - bots now learn cause/effect from news
+- Kraken portfolio: $1,975.66
+- Alpaca portfolio: $1,006.91 (+0.69% day 1)
+
 **January 7, 2026 (Morning):**
-- All 4 bots running stable for 6+ hours
-- Chuck on ADA/USD with ~$907 portfolio value
-- Marketbot waiting for 9:30 AM market open
-- Crosskiller holding UNI position
+- Growler grid range fixed ($0.0000062-$0.0000070) - now has orders
+- Chuck on ADA/USD with healthy grid
+- Marketbot configured and waiting for market open
 
 **January 7, 2026 (Early AM):**
-- Chuck switched from VET/USD to ADA/USD due to Kraken WebSocket timeouts on VET
-- Growler running strong on PEPE/USD
-- Crosskiller actively trading - bought UNI position
+- Chuck switched from VET/USD to ADA/USD due to Kraken WebSocket timeouts
+- Growler running on PEPE/USD
+- Crosskiller actively trading on Coinbase
 - All bots restarted fresh after wallet reset
 
 **January 6, 2026:**
@@ -108,6 +138,19 @@
 - BTC scored only 50/100 - too stable for grid trading
 - Added Telegram notifications for pair switches
 - News analyzer integrated with Marketbot
+
+---
+
+## New Feature: News-Market Learner
+
+The bots now learn from news events:
+1. Fetches live headlines during market scans
+2. Records news + price at scan time
+3. Tracks price movement 1h/4h/1d later
+4. Learns which keywords correlate with price moves
+5. Uses learned patterns to improve future predictions
+
+Keywords tracked: upgrades, downgrades, earnings, Fed, crypto, ETF, etc.
 
 ---
 
@@ -125,4 +168,4 @@ This is a personal trading project for educational purposes. Past performance do
 
 ---
 
-*Last verified by operator: January 7, 2026 @ 8:50 AM EST*
+*Last verified by operator: January 7, 2026 @ 7:58 PM EST*
