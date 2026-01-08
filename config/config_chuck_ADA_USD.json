@@ -5,7 +5,7 @@
     "trading_mode": "live"
   },
   "pair": {
-    "base_currency": "PEPE",
+    "base_currency": "ADA",
     "quote_currency": "USD"
   },
   "trading_settings": {
@@ -22,18 +22,18 @@
     "spacing": "geometric",
     "num_grids": 6,
     "range": {
-      "bottom": 0.0000062,
-      "top": 0.0000070
+      "bottom": 0.38,
+      "top": 0.44
     }
   },
   "risk_management": {
     "take_profit": {
       "enabled": false,
-      "threshold": 0.00001
+      "threshold": 1.5
     },
     "stop_loss": {
       "enabled": false,
-      "threshold": 0.000005
+      "threshold": 0.70
     },
     "position_sizing": {
       "buy_percent_of_total": 15.0,
@@ -55,12 +55,12 @@
   },
   "api": {
     "enabled": true,
-    "port": 8083
+    "port": 8082
   },
   "_auto_selected": {
-    "bot": "growler",
-    "score": 75,
-    "volatility_pct": 1.4,
-    "selected_at": "2026-01-07T01:40:00.000000"
+    "bot": "chuck",
+    "score": 70,
+    "volatility_pct": 1.0,
+    "selected_at": "2026-01-07T01:50:00.000000"
   }
 }

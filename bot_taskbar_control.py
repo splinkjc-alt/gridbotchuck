@@ -53,7 +53,7 @@ class BotTaskbarControl:
         # Draw text
         try:
             draw.text((size // 2 - 6, size // 2 - 8), text, fill="white")
-        except:
+        except Exception:
             pass  # Font loading might fail on some systems
 
         return image
@@ -63,7 +63,7 @@ class BotTaskbarControl:
         try:
             response = requests.get(f"{self.api_url}/api/bot/status", timeout=2)
             return response.status_code == 200
-        except:
+        except Exception:
             return False
 
     def get_bot_status(self):
@@ -73,7 +73,7 @@ class BotTaskbarControl:
             if response.status_code == 200:
                 data = response.json()
                 return data.get("status", "unknown")
-        except:
+        except Exception:
             pass
         return "unknown"
 
@@ -212,11 +212,9 @@ class BotTaskbarControl:
 
 def main():
     """Main entry point"""
-    try:
-        # Check if pystray and pillow are installed
-        from PIL import Image
-        import pystray
-    except ImportError:
+    import importlib.util
+    # Check if pystray and pillow are installed
+    if importlib.util.find_spec("PIL") is None or importlib.util.find_spec("pystray") is None:
         return 1
 
     # Create and run the control app

@@ -16,7 +16,6 @@ Usage:
 """
 
 import argparse
-import json
 import os
 import sqlite3
 from datetime import UTC, datetime
@@ -68,9 +67,9 @@ def post_signals():
 
     # Get latest signals (last scan)
     signals = conn.execute("""
-        SELECT * FROM signals 
+        SELECT * FROM signals
         WHERE signal IN ('BUY', 'SELL')
-        ORDER BY timestamp DESC 
+        ORDER BY timestamp DESC
         LIMIT 15
     """).fetchall()
     conn.close()
@@ -109,7 +108,7 @@ def post_signals():
 
     embed = {
         "title": "📊 GridBot Chuck - Live Signals",
-        "description": f"Scanning 15 crypto + 5 stocks with per-asset optimized settings",
+        "description": "Scanning 15 crypto + 5 stocks with per-asset optimized settings",
         "color": 0x00ff00 if buy_signals else 0xff0000,
         "fields": fields,
         "footer": {

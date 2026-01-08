@@ -5,13 +5,12 @@ Combines news fetching, sentiment analysis, and tracking.
 """
 
 import logging
-from datetime import datetime, timedelta
 from typing import Optional
 from dataclasses import dataclass
 
 import yfinance as yf
 
-from .fetcher import NewsFetcher, NewsArticle
+from .fetcher import NewsFetcher
 from .sentiment import SentimentAnalyzer, SentimentResult
 from .tracker import NewsTracker
 
@@ -259,7 +258,7 @@ def main():
     print(f"Headlines analyzed: {signal.headline_count}")
     print(f"Recommendation: {signal.recommendation}")
     print(f"Reason: {signal.reason}")
-    print(f"\nTop Headlines:")
+    print("\nTop Headlines:")
     for h in signal.top_headlines:
         print(f"  - {h[:80]}...")
 

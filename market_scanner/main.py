@@ -29,7 +29,7 @@ class MarketScanner:
             ticker = yf.Ticker(symbol)
             hist = ticker.history(period="2y")
             return hist
-        except Exception as e:
+        except Exception:
             return None
 
     def get_crypto_data(self, symbol):
@@ -42,7 +42,7 @@ class MarketScanner:
                 df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
                 df.set_index('Timestamp', inplace=True)
                 return df
-        except Exception as e:
+        except Exception:
             return None
         return None
 
@@ -50,7 +50,7 @@ class MarketScanner:
         """Runs all strategies on the provided data."""
         if data is None or data.empty:
             return None
-            
+
         return {
             'Long-Term': (ticker, long_term.analyze(ticker, data)),
             'Strategic': (ticker, strategic.analyze(ticker, data)),
@@ -60,18 +60,18 @@ class MarketScanner:
 
 def run_cli_scan():
     scanner = MarketScanner()
-    
+
     # 1. Get Asset Lists
     stocks = scanner.get_ai_stocks()
     crypto = scanner.get_ai_crypto_pairs()
-    
+
     results = {
         'Long-Term': [],
         'Strategic': [],
         'Risk': [],
         'Trading': []
     }
-    
+
     print(f"Scanning {len(stocks)} Stocks...")
     for i, ticker in enumerate(stocks):
         print(f"  [{i+1}/{len(stocks)}] Fetching {ticker}...", end='\r')
@@ -106,10 +106,10 @@ def run_cli_scan():
         print(f"\n[{cat} Investor] - {desc}")
         print(f"{'Rank':<5} {'Asset':<10} {'Score':<10}")
         print("-" * 30)
-        
+
         # Sort descending
         sorted_picks = sorted(results[cat], key=lambda x: x[1], reverse=True)
-        
+
         for i, (asset, score) in enumerate(sorted_picks[:5], 1):
             score_display = f"{score:.2f}" if score != -999 else "N/A"
             print(f"{i:<5} {asset:<10} {score_display}")

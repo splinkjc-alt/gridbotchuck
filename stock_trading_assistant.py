@@ -21,7 +21,7 @@ import logging
 import os
 
 from alpaca.trading.client import TradingClient
-from alpaca.trading.requests import MarketOrderRequest, LimitOrderRequest
+from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
 from dotenv import load_dotenv
 import pandas as pd
@@ -410,7 +410,7 @@ class StockTradingAssistant:
                     headlines = fetch_live_news(analysis.symbol)
                     if headlines:
                         self.learner.record_snapshot(analysis.symbol, headlines, analysis.price)
-                except Exception as e:
+                except Exception:
                     pass  # Silent fail - learning is optional
 
             # Periodically update outcomes

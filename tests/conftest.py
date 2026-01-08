@@ -66,7 +66,7 @@ collect_ignore_glob = []
 KNOWN_FAILING_TESTS = [
     "test_restart_bot",
     "test_restart_when_running",
-    "test_restart_when_not_running", 
+    "test_restart_when_not_running",
     "test_setup_balances_live_mode",
     "test_setup_balances_paper_trading_mode",
     "test_fetch_live_balances_success",

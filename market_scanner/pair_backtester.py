@@ -8,7 +8,7 @@ to find the best opportunities for grid trading.
 import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional
 import json
 

@@ -123,7 +123,7 @@ def create_config(pair_info, capital: float = 100) -> str:
         json.dump(config, f, indent=2)
 
     print(f"\nConfig saved to: {config_path}")
-    print(f"\nCONFIGURATION:")
+    print("\nCONFIGURATION:")
     print(f"  Pair: {pair}")
     print(f"  Current Price: ${price:.6f}")
     print(f"  Grid Range: ${price_low:.6f} - ${price_high:.6f} ({pair_info.best_range_pct:.1f}%)")

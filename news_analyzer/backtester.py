@@ -13,7 +13,7 @@ from dataclasses import dataclass
 import yfinance as yf
 import pandas as pd
 
-from .sentiment import SentimentAnalyzer, SentimentResult
+from .sentiment import SentimentAnalyzer
 from .tracker import NewsTracker
 
 logger = logging.getLogger(__name__)

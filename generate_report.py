@@ -6,7 +6,7 @@ Generates daily/weekly reports for all trading bots.
 
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from dataclasses import dataclass, field
 

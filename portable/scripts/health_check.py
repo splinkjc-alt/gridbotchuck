@@ -63,7 +63,7 @@ async def main():
                         value = amount * price
                         if value > 0.01:
                             total_value += value
-                    except:
+                    except Exception:
                         if amount > 0.01:
                             pass
 

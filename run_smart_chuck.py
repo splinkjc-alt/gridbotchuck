@@ -39,7 +39,7 @@ def send_telegram(message: str):
             data = resp.json()
             if data.get("result"):
                 chat_id = str(data["result"][-1]["message"]["chat"]["id"])
-        except:
+        except Exception:
             return
 
     if not chat_id:
@@ -159,7 +159,7 @@ class SmartChuck:
             exchange = ccxt.kraken()
             ticker = exchange.fetch_ticker(pair)
             current_price = ticker['last']
-        except:
+        except Exception:
             current_price = 1.0  # Fallback
 
         # Calculate grid range
