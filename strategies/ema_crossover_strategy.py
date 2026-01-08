@@ -6,6 +6,11 @@ This strategy:
 2. Monitors EMA 9 and EMA 20 crossovers
 3. Buys when EMA 9 crosses ABOVE EMA 20 (bullish crossover)
 4. Sells when EMA 9 crosses BELOW EMA 20 (bearish crossover)
+
+Safety Features (v2):
+- Stop-loss: Auto-sell if position drops X%
+- Take-profit: Auto-sell if position gains X%
+- Time-stop: Auto-sell if held longer than X hours
 """
 
 import asyncio
@@ -61,6 +66,10 @@ class EMACrossoverStrategy:
         max_positions: int = 3,
         position_size_percent: float = 20.0,
         min_reserve_percent: float = 10.0,
+        # Safety parameters
+        stop_loss_pct: float = 7.0,      # Sell if down 7%
+        take_profit_pct: float = 5.0,    # Sell if up 5%
+        max_hold_hours: float = 6.0,     # Sell after 6 hours
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.config_manager = config_manager
@@ -70,6 +79,11 @@ class EMACrossoverStrategy:
         self.max_positions = max_positions
         self.position_size_percent = position_size_percent
         self.min_reserve_percent = min_reserve_percent
+
+        # Safety parameters
+        self.stop_loss_pct = stop_loss_pct
+        self.take_profit_pct = take_profit_pct
+        self.max_hold_hours = max_hold_hours
 
         # Track monitored coins and positions
         self.monitored_coins: dict[str, CoinStatus] = {}
@@ -84,6 +98,7 @@ class EMACrossoverStrategy:
         self._running = True
         self.logger.info(f"Starting EMA {self.ema_fast}/{self.ema_slow} Crossover Strategy")
         self.logger.info(f"Max positions: {self.max_positions}, Position size: {self.position_size_percent}%")
+        self.logger.info(f"Safety: Stop-loss {self.stop_loss_pct}% | Take-profit {self.take_profit_pct}% | Max hold {self.max_hold_hours}h")
 
         # Initial market scan
         await self.scan_market()
@@ -91,7 +106,12 @@ class EMACrossoverStrategy:
         # Main loop
         while self._running:
             try:
+                # Check safety exits first (stop-loss, take-profit, time-stop)
+                await self.check_exit_conditions()
+
+                # Then check EMA crossover signals
                 await self.check_all_signals()
+
                 await asyncio.sleep(self._check_interval)
             except asyncio.CancelledError:
                 break
@@ -103,6 +123,101 @@ class EMACrossoverStrategy:
         """Stop the strategy."""
         self._running = False
         self.logger.info("EMA Crossover Strategy stopped")
+
+    async def check_exit_conditions(self):
+        """
+        Check all active positions for safety exit conditions:
+        - Stop-loss: Position down more than stop_loss_pct
+        - Take-profit: Position up more than take_profit_pct
+        - Time-stop: Position held longer than max_hold_hours
+        """
+        for pair, status in list(self.active_positions.items()):
+            if not status.position_held:
+                continue
+
+            try:
+                # Get current price
+                ticker = await self._fetch_ticker(pair)
+                price = ticker.get("last", 0)
+                if price <= 0:
+                    continue
+
+                # Update current price
+                status.current_price = price
+
+                # Calculate P&L
+                pnl_pct = ((price / status.entry_price) - 1) * 100 if status.entry_price > 0 else 0
+
+                # Check stop-loss
+                if pnl_pct <= -self.stop_loss_pct:
+                    self.logger.warning(
+                        f"🛑 STOP-LOSS triggered for {pair}: {pnl_pct:.2f}% "
+                        f"(threshold: -{self.stop_loss_pct}%)"
+                    )
+                    await self.execute_exit(pair, "STOP_LOSS", price, pnl_pct)
+                    continue
+
+                # Check take-profit
+                if pnl_pct >= self.take_profit_pct:
+                    self.logger.info(
+                        f"🎯 TAKE-PROFIT triggered for {pair}: +{pnl_pct:.2f}% "
+                        f"(threshold: +{self.take_profit_pct}%)"
+                    )
+                    await self.execute_exit(pair, "TAKE_PROFIT", price, pnl_pct)
+                    continue
+
+                # Check time-stop
+                if status.entry_time:
+                    hold_hours = (datetime.now() - status.entry_time).total_seconds() / 3600
+                    if hold_hours >= self.max_hold_hours:
+                        self.logger.warning(
+                            f"⏰ TIME-STOP triggered for {pair}: held {hold_hours:.1f}h "
+                            f"(max: {self.max_hold_hours}h) P&L: {pnl_pct:+.2f}%"
+                        )
+                        await self.execute_exit(pair, "TIME_STOP", price, pnl_pct)
+                        continue
+
+            except Exception as e:
+                self.logger.error(f"Error checking exit conditions for {pair}: {e}")
+
+    async def execute_exit(self, pair: str, reason: str, price: float, pnl_pct: float):
+        """Execute an exit (sell) for a position with reason logging."""
+        try:
+            status = self.active_positions.get(pair)
+            if not status or not status.position_held:
+                return
+
+            quantity = status.quantity
+            pnl = (price - status.entry_price) * quantity
+
+            self.logger.info(
+                f"💸 EXIT [{reason}] Selling {quantity:.4f} {pair} @ ${price:.4f} "
+                f"(P&L: ${pnl:.2f} / {pnl_pct:+.2f}%)"
+            )
+
+            # Execute order
+            order = await self.exchange_service.place_order(
+                symbol=pair,
+                side="sell",
+                order_type="market",
+                amount=quantity,
+            )
+
+            if order:
+                # Update tracking
+                status.position_held = False
+                status.last_signal = CrossoverSignal.SELL
+                status.quantity = 0
+
+                if pair in self.active_positions:
+                    del self.active_positions[pair]
+
+                self.logger.info(f"✅ EXIT [{reason}] FILLED: {pair} (P&L: ${pnl:.2f})")
+            else:
+                self.logger.error(f"❌ EXIT [{reason}] FAILED: {pair}")
+
+        except Exception as e:
+            self.logger.error(f"Error executing exit for {pair}: {e}")
 
     async def scan_market(self) -> list[tuple[str, float]]:
         """
@@ -448,11 +563,16 @@ class EMACrossoverStrategy:
     async def _get_balance(self) -> dict:
         """Get current balance."""
         try:
-            if hasattr(self.exchange_service, "fetch_balance"):
+            # Try get_balance first (LiveExchangeService), then fetch_balance
+            if hasattr(self.exchange_service, "get_balance"):
+                balance = await self.exchange_service.get_balance()
+                return balance.get("total", {})
+            elif hasattr(self.exchange_service, "fetch_balance"):
                 balance = await self.exchange_service.fetch_balance()
                 return balance.get("total", {})
             return {}
-        except Exception:
+        except Exception as e:
+            self.logger.warning(f"Error fetching balance: {e}")
             return {}
 
     def get_status(self) -> dict:

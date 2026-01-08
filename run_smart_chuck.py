@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 load_dotenv()
 
 from market_scanner.pair_backtester import PairBacktester
+from shared_pair_tracker import get_tracker
 
 
 def send_telegram(message: str):
@@ -82,7 +83,9 @@ class SmartChuck:
     def __init__(self,
                  min_score: float = 65,
                  rescan_hours: float = 4,
-                 capital_usd: float = 100):
+                 capital_usd: float = 100,
+                 scan_offset_seconds: int = 0,
+                 check_interval_seconds: int = 60):
         """
         Initialize Smart Chuck.
 
@@ -90,10 +93,14 @@ class SmartChuck:
             min_score: Minimum grid score to consider a pair (0-100)
             rescan_hours: How often to rescan for better pairs
             capital_usd: Trading capital in USD
+            scan_offset_seconds: Offset to stagger scans with other bots
+            check_interval_seconds: How often to check bot health
         """
         self.min_score = min_score
         self.rescan_hours = rescan_hours
         self.capital_usd = capital_usd
+        self.scan_offset_seconds = scan_offset_seconds
+        self.check_interval_seconds = check_interval_seconds
 
         self.current_pair = None
         self.current_score = 0
@@ -103,16 +110,25 @@ class SmartChuck:
         self.backtester = PairBacktester(exchange_id="kraken")
         self.results_file = Path("data/backtest_results.json")
 
+        # Shared pair tracker to avoid conflicts with other bots
+        self.pair_tracker = get_tracker()
+
     async def scan_pairs(self) -> dict:
         """
         Scan all candidate pairs and return the best one.
+        Avoids pairs that other bots are currently trading.
 
         Returns:
             Dict with best pair info or None
         """
         logger.info("=" * 60)
-        logger.info("SCANNING FOR BEST TRADING PAIR")
+        logger.info("CHUCK SCANNING FOR BEST TRADING PAIR")
         logger.info("=" * 60)
+
+        # Get pairs to avoid (other bots' current pairs)
+        avoid_pairs = self.pair_tracker.get_other_pairs("chuck")
+        if avoid_pairs:
+            logger.info(f"Avoiding pairs traded by other bots: {avoid_pairs}")
 
         results = await self.backtester.run_full_scan(
             pairs=self.CANDIDATE_PAIRS,
@@ -126,8 +142,13 @@ class SmartChuck:
         # Save results
         self.backtester.save_results(str(self.results_file))
 
-        # Get best pair meeting minimum score
+        # Get best pair meeting minimum score AND not traded by others
         for r in results:
+            # Skip pairs being traded by other bots
+            if r.pair in avoid_pairs:
+                logger.info(f"Skipping {r.pair} - being traded by another bot")
+                continue
+
             if r.grid_score >= self.min_score:
                 best = {
                     'pair': r.pair,
@@ -138,7 +159,7 @@ class SmartChuck:
                     'grids': r.recommended_grids,
                     'indicators': r.indicators
                 }
-                logger.info(f"\nBEST PAIR: {best['pair']} (Score: {best['score']:.0f})")
+                logger.info(f"\nBEST PAIR FOR CHUCK: {best['pair']} (Score: {best['score']:.0f})")
                 logger.info(f"  Volatility: {best['volatility']:.1f}%")
                 logger.info(f"  Backtest Return: {best['return_pct']:.1f}%")
                 logger.info(f"  Optimal Range: {best['range_pct']:.1f}%")
@@ -152,43 +173,69 @@ class SmartChuck:
         pair = pair_info['pair']
         base, quote = pair.split('/')
 
-        # Get current price (approximate from backtest data)
-        # In production, fetch live price
+        # Get current price
         try:
             import ccxt
             exchange = ccxt.kraken()
             ticker = exchange.fetch_ticker(pair)
             current_price = ticker['last']
         except Exception:
-            current_price = 1.0  # Fallback
+            current_price = 1.0
 
         # Calculate grid range
         range_pct = pair_info['range_pct'] / 100
         price_low = current_price * (1 - range_pct / 2)
         price_high = current_price * (1 + range_pct / 2)
 
+        # Proper config format for main.py
         config = {
-            "exchange": "kraken",
-            "pair": pair,
-            "strategy": "SIMPLE_GRID",
-            "grid_spacing": "GEOMETRIC",
-            "grid_count": pair_info['grids'],
-            "price_range": {
-                "low": round(price_low, 6),
-                "high": round(price_high, 6)
+            "exchange": {
+                "name": "kraken",
+                "trading_fee": 0.0026,
+                "trading_mode": "live"
             },
-            "order_size_usd": self.capital_usd / pair_info['grids'],
-            "live_mode": True,
-            "auto_selected": True,
-            "selection_score": pair_info['score'],
-            "selection_time": datetime.now().isoformat()
+            "pair": {
+                "base_currency": base,
+                "quote_currency": quote
+            },
+            "trading_settings": {
+                "timeframe": "1h",
+                "period": {
+                    "start_date": "2026-01-01T00:00:00Z",
+                    "end_date": "2026-12-31T23:59:59Z"
+                },
+                "initial_balance": self.capital_usd
+            },
+            "grid_strategy": {
+                "type": "simple_grid",
+                "spacing": "geometric",
+                "num_grids": pair_info['grids'],
+                "range": {
+                    "top": round(price_high, 8),
+                    "bottom": round(price_low, 8)
+                }
+            },
+            "risk_management": {
+                "take_profit": {"enabled": False, "threshold": price_high * 1.5},
+                "stop_loss": {"enabled": False, "threshold": price_low * 0.5}
+            },
+            "logging": {
+                "log_level": "INFO",
+                "log_to_file": True
+            },
+            "api": {
+                "enabled": True,
+                "port": 8080
+            }
         }
 
         return config
 
     def save_config(self, config: dict) -> str:
         """Save config to file and return path."""
-        pair_safe = config['pair'].replace('/', '_')
+        base = config['pair']['base_currency']
+        quote = config['pair']['quote_currency']
+        pair_safe = f"{base}_{quote}"
         config_path = f"config/config_smart_{pair_safe}.json"
 
         with open(config_path, 'w') as f:
@@ -209,9 +256,7 @@ class SmartChuck:
         # Start the bot
         self.bot_process = subprocess.Popen(
             [sys.executable, "main.py", "--config", config_path],
-            cwd=str(Path(__file__).parent),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            cwd=str(Path(__file__).parent)
         )
 
         logger.info(f"Bot started with PID: {self.bot_process.pid}")
@@ -250,7 +295,14 @@ class SmartChuck:
         logger.info(f"Capital: ${self.capital_usd}")
         logger.info(f"Min Score: {self.min_score}")
         logger.info(f"Rescan Interval: {self.rescan_hours} hours")
+        logger.info(f"Scan Offset: {self.scan_offset_seconds}s (stagger with other bots)")
+        logger.info(f"Health Check: every {self.check_interval_seconds}s")
         logger.info("=" * 60)
+
+        # Apply initial offset to stagger startup with other bots
+        if self.scan_offset_seconds > 0:
+            logger.info(f"Waiting {self.scan_offset_seconds}s offset before first scan...")
+            await asyncio.sleep(self.scan_offset_seconds)
 
         while True:
             try:
@@ -274,10 +326,13 @@ class SmartChuck:
                         self.current_pair = best['pair']
                         self.current_score = best['score']
 
+                        # Claim this pair so other bots avoid it
+                        self.pair_tracker.claim_pair("chuck", self.current_pair)
+
                         # Start bot
                         await self.start_bot(config_path)
 
-                        logger.info(f"\n*** NOW TRADING: {self.current_pair} ***\n")
+                        logger.info(f"\n*** CHUCK NOW TRADING: {self.current_pair} ***\n")
 
                         # Send notification
                         send_telegram(
@@ -293,8 +348,8 @@ class SmartChuck:
                         logger.warning("Bot process died, will restart on next scan")
                         self.bot_process = None
 
-                # Wait before next check
-                await asyncio.sleep(60)  # Check every minute
+                # Wait before next check (staggered interval)
+                await asyncio.sleep(self.check_interval_seconds)
 
             except KeyboardInterrupt:
                 logger.info("Shutting down...")
@@ -304,7 +359,7 @@ class SmartChuck:
 
             except Exception as e:
                 logger.error(f"Error in main loop: {e}")
-                await asyncio.sleep(60)
+                await asyncio.sleep(self.check_interval_seconds)
 
 
 async def main():
@@ -312,10 +367,14 @@ async def main():
     from dotenv import load_dotenv
     load_dotenv()
 
+    # Chuck scans first (no offset), then other bots follow
+    # Stagger check intervals to avoid simultaneous API calls
     chuck = SmartChuck(
-        min_score=60,       # Minimum score to consider a pair
-        rescan_hours=2,     # Rescan every 2 hours
-        capital_usd=100     # Trading capital
+        min_score=60,              # Minimum score to consider a pair
+        rescan_hours=2,            # Rescan every 2 hours
+        capital_usd=100,           # Trading capital
+        scan_offset_seconds=0,     # Chuck goes first
+        check_interval_seconds=90  # Check every 90 seconds
     )
 
     await chuck.run()

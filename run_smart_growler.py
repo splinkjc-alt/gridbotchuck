@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 load_dotenv()
 
 from market_scanner.pair_backtester import PairBacktester
+from shared_pair_tracker import get_tracker
 
 
 def send_telegram(message: str):
@@ -80,11 +81,26 @@ class SmartGrowler:
                  min_score: float = 60,
                  rescan_hours: float = 2,
                  capital_usd: float = 100,
-                 avoid_pairs: list = None):
+                 avoid_pairs: list = None,
+                 scan_offset_seconds: int = 0,
+                 check_interval_seconds: int = 60):
+        """
+        Initialize Smart Growler.
+
+        Args:
+            min_score: Minimum grid score to consider a pair
+            rescan_hours: How often to rescan for better pairs
+            capital_usd: Trading capital in USD
+            avoid_pairs: Pairs to avoid (e.g., Chuck's pair)
+            scan_offset_seconds: Offset to stagger scans with other bots
+            check_interval_seconds: How often to check bot health
+        """
         self.min_score = min_score
         self.rescan_hours = rescan_hours
         self.capital_usd = capital_usd
         self.avoid_pairs = avoid_pairs or []
+        self.scan_offset_seconds = scan_offset_seconds
+        self.check_interval_seconds = check_interval_seconds
 
         self.current_pair = None
         self.current_score = 0
@@ -93,40 +109,24 @@ class SmartGrowler:
 
         self.backtester = PairBacktester(exchange_id="kraken")
         self.results_file = Path("data/backtest_results_growler.json")
-        self.chuck_config = Path("config/config_smart_VET_USD.json")
 
-    def get_chuck_pair(self) -> str:
-        """Get the pair Chuck is currently trading."""
-        try:
-            # Check Smart Chuck's config
-            if self.chuck_config.exists():
-                with open(self.chuck_config) as f:
-                    config = json.load(f)
-                    # Smart Chuck uses "pair": "VET/USD" format
-                    pair = config.get('pair')
-                    if isinstance(pair, str) and '/' in pair:
-                        return pair
-                    # Also check nested format
-                    if isinstance(pair, dict):
-                        base = pair.get('base_currency', '')
-                        quote = pair.get('quote_currency', '')
-                        if base and quote:
-                            return f"{base}/{quote}"
-        except Exception as e:
-            logger.warning(f"Could not read Chuck's config: {e}")
-        return None
+        # Shared pair tracker to coordinate with other bots
+        self.pair_tracker = get_tracker()
+
+    def get_pairs_to_avoid(self) -> list:
+        """Get pairs being traded by other bots."""
+        return self.pair_tracker.get_other_pairs("growler")
 
     async def scan_pairs(self) -> dict:
-        """Scan pairs, avoiding Chuck's current pair."""
+        """Scan pairs, avoiding pairs being traded by other bots."""
         logger.info("=" * 60)
         logger.info("GROWLER SCANNING FOR BEST PAIR")
         logger.info("=" * 60)
 
-        # Get Chuck's pair to avoid
-        chuck_pair = self.get_chuck_pair()
-        if chuck_pair:
-            logger.info(f"Avoiding Chuck's pair: {chuck_pair}")
-            self.avoid_pairs = [chuck_pair]
+        # Get pairs to avoid (from shared tracker)
+        avoid_pairs = self.get_pairs_to_avoid()
+        if avoid_pairs:
+            logger.info(f"Avoiding pairs traded by other bots: {avoid_pairs}")
 
         results = await self.backtester.run_full_scan(
             pairs=self.CANDIDATE_PAIRS,
@@ -138,10 +138,10 @@ class SmartGrowler:
 
         self.backtester.save_results(str(self.results_file))
 
-        # Get best pair not being traded by Chuck
+        # Get best pair not being traded by other bots
         for r in results:
-            if r.pair in self.avoid_pairs:
-                logger.info(f"Skipping {r.pair} (Chuck's pair)")
+            if r.pair in avoid_pairs:
+                logger.info(f"Skipping {r.pair} - being traded by another bot")
                 continue
             if r.grid_score >= self.min_score:
                 best = {
@@ -154,15 +154,18 @@ class SmartGrowler:
                     'indicators': r.indicators
                 }
                 logger.info(f"\nBEST PAIR FOR GROWLER: {best['pair']} (Score: {best['score']:.0f})")
+                logger.info(f"  Volatility: {best['volatility']:.1f}%")
+                logger.info(f"  Backtest Return: {best['return_pct']:.1f}%")
                 return best
 
         return None
 
     def generate_config(self, pair_info: dict) -> dict:
-        """Generate grid bot config."""
+        """Generate grid bot config for the selected pair."""
         pair = pair_info['pair']
         base, quote = pair.split('/')
 
+        # Get current price
         try:
             import ccxt
             exchange = ccxt.kraken()
@@ -171,20 +174,12 @@ class SmartGrowler:
         except Exception:
             current_price = 1.0
 
+        # Calculate grid range
         range_pct = pair_info['range_pct'] / 100
         price_low = current_price * (1 - range_pct / 2)
         price_high = current_price * (1 + range_pct / 2)
 
-        # Determine decimal places
-        if current_price < 0.001:
-            decimals = 8
-        elif current_price < 0.1:
-            decimals = 6
-        elif current_price < 10:
-            decimals = 4
-        else:
-            decimals = 2
-
+        # Proper config format for main.py
         config = {
             "exchange": {
                 "name": "kraken",
@@ -197,6 +192,10 @@ class SmartGrowler:
             },
             "trading_settings": {
                 "timeframe": "1h",
+                "period": {
+                    "start_date": "2026-01-01T00:00:00Z",
+                    "end_date": "2026-12-31T23:59:59Z"
+                },
                 "initial_balance": self.capital_usd
             },
             "grid_strategy": {
@@ -204,33 +203,24 @@ class SmartGrowler:
                 "spacing": "geometric",
                 "num_grids": pair_info['grids'],
                 "range": {
-                    "top": round(price_high, decimals),
-                    "bottom": round(price_low, decimals)
+                    "top": round(price_high, 8),
+                    "bottom": round(price_low, 8)
                 }
             },
             "risk_management": {
-                "take_profit": {"enabled": False},
-                "stop_loss": {"enabled": False}
+                "take_profit": {"enabled": False, "threshold": price_high * 1.5},
+                "stop_loss": {"enabled": False, "threshold": price_low * 0.5}
             },
             "logging": {
                 "log_level": "INFO",
                 "log_to_file": True
             },
-            "multi_timeframe_analysis": {
-                "enabled": True,
-                "timeframes": {"trend": "1d", "config": "4h", "execution": "1h"}
-            },
             "api": {
                 "enabled": True,
-                "port": 8083  # Different port from Chuck
-            },
-            "_auto_selected": {
-                "bot": "growler",
-                "score": pair_info['score'],
-                "volatility_pct": pair_info['volatility'],
-                "selected_at": datetime.now().isoformat()
+                "port": 8081
             }
         }
+
         return config
 
     def save_config(self, config: dict) -> str:
@@ -255,9 +245,7 @@ class SmartGrowler:
 
         self.bot_process = subprocess.Popen(
             [sys.executable, "main.py", "--config", config_path],
-            cwd=str(Path(__file__).parent),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            cwd=str(Path(__file__).parent)
         )
 
         logger.info(f"Growler started with PID: {self.bot_process.pid}")
@@ -285,7 +273,14 @@ class SmartGrowler:
         logger.info("=" * 60)
         logger.info(f"Capital: ${self.capital_usd}")
         logger.info(f"Rescan Interval: {self.rescan_hours} hours")
+        logger.info(f"Scan Offset: {self.scan_offset_seconds}s (stagger with Chuck)")
+        logger.info(f"Health Check: every {self.check_interval_seconds}s")
         logger.info("=" * 60)
+
+        # Apply initial offset to stagger startup with Chuck
+        if self.scan_offset_seconds > 0:
+            logger.info(f"Waiting {self.scan_offset_seconds}s offset before first scan...")
+            await asyncio.sleep(self.scan_offset_seconds)
 
         while True:
             try:
@@ -305,6 +300,9 @@ class SmartGrowler:
                         self.current_pair = best['pair']
                         self.current_score = best['score']
 
+                        # Claim this pair so other bots avoid it
+                        self.pair_tracker.claim_pair("growler", self.current_pair)
+
                         await self.start_bot(config_path)
 
                         logger.info(f"\n*** GROWLER NOW TRADING: {self.current_pair} ***\n")
@@ -321,7 +319,7 @@ class SmartGrowler:
                     logger.warning("Growler process died, will restart on next scan")
                     self.bot_process = None
 
-                await asyncio.sleep(60)
+                await asyncio.sleep(self.check_interval_seconds)
 
             except KeyboardInterrupt:
                 logger.info("Shutting down Growler...")
@@ -330,17 +328,21 @@ class SmartGrowler:
                 break
             except Exception as e:
                 logger.error(f"Error: {e}")
-                await asyncio.sleep(60)
+                await asyncio.sleep(self.check_interval_seconds)
 
 
 async def main():
     from dotenv import load_dotenv
     load_dotenv()
 
+    # Growler scans 45 seconds after Chuck to avoid API conflicts
+    # Uses different check interval to prevent overlap
     growler = SmartGrowler(
         min_score=60,
         rescan_hours=2,
-        capital_usd=100
+        capital_usd=100,
+        scan_offset_seconds=45,    # Wait 45s after startup (Chuck goes first)
+        check_interval_seconds=75  # Different from Chuck's 90s to avoid overlap
     )
 
     await growler.run()

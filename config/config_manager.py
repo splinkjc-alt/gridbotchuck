@@ -135,9 +135,18 @@ class ConfigManager:
         grid_range = self.get_grid_range()
         return grid_range.get("bottom", None)
 
+    # --- Market Scanner Accessor Methods ---
+    def get_market_scanner_config(self) -> dict:
+        """Get market scanner configuration."""
+        return self.config.get("market_scanner", {})
+
     # --- Risk management (Take Profit / Stop Loss) Accessor Methods ---
     def get_risk_management(self):
         return self.config.get("risk_management", {})
+
+    def get_risk_management_config(self) -> dict:
+        """Alias for get_risk_management for compatibility."""
+        return self.get_risk_management()
 
     def get_take_profit(self):
         risk_management = self.get_risk_management()
