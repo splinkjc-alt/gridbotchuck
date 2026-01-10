@@ -374,8 +374,7 @@ class GridTradingBot:
 
         try:
             # Get current position info
-            base_currency = pair.split("/")[0]
-            pair.split("/")[1]
+            base_currency, _ = pair.split("/")
 
             # Get current balances
             crypto_balance = await self.balance_tracker.get_crypto_balance()
