@@ -12,6 +12,8 @@ dependencies = [
     "plotly==6.3.0",
     "tabulate==0.9.0",
     "aiohttp==3.10.11",
+    "aiohttp-cors>=0.7.0",
+    "aiosqlite>=0.19.0",
     "apprise==1.9.5",
     "ccxt==4.4.82",
     "configparser==7.2.0",

@@ -350,35 +350,46 @@ class OrderRepository:
             async with aiosqlite.connect(self.db_path) as db:
                 db.row_factory = aiosqlite.Row
 
-                pair_filter = f"AND pair = '{pair}'" if pair else ""
+                # Use parameterized queries to prevent SQL injection
+                if pair:
+                    pair_filter = "AND pair = ?"
+                    params = (pair,)
+                else:
+                    pair_filter = ""
+                    params = ()
 
                 # Total orders
                 async with db.execute(
-                    f"SELECT COUNT(*) as count FROM orders WHERE 1=1 {pair_filter}"
+                    f"SELECT COUNT(*) as count FROM orders WHERE 1=1 {pair_filter}",
+                    params
                 ) as cursor:
                     total_orders = (await cursor.fetchone())["count"]
 
                 # Filled orders
                 async with db.execute(
-                    f"SELECT COUNT(*) as count FROM orders WHERE status = 'closed' {pair_filter}"
+                    f"SELECT COUNT(*) as count FROM orders WHERE status = 'closed' {pair_filter}",
+                    params
                 ) as cursor:
                     filled_orders = (await cursor.fetchone())["count"]
 
                 # Total trades
                 async with db.execute(
-                    f"SELECT COUNT(*) as count FROM trade_history WHERE 1=1 {pair_filter}"
+                    f"SELECT COUNT(*) as count FROM trade_history WHERE 1=1 {pair_filter}",
+                    params
                 ) as cursor:
                     total_trades = (await cursor.fetchone())["count"]
 
                 # Total fees
                 async with db.execute(
-                    f"SELECT SUM(fee) as total FROM trade_history WHERE 1=1 {pair_filter}"
+                    f"SELECT SUM(fee) as total FROM trade_history WHERE 1=1 {pair_filter}",
+                    params
                 ) as cursor:
                     total_fees = (await cursor.fetchone())["total"] or 0.0
 
                 # Total profit
                 async with db.execute(
-                    f"SELECT SUM(profit) as total FROM trade_history WHERE profit IS NOT NULL {pair_filter}"
+                    f"SELECT SUM(profit) as total FROM trade_history WHERE profit IS NOT NULL {pair_filter}",
+                    params
                 ) as cursor:
                     total_profit = (await cursor.fetchone())["total"] or 0.0
 
