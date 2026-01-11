@@ -9,6 +9,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import time
 
 from aiohttp import web
 from aiohttp_cors import setup as setup_cors
@@ -358,7 +359,8 @@ class BotAPIServer:
                 if hasattr(self.config_manager, attr):
                     try:
                         config[key] = getattr(self.config_manager, attr)()
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError) as e:
+                        self.logger.debug(f"Could not get {key}: {e}")
                         pass
             
             # Grid config
@@ -373,7 +375,8 @@ class BotAPIServer:
                 if hasattr(self.config_manager, attr):
                     try:
                         grid_config[key] = getattr(self.config_manager, attr)()
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError) as e:
+                        self.logger.debug(f"Could not get grid config {key}: {e}")
                         pass
             
             if grid_config:
@@ -390,7 +393,8 @@ class BotAPIServer:
                 if hasattr(self.config_manager, attr):
                     try:
                         risk_management[key] = getattr(self.config_manager, attr)()
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError) as e:
+                        self.logger.debug(f"Could not get risk management {key}: {e}")
                         pass
             
             if risk_management:
@@ -875,9 +879,9 @@ class BotAPIServer:
 
             return web.json_response({"success": True, "data": status, "timestamp": datetime.now(UTC).isoformat()})
         except TypeError as e:
-            # JSON serialization error - likely a Mock object somewhere
-            self.logger.error(f"JSON serialization error in multi-pair status: {e}")
-            # Return minimal safe response
+            # JSON serialization error - can happen with improperly initialized objects
+            # Return a safe default response rather than 500 error
+            self.logger.warning(f"JSON serialization error in multi-pair status, returning defaults: {e}")
             return web.json_response({
                 "success": True,
                 "data": {
@@ -1499,7 +1503,7 @@ class BotAPIServer:
             if hasattr(strategy, "_mtf_analysis_result"):
                 strategy._mtf_analysis_result = result
             if hasattr(strategy, "_last_mtf_analysis_time"):
-                strategy._last_mtf_analysis_time = __import__("time").time()
+                strategy._last_mtf_analysis_time = time.time()
 
             return web.json_response(
                 {

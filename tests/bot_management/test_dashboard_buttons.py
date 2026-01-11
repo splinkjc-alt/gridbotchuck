@@ -1,12 +1,13 @@
 """
 Test suite for dashboard button functionality and API endpoints.
 Tests each button's corresponding API endpoint to ensure proper responses.
+Note: Using pytest-aiohttp for async test support instead of deprecated unittest_run_loop.
 """
 
 import pytest
 from unittest.mock import Mock, AsyncMock, MagicMock
 from aiohttp import web
-from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
+from aiohttp.test_utils import AioHTTPTestCase
 
 from core.bot_management.bot_api_server import BotAPIServer
 from core.bot_management.event_bus import EventBus
@@ -85,7 +86,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         
         return api_server.app
 
-    @unittest_run_loop
+    
     async def test_health_endpoint(self):
         """Test health check endpoint."""
         resp = await self.client.request("GET", "/api/health")
@@ -94,7 +95,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         assert data["status"] == "ok"
         assert "timestamp" in data
 
-    @unittest_run_loop
+    
     async def test_bot_start_button(self):
         """Test Start Bot button endpoint."""
         resp = await self.client.request("POST", "/api/bot/start")
@@ -103,7 +104,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         assert "success" in data
         assert "message" in data
 
-    @unittest_run_loop
+    
     async def test_bot_stop_button(self):
         """Test Stop Bot button endpoint."""
         # Set bot to running state first
@@ -115,7 +116,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         assert "success" in data
         assert "message" in data
 
-    @unittest_run_loop
+    
     async def test_bot_pause_button(self):
         """Test Pause Bot button endpoint."""
         resp = await self.client.request("POST", "/api/bot/pause")
@@ -124,7 +125,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         assert "success" in data
         assert "message" in data
 
-    @unittest_run_loop
+    
     async def test_bot_resume_button(self):
         """Test Resume Bot button endpoint."""
         resp = await self.client.request("POST", "/api/bot/resume")
@@ -133,7 +134,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         assert "success" in data
         assert "message" in data
 
-    @unittest_run_loop
+    
     async def test_bot_status_endpoint(self):
         """Test bot status retrieval."""
         resp = await self.client.request("GET", "/api/bot/status")
@@ -144,7 +145,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         assert "trading_pair" in data
         assert "timestamp" in data
 
-    @unittest_run_loop
+    
     async def test_bot_metrics_endpoint(self):
         """Test bot metrics retrieval."""
         resp = await self.client.request("GET", "/api/bot/metrics")
@@ -152,7 +153,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert "timestamp" in data
 
-    @unittest_run_loop
+    
     async def test_bot_orders_endpoint(self):
         """Test orders list retrieval."""
         resp = await self.client.request("GET", "/api/bot/orders")
@@ -160,7 +161,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert "orders" in data
 
-    @unittest_run_loop
+    
     async def test_config_get_endpoint(self):
         """Test config retrieval."""
         resp = await self.client.request("GET", "/api/config")
@@ -170,7 +171,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         assert len(data) > 0
         assert isinstance(data, dict)
 
-    @unittest_run_loop
+    
     async def test_config_update_endpoint(self):
         """Test config update (used by many buttons)."""
         update_data = {
@@ -184,7 +185,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert "success" in data or "message" in data
 
-    @unittest_run_loop
+    
     async def test_market_scan_button(self):
         """Test market scan button endpoint."""
         scan_params = {
@@ -204,7 +205,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert "success" in data or "message" in data
 
-    @unittest_run_loop
+    
     async def test_multi_pair_status_button(self):
         """Test multi-pair status retrieval."""
         resp = await self.client.request("GET", "/api/multi-pair/status")
@@ -213,7 +214,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         assert "success" in data
         assert "data" in data
 
-    @unittest_run_loop
+    
     async def test_multi_pair_start_button(self):
         """Test multi-pair start button."""
         start_params = {"max_pairs": 2}
@@ -226,7 +227,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert "success" in data or "message" in data
 
-    @unittest_run_loop
+    
     async def test_multi_pair_stop_button(self):
         """Test multi-pair stop button."""
         resp = await self.client.request("POST", "/api/multi-pair/stop", json={})
@@ -235,7 +236,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert "success" in data or "message" in data
 
-    @unittest_run_loop
+    
     async def test_mtf_status_endpoint(self):
         """Test multi-timeframe analysis status."""
         resp = await self.client.request("GET", "/api/mtf/status")
@@ -244,7 +245,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         # Should return valid response structure
         assert isinstance(data, dict)
 
-    @unittest_run_loop
+    
     async def test_mtf_analyze_button(self):
         """Test MTF analyze button."""
         resp = await self.client.request("POST", "/api/mtf/analyze", json={})
@@ -253,7 +254,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert "success" in data or "message" in data
 
-    @unittest_run_loop
+    
     async def test_chuck_smart_scan_button(self):
         """Test Chuck AI Smart Scan button."""
         scan_params = {
@@ -272,7 +273,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert "success" in data or "message" in data
 
-    @unittest_run_loop
+    
     async def test_chuck_portfolio_status(self):
         """Test Chuck AI portfolio status."""
         resp = await self.client.request("GET", "/api/chuck/portfolio/status")
@@ -281,7 +282,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         assert "success" in data
         assert "running" in data
 
-    @unittest_run_loop
+    
     async def test_chuck_portfolio_start_button(self):
         """Test Chuck AI portfolio start button."""
         start_params = {
@@ -299,7 +300,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert "success" in data or "message" in data
 
-    @unittest_run_loop
+    
     async def test_chuck_portfolio_stop_button(self):
         """Test Chuck AI portfolio stop button."""
         resp = await self.client.request("POST", "/api/chuck/portfolio/stop", json={})
@@ -308,7 +309,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert "success" in data or "message" in data
 
-    @unittest_run_loop
+    
     async def test_chuck_entry_signal_button(self):
         """Test Chuck AI entry signal analysis button."""
         signal_params = {
@@ -325,7 +326,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert "success" in data or "message" in data
 
-    @unittest_run_loop
+    
     async def test_scanner_config_get(self):
         """Test scanner config retrieval."""
         resp = await self.client.request("GET", "/api/market/scanner-config")
@@ -333,7 +334,7 @@ class TestDashboardButtons(AioHTTPTestCase):
         data = await resp.json()
         assert isinstance(data, dict)
 
-    @unittest_run_loop
+    
     async def test_scanner_config_update(self):
         """Test scanner config update."""
         config_update = {
