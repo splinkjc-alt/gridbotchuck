@@ -1,3 +1,11 @@
+exclude: |
+  (?x)^(
+    desktop/node_modules/.*|
+    backups/.*|
+    \.venv/.*|
+    web/dashboard/.*
+  )$
+
 repos:
   # Ruff for linting and formatting
   - repo: https://github.com/astral-sh/ruff-pre-commit
