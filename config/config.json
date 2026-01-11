@@ -2,7 +2,7 @@
   "exchange": {
     "name": "kraken",
     "trading_fee": 0.0026,
-    "trading_mode": "live"
+    "trading_mode": "paper_trading"
   },
   "pair": {
     "base_currency": "BTC",
@@ -83,7 +83,11 @@
   "api": {
     "enabled": true,
     "port": 8080
+  },
+  "market_scanner": {
+    "min_price": 1.0,
+    "max_price": 20.0,
+    "ema_fast_period": 9,
+    "ema_slow_period": 21
   }
 }
-
-
