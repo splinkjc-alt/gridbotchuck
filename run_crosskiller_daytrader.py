@@ -58,7 +58,7 @@ COIN_CONFIGS = {
 }
 
 # Day trading settings
-TIMEFRAME = "5m"
+TIMEFRAME = "15m"
 POSITION_SIZE_USD = 350.0  # $400 per position
 MAX_POSITIONS = 3
 TAKE_PROFIT_PCT = 2.0
@@ -66,7 +66,7 @@ STOP_LOSS_PCT = 1.5
 MAX_HOLD_HOURS = 4  # Quick trades
 
 # Anti-churn settings
-MIN_HOLD_MINUTES = 10  # Don't sell within first 10 min (unless stop loss)
+MIN_HOLD_MINUTES = 20  # Don't sell within first 20 min (unless stop loss)
 MIN_PROFIT_TO_SELL = 0.5  # Need at least 0.5% profit to sell on signals
 COOLDOWN_MINUTES = 15  # After selling, wait 15 min before re-buying same coin
 
@@ -128,7 +128,7 @@ class DayTraderBot:
 
         if config.get("use_ema", False):
             df["ema_9"] = df["close"].ewm(span=9, adjust=False).mean()
-            df["ema_20"] = df["close"].ewm(span=20, adjust=False).mean()
+            df["ema_16"] = df["close"].ewm(span=16, adjust=False).mean()
 
         if config.get("use_macd", False):
             ema_12 = df["close"].ewm(span=12, adjust=False).mean()
@@ -168,7 +168,7 @@ class DayTraderBot:
 
         if config.get("use_ema", False) and "ema_9" in row:
             # Buy on bearish cross (dip) - EMA 9 below EMA 20
-            if row["ema_9"] < row["ema_20"]:
+            if row["ema_9"] < row["ema_16"]:
                 signals.append(True)
                 reasons.append("EMA_dip")
 
@@ -228,7 +228,7 @@ class DayTraderBot:
 
         if config.get("use_ema", False) and "ema_9" in row:
             # Sell on bullish cross (recovery) - EMA 9 above EMA 20
-            if row["ema_9"] > row["ema_20"]:
+            if row["ema_9"] > row["ema_16"]:
                 return True, f"EMA_RECOVERY {pct_change:+.2f}%"
 
         if config.get("use_macd", False) and "macd" in row:
