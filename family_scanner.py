@@ -22,19 +22,19 @@ import pytz
 # Try importing yfinance for stocks
 try:
     import yfinance as yf
+
     YFINANCE_AVAILABLE = True
 except ImportError:
     YFINANCE_AVAILABLE = False
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(message)s",
-    datefmt="%H:%M:%S"
+    level=logging.INFO, format="%(asctime)s | %(message)s", datefmt="%H:%M:%S"
 )
 log = logging.getLogger("FamilyScanner")
 
 
 # ============== INDICATORS ==============
+
 
 def rsi(prices: pd.Series, period: int = 14) -> float:
     """Calculate current RSI."""
@@ -50,7 +50,9 @@ def rsi(prices: pd.Series, period: int = 14) -> float:
     return rsi_val.iloc[-1]
 
 
-def bollinger_position(prices: pd.Series, period: int = 20) -> tuple[float, float, float, float]:
+def bollinger_position(
+    prices: pd.Series, period: int = 20
+) -> tuple[float, float, float, float]:
     """Calculate Bollinger Band position (0-100) and bands."""
     if len(prices) < period:
         return 50.0, prices.iloc[-1], prices.iloc[-1], prices.iloc[-1]
@@ -73,9 +75,11 @@ def ema(prices: pd.Series, period: int) -> float:
 
 # ============== OPPORTUNITY CLASSES ==============
 
+
 @dataclass
 class Opportunity:
     """Trading opportunity."""
+
     bot: str
     pair: str
     signal: str  # BUY, SELL, WAIT
@@ -87,6 +91,7 @@ class Opportunity:
 
 
 # ============== SCANNERS ==============
+
 
 class GridBotScanner:
     """Scan for GridBot Chuck opportunities on BTC/USD."""
@@ -101,7 +106,9 @@ class GridBotScanner:
         try:
             # Fetch recent candles
             candles = self.exchange.fetch_ohlcv(self.pair, self.timeframe, limit=100)
-            df = pd.DataFrame(candles, columns=["ts", "open", "high", "low", "close", "volume"])
+            df = pd.DataFrame(
+                candles, columns=["ts", "open", "high", "low", "close", "volume"]
+            )
             close = df["close"]
 
             current_price = close.iloc[-1]
@@ -129,7 +136,9 @@ class GridBotScanner:
                 reasons.append(f"Below mid BB ({bb_pos:.0f}%)")
 
             # Price volatility check
-            price_range = (df["high"].max() - df["low"].min()) / df["close"].mean() * 100
+            price_range = (
+                (df["high"].max() - df["low"].min()) / df["close"].mean() * 100
+            )
             if price_range > 3:
                 strength += 20
                 reasons.append(f"Good volatility ({price_range:.1f}%)")
@@ -150,9 +159,9 @@ class GridBotScanner:
                     "RSI": round(current_rsi, 1),
                     "BB_pos": round(bb_pos, 1),
                     "BB_upper": round(bb_upper, 2),
-                    "BB_lower": round(bb_lower, 2)
+                    "BB_lower": round(bb_lower, 2),
                 },
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
         except Exception as e:
@@ -172,7 +181,9 @@ class GrowlerScanner:
         """Scan for bearish scalp opportunity."""
         try:
             candles = self.exchange.fetch_ohlcv(self.pair, self.timeframe, limit=100)
-            df = pd.DataFrame(candles, columns=["ts", "open", "high", "low", "close", "volume"])
+            df = pd.DataFrame(
+                candles, columns=["ts", "open", "high", "low", "close", "volume"]
+            )
             close = df["close"]
 
             current_price = close.iloc[-1]
@@ -215,9 +226,9 @@ class GrowlerScanner:
                     "RSI": round(current_rsi, 1),
                     "EMA20": round(ema_20, 4),
                     "EMA50": round(ema_50, 4),
-                    "Trend": "BEAR" if is_bearish else "BULL"
+                    "Trend": "BEAR" if is_bearish else "BULL",
                 },
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
         except Exception as e:
@@ -252,7 +263,7 @@ class StockScanner:
                 price=0,
                 reason="yfinance not installed",
                 indicators={},
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
         if not self.is_market_open():
@@ -265,7 +276,7 @@ class StockScanner:
                 price=0,
                 reason=f"Market closed ({now.strftime('%I:%M %p ET')})",
                 indicators={"market": "CLOSED"},
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
         try:
@@ -308,15 +319,19 @@ class StockScanner:
                         best_opp = Opportunity(
                             bot="Sleeping Marketbot",
                             pair=symbol,
-                            signal="BUY" if score >= 60 else "WATCH" if score >= 40 else "WAIT",
+                            signal="BUY"
+                            if score >= 60
+                            else "WATCH"
+                            if score >= 40
+                            else "WAIT",
                             strength=min(score, 100),
                             price=current_price,
                             reason=" | ".join(reasons) if reasons else "Neutral",
                             indicators={
                                 "RSI": round(current_rsi, 1),
-                                "BB_pos": round(bb_pos, 1)
+                                "BB_pos": round(bb_pos, 1),
                             },
-                            timestamp=datetime.now()
+                            timestamp=datetime.now(),
                         )
 
                 except Exception:
@@ -333,7 +348,7 @@ class StockScanner:
                     price=0,
                     reason="No opportunities in watchlist",
                     indicators={},
-                    timestamp=datetime.now()
+                    timestamp=datetime.now(),
                 )
 
         except Exception as e:
@@ -343,6 +358,7 @@ class StockScanner:
 
 # ============== MAIN SCANNER ==============
 
+
 class FamilyScanner:
     """Unified scanner for all bots."""
 
@@ -351,18 +367,29 @@ class FamilyScanner:
         self.growler = GrowlerScanner()
         self.stocks = StockScanner()
         self.scan_interval = 60  # seconds
+        self.error_count = 0
+        self.max_errors = 5
+
+    def reset_scanners(self):
+        """Reset all scanners after errors."""
+        log.info("[RESET] Reinitializing scanners...")
+        self.gridbot = GridBotScanner()
+        self.growler = GrowlerScanner()
+        self.stocks = StockScanner()
+        self.error_count = 0
+        log.info("[RESET] Scanners reinitialized")
 
     def print_header(self):
         """Print scanner header."""
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("  BOT FAMILY SCANNER - Watching for Opportunities")
-        print("="*70)
+        print("=" * 70)
         print("  GridBot Chuck  : BTC/USD  (30m, RSI+BB)")
         print("  Growler        : ADA/USD  (30m, Bearish)")
         print("  Sleeping Bot   : Stocks   (30m, Mean Reversion)")
-        print("="*70)
+        print("=" * 70)
         print("  Signal Guide: BUY = Strong entry | WATCH = Prepare | WAIT = Hold")
-        print("="*70 + "\n")
+        print("=" * 70 + "\n")
 
     def print_opportunity(self, opp: Opportunity):
         """Print a single opportunity."""
@@ -376,14 +403,16 @@ class FamilyScanner:
         else:
             signal_str = "... WAIT ..."
 
-        print(f"{opp.bot:20} | {opp.pair:10} | {signal_str:15} | Str: {opp.strength:3}%")
+        print(
+            f"{opp.bot:20} | {opp.pair:10} | {signal_str:15} | Str: {opp.strength:3}%"
+        )
         if opp.reason and opp.signal in ["BUY", "WATCH"]:
             print(f"{'':20} | Reason: {opp.reason}")
         if opp.signal == "BUY":
             print(f"{'':20} | Price: ${opp.price:,.2f}")
             for k, v in opp.indicators.items():
                 print(f"{'':20} | {k}: {v}")
-        print("-"*70)
+        print("-" * 70)
 
     async def scan_all(self):
         """Scan all bots once."""
@@ -391,7 +420,7 @@ class FamilyScanner:
             self.gridbot.scan(),
             self.growler.scan(),
             self.stocks.scan(),
-            return_exceptions=True
+            return_exceptions=True,
         )
 
         opportunities = []
@@ -411,13 +440,21 @@ class FamilyScanner:
                 scan_count += 1
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 print(f"\n[Scan #{scan_count}] {now}")
-                print("-"*70)
+                print("-" * 70)
 
                 opportunities = await self.scan_all()
 
                 # Sort by signal priority and strength
-                priority = {"BUY": 0, "WATCH": 1, "SLEEPING": 2, "WAIT": 3, "DISABLED": 4}
-                opportunities.sort(key=lambda x: (priority.get(x.signal, 5), -x.strength))
+                priority = {
+                    "BUY": 0,
+                    "WATCH": 1,
+                    "SLEEPING": 2,
+                    "WAIT": 3,
+                    "DISABLED": 4,
+                }
+                opportunities.sort(
+                    key=lambda x: (priority.get(x.signal, 5), -x.strength)
+                )
 
                 # Print all opportunities
                 for opp in opportunities:
@@ -426,11 +463,17 @@ class FamilyScanner:
                 # Alert on BUY signals
                 buy_signals = [o for o in opportunities if o.signal == "BUY"]
                 if buy_signals:
-                    print("\n" + "!"*70)
+                    print("\n" + "!" * 70)
                     print("  OPPORTUNITY ALERT!")
                     for opp in buy_signals:
-                        print(f"  -> {opp.bot}: {opp.pair} @ ${opp.price:,.2f} (Strength: {opp.strength}%)")
-                    print("!"*70)
+                        print(
+                            f"  -> {opp.bot}: {opp.pair} @ ${opp.price:,.2f} (Strength: {opp.strength}%)"
+                        )
+                    print("!" * 70)
+
+                # Reset error count on successful scan
+                if opportunities:
+                    self.error_count = 0
 
                 # Wait for next scan
                 print(f"\nNext scan in {self.scan_interval}s... (Ctrl+C to stop)")
@@ -440,8 +483,18 @@ class FamilyScanner:
                 print("\n\nScanner stopped. Bots are ready when you are!")
                 break
             except Exception as e:
-                log.error(f"Scan error: {e}")
-                await asyncio.sleep(10)
+                self.error_count += 1
+                log.error(f"Scan error ({self.error_count}/{self.max_errors}): {e}")
+
+                # Auto-reset after too many errors
+                if self.error_count >= self.max_errors:
+                    log.warning(
+                        f"[REFRESH] {self.error_count} errors - resetting scanners..."
+                    )
+                    await asyncio.sleep(5)
+                    self.reset_scanners()
+                else:
+                    await asyncio.sleep(10)
 
 
 async def main():
