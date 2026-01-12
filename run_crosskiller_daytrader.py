@@ -27,33 +27,19 @@ import os
 
 load_dotenv()
 
-# Optimized coin configs from backtest
+# RSI-based configs - buy oversold, sell overbought
 COIN_CONFIGS = {
     "SOL/USD": {
         "name": "SOL",
-        "use_rsi": False,
-        "use_bb": False,
-        "use_ema": True,
-        "strategy": "mean_reversion",
-        "backtest_return": 13.91,
+        "use_rsi": True,  # RSI for entries/exits
     },
     "ADA/USD": {
         "name": "ADA",
         "use_rsi": True,
-        "use_bb": True,
-        "use_ema": True,
-        "use_macd": True,
-        "strategy": "momentum",
-        "backtest_return": 11.41,
     },
     "LINK/USD": {
         "name": "LINK",
         "use_rsi": True,
-        "use_bb": False,
-        "use_ema": True,
-        "use_macd": False,
-        "strategy": "mean_reversion",
-        "backtest_return": 11.37,
     },
 }
 
@@ -139,9 +125,9 @@ class DayTraderBot:
         return df
 
     def check_buy_signal(
-        self, symbol: str, row: pd.Series, config: dict
+        self, symbol: str, df: pd.DataFrame, config: dict
     ) -> tuple[bool, str]:
-        """Check buy signal based on coin's optimal config."""
+        """Check buy signal - RSI crosses below 30."""
         # === ANTI-CHURN: Check cooldown ===
         if symbol in self.cooldowns:
             if datetime.now() < self.cooldowns[symbol]:
@@ -149,49 +135,25 @@ class DayTraderBot:
             else:
                 del self.cooldowns[symbol]  # Cooldown expired
 
-        signals = []
-        reasons = []
-        strategy = config.get("strategy", "momentum")
+        row = df.iloc[-1]  # Current candle
+        prev = df.iloc[-2]  # Previous candle
 
-        if config.get("use_rsi", False) and "rsi" in row:
-            if strategy == "mean_reversion" and row["rsi"] < 30:
-                signals.append(True)
-                reasons.append(f"RSI={row['rsi']:.1f}")
-            elif strategy == "momentum" and 30 < row["rsi"] < 50:
-                signals.append(True)
-                reasons.append(f"RSI={row['rsi']:.1f}")
+        # RSI cross entry: Buy when RSI CROSSES below 30
+        # Previous >= 30, Current < 30
+        if "rsi" in row and "rsi" in prev:
+            if prev["rsi"] >= 30 and row["rsi"] < 30:
+                return True, f"RSI_cross_DOWN={row['rsi']:.1f}"
 
-        if config.get("use_bb", False) and "bb_lower" in row:
-            if row["close"] <= row["bb_lower"]:
-                signals.append(True)
-                reasons.append("BB_lower")
-
-        if config.get("use_ema", False) and "ema_9" in row:
-            # Buy on bearish cross (dip) - EMA 9 below EMA 20
-            if row["ema_9"] < row["ema_16"]:
-                signals.append(True)
-                reasons.append("EMA_dip")
-
-        if config.get("use_macd", False) and "macd" in row:
-            if strategy == "momentum" and row["macd"] > row["macd_signal"]:
-                signals.append(True)
-                reasons.append("MACD_bull")
-
-        if not signals:
-            return False, ""
-
-        # Momentum: any signal, Mean reversion: all signals
-        if strategy == "momentum":
-            return any(signals), " + ".join(reasons)
-        else:
-            return all(signals), " + ".join(reasons)
+        return False, ""
 
     def check_sell_signal(
-        self, symbol: str, current_price: float, config: dict, row: pd.Series
+        self, symbol: str, current_price: float, config: dict, df: pd.DataFrame
     ) -> tuple[bool, str]:
-        """Check sell conditions."""
+        """Check sell conditions - RSI overbought or stops."""
         if symbol not in self.positions:
             return False, ""
+
+        row = df.iloc[-1]  # Current candle
 
         pos = self.positions[symbol]
         entry_price = pos["entry_price"]
@@ -220,20 +182,12 @@ class DayTraderBot:
         if pct_change < MIN_PROFIT_TO_SELL:
             return False, ""  # Not enough profit to justify selling
 
-        # Indicator-based exits (only if past min hold AND min profit)
-        strategy = config.get("strategy", "momentum")
-
-        if config.get("use_rsi", False) and "rsi" in row and row["rsi"] > 70:
-            return True, f"RSI_OVERBOUGHT {pct_change:+.2f}%"
-
-        if config.get("use_ema", False) and "ema_9" in row:
-            # Sell on bullish cross (recovery) - EMA 9 above EMA 20
-            if row["ema_9"] > row["ema_16"]:
-                return True, f"EMA_RECOVERY {pct_change:+.2f}%"
-
-        if config.get("use_macd", False) and "macd" in row:
-            if strategy == "momentum" and row["macd"] < row["macd_signal"]:
-                return True, f"MACD_BEARISH {pct_change:+.2f}%"
+        # RSI cross exit: Sell when RSI CROSSES above 70
+        # Previous <= 70, Current > 70
+        prev = df.iloc[-2]
+        if "rsi" in row and "rsi" in prev:
+            if prev["rsi"] <= 70 and row["rsi"] > 70:
+                return True, f"RSI_cross_UP={row['rsi']:.1f} {pct_change:+.2f}%"
 
         return False, ""
 
@@ -392,16 +346,14 @@ class DayTraderBot:
                     # Check sell first (if in position)
                     if symbol in self.positions:
                         should_sell, reason = self.check_sell_signal(
-                            symbol, price, config, current
+                            symbol, price, config, df
                         )
                         if should_sell:
                             await self.execute_sell(symbol, price, reason, paper_mode)
 
                     # Check buy (if not in position and under max)
                     elif len(self.positions) < MAX_POSITIONS:
-                        should_buy, reason = self.check_buy_signal(
-                            symbol, current, config
-                        )
+                        should_buy, reason = self.check_buy_signal(symbol, df, config)
                         if should_buy:
                             await self.execute_buy(symbol, price, reason, paper_mode)
 
