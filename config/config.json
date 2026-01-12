@@ -2,7 +2,7 @@
   "exchange": {
     "name": "kraken",
     "trading_fee": 0.0026,
-    "trading_mode": "live"
+    "trading_mode": "paper"
   },
   "pair": {
     "base_currency": "BTC",
@@ -85,5 +85,3 @@
     "port": 8080
   }
 }
-
-
