@@ -1,174 +1,181 @@
-# Grid Trading Bot - Session Status
+# GridBot Chuck Session Status
+**Last Updated:** 2026-01-11 (continued session)
 
-**Last Updated:** December 20, 2025, 2:58 PM EST
+## Current Status: BOTS FIXED WITH AUTO-REFRESH
 
-## 🎯 Current State
+| Bot | Exchange | Strategy | Capital | Status |
+|-----|----------|----------|---------|--------|
+| **CrossKiller** | Coinbase | 5m Day Trading (SOL, ADA, LINK) | ~$800 deployed | XRP removed, auto-refresh added |
+| **VET Momentum** | Kraken | 15m RSI+BB | ~$200 | Holding 17k VET |
+| **PEPE Momentum** | Kraken | 30m RSI+EMA | ~$200 | Watching for entry |
 
-### Exchange & Account
+## Account Balances (Approx)
+- **Coinbase:** ~$1,865 total (~$1,200 in positions, ~$665 USD)
+- **Kraken:** ~$2,800 total (~$200 in VET, ~$2,600 USD)
+- **Total Portfolio:** ~$4,665
 
-- **Exchange:** Kraken (LIVE mode)
-- **Actual Balance:** ~$157 USD + ~0.43 UNI
-- **Trading Pair:** UNI/USD @ ~$6.25
-- **Grid Range:** $5.96 - $6.58
+---
 
-### Active Orders
+## Fixes Applied (Jan 11, 2026 - Continued Session)
 
-- **Buy Limit Order:** 5.12 UNI @ $5.96 (~$30.50 reserved)
-- **Available USD:** ~$127 (after reservation)
+1. **Removed XRP** from CrossKiller (user sold manually, now only SOL/ADA/LINK)
+2. **Added auto-refresh** to CrossKiller - reconnects after 5 consecutive errors
+3. **Added auto-refresh** to momentum_strategy.py - same mechanism for VET/PEPE
+4. **Fixed sell orders** - CrossKiller now fetches actual balance before selling (fees reduce tracked amounts)
+5. **Added cycle logging** - Shows `[SCANNING] Cycle X` every 5 cycles so you know it's alive
 
-## ✅ Features Implemented This Session (Dec 20)
+---
 
-### 1. Position Sizing (NEW)
+## What Was Done This Session (Jan 11, 2026 Night)
 
-**Config:** `config.json` → `risk_management.position_sizing`
+### 1. Retired Grid Trading Strategy
+- Grid trading was losing money even when working correctly
+- Market trending down = grid keeps buying dips that keep dipping
+- Switched to momentum-based strategies
 
-```json
-{
-  "buy_percent_of_total": 20.0,    // Use 20% of portfolio per buy
-  "min_reserve_percent": 10.0,     // Stop buying when USD < 10%
-  "sync_balances_on_startup": true
-}
-```
+### 2. Ran Comprehensive Backtests
 
-**Files Modified:**
+**Kraken (VET/PEPE) - 30 day backtest:**
+| Asset | Best Timeframe | Best Indicators | Strategy | Return |
+|-------|---------------|-----------------|----------|--------|
+| VET | 15m | RSI + BB | momentum | +23.56% (83% win) |
+| PEPE | 30m | RSI + EMA | momentum | +36.41% (54% win) |
 
-- `core/order_handling/order_manager.py` - Added `config_manager` param, `_is_below_min_reserve()` method
-- `core/grid_management/grid_manager.py` - Modified `get_order_size_for_grid_level()` to use buy_percent
-- `core/bot_management/grid_trading_bot.py` - Pass config_manager to OrderManager
-- `core/bot_management/multi_pair_manager.py` - Pass config_manager to OrderManager
-- `tests/order_handling/test_order_manager.py` - Updated test fixture
+**Coinbase - 5m Day Trading (14 day backtest):**
+| Asset | Best Indicators | Strategy | Return |
+|-------|-----------------|----------|--------|
+| SOL | EMA 9/20 | mean_reversion | +13.91% |
+| XRP | Full Suite | momentum | +13.52% |
+| ADA | Full Suite | momentum | +11.41% |
+| LINK | RSI+EMA | mean_reversion | +11.37% |
+| UNI | - | - | LOSER (avoid) |
+| ATOM | - | - | LOSER (avoid) |
 
-### 2. Auto Pair Selection (Previously Working)
+### 3. Created New Momentum Bots
 
-- Scans top gainers on startup
-- Analyzes with MarketAnalyzer (RSI, trend, score)
-- Picks highest scoring bullish pair
-- Updates balance_tracker.base_currency on switch
+**CrossKiller Day Trader** (`run_crosskiller_daytrader.py`)
+- Coins: SOL, XRP, ADA, LINK (winners only)
+- Timeframe: 5m
+- Buy signal: EMA 9 < EMA 20 (dip)
+- Sell signal: EMA 9 > EMA 20 (recovery) or +2% take profit
+- Stop loss: -1.5%
+- Max hold: 4 hours
+- Position size: $400 each, max 3 positions
 
-### 3. Balance Tracker Fix (Previously Fixed)
+**VET Momentum** (`run_vet_momentum.py`)
+- Timeframe: 15m
+- Indicators: RSI + Bollinger Bands
+- Buy: BB lower + RSI oversold
+- Sell: BB upper or +5% take profit
+- Stop loss: -3.5%, Max hold: 24h
 
-- Fixed: balance_tracker.base_currency now updates when pair switches
-- Location: `grid_trading_bot.py` lines ~274-280
+**PEPE Momentum** (`run_pepe_momentum.py`)
+- Timeframe: 30m
+- Indicators: RSI + EMA
+- Similar momentum strategy
+- Stop loss: -3.5%, Max hold: 24h
 
-## 📊 How Position Sizing Works
+### 4. Fixed Issues
+- Coinbase API errors - added error tolerance
+- Wrong EMA crossover direction - flipped buy/sell logic
+- Momentum strategy hanging - added debug logging
+- Coinbase market buy requires price parameter
 
-1. **Order Size Calculation:**
-   - Total portfolio value = USD + (crypto × price)
-   - Buy order size = 20% of total / current_price
+---
 
-2. **Minimum Reserve Check:**
-   - Before each buy: check if (USD / total) < 10%
-   - If below, skip buy and log warning
-
-3. **Example with $157 portfolio:**
-   - 20% = ~$31.40 per buy order
-   - Can make ~4 buys before hitting 10% reserve
-   - At 10% reserve = ~$16 USD minimum held
-
-## 🔧 Config Summary (`config/config.json`)
-
-```json
-{
-  "exchange": { "name": "kraken", "trading_mode": "live" },
-  "pair": { "base_currency": "UNI", "quote_currency": "USD" },
-  "trading_settings": {
-    "initial_balance": 157,
-    "initial_crypto_balance": 0.5
-  },
-  "grid_strategy": {
-    "type": "hedged_grid",
-    "num_grids": 3,
-    "range": { "bottom": 5.96, "top": 6.58 }
-  },
-  "risk_management": {
-    "position_sizing": {
-      "buy_percent_of_total": 20.0,
-      "min_reserve_percent": 10.0
-    }
-  },
-  "market_scanner": { "enabled": true }
-}
-```
-
-## ⚠️ Known Issues
-
-1. **Sell Order Errors:** Bot shows errors when trying to place sell orders because crypto balance (~0.43 UNI) is less than the calculated order size (~5 UNI). This is expected behavior when mostly holding USD.
-
-2. **Balance Sync:** On startup, bot syncs with actual exchange balance (not config values). Config values are just initial defaults.
-
-## 🚀 To Continue
-
-1. **Monitor the bot:** Watch if the $5.96 buy order fills
-2. **Check Kraken:** Verify the limit order appears in your orders
-3. **Grid will work:** When price drops to $5.96, order fills, then sell order placed at higher grid level
-
-## 📁 Key Files
+## New Files Created
 
 | File | Purpose |
 |------|---------|
-| `main.py` | Entry point |
-| `config/config.json` | Configuration |
-| `core/order_handling/order_manager.py` | Order placement + position sizing |
-| `core/grid_management/grid_manager.py` | Grid levels + order sizing |
-| `core/bot_management/grid_trading_bot.py` | Main bot orchestration |
+| `run_crosskiller_daytrader.py` | 5m day trading bot for Coinbase |
+| `run_vet_momentum.py` | VET momentum bot |
+| `run_pepe_momentum.py` | PEPE momentum bot |
+| `strategies/momentum_strategy.py` | Momentum strategy class |
+| `backtest_all_combos.py` | Backtest VET/PEPE all timeframes |
+| `backtest_coinbase_5m.py` | Backtest Coinbase coins 5m |
+| `config/config_vet_momentum.json` | VET config |
+| `config/config_pepe_momentum.json` | PEPE config |
+| `liquidate_coinbase.py` | Quick liquidate Coinbase |
+| `liquidate_kraken.py` | Quick liquidate Kraken |
+| `check_balances.py` | Check all exchange balances |
 
-## 🏃 Run Commands
+---
+
+## Quick Commands
 
 ```powershell
-# Start bot
-cd "c:\Users\splin\OneDrive\Documents\grid_trading_bot-master"
-python main.py --config config/config.json
+# Check all balances
+cd D:\gridbotchuck
+.\.venv\Scripts\python.exe check_balances.py
 
-# Kill port 8080 if needed
-Get-NetTCPConnection -LocalPort 8080 | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+# Liquidate Coinbase to USD
+.\.venv\Scripts\python.exe liquidate_coinbase.py
+
+# Liquidate Kraken to USD
+.\.venv\Scripts\python.exe liquidate_kraken.py
+
+# Start bots (each in separate PowerShell window)
+.\.venv\Scripts\python.exe run_crosskiller_daytrader.py
+.\.venv\Scripts\python.exe run_vet_momentum.py
+.\.venv\Scripts\python.exe run_pepe_momentum.py
+
+# Check logs
+Get-Content logs/crosskiller_daytrader.log -Last 20
+Get-Content logs/vet_momentum.log -Last 20
+Get-Content logs/pepe_momentum.log -Last 20
 ```
 
 ---
 
-## Previous Session (Dec 19) - Settings Page
+## Bot Logic Summary
 
-### What Was Completed ✅
-
-| `web/dashboard/styles.css` | Added menu-item link styling |
-| `web/dashboard/settings.html` | **NEW** - Complete settings page |
-| `web/dashboard/settings.css` | **NEW** - Settings page styling |
-| `web/dashboard/settings.js` | **NEW** - Settings page JavaScript |
-| `core/bot_management/bot_api_server.py` | Added settings routes and handlers |
-
-### To Resume
-
-1. **Check if bot is running**: Look for process on port 8080
-2. **If not running**: `python main.py --config config/config.json`
-3. **Test settings page**: Navigate to <http://localhost:8080/settings.html>
-4. **If still 404**: Check bot_api_server.py for route registration issues
-
-### Quick Commands
-
-```powershell
-# Kill any process on port 8080
-Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-
-# Start the bot
-python main.py --config config/config.json
-
-# Access dashboard
-# http://localhost:8080/index.html
-
-# Access settings (what we're testing)
-# http://localhost:8080/settings.html
+### CrossKiller (Day Trading)
+```
+BUY when: EMA 9 crosses BELOW EMA 20 (dip/weakness)
+SELL when: EMA 9 crosses ABOVE EMA 20 (recovery) OR +2% profit OR -1.5% loss OR 4h hold
 ```
 
-### Settings Page Features
+### VET/PEPE (Swing Trading)
+```
+BUY when: Price at lower Bollinger Band + RSI oversold (VET) or EMA conditions (PEPE)
+SELL when: Price at upper BB OR +5% profit OR -3.5% loss OR 24h hold
+```
 
-- **Profile Section**: Personal info storage
-- **8 Exchange APIs**: Each with API key, secret, optional passphrase, and test button
-- **Notifications**: Email alerts, Telegram bot, Discord webhooks with test buttons
-- **Trading Defaults**: Default exchange, mode, capital, risk level
-- **Security**: 2FA toggle, session timeout, API access toggle
-- **Advanced**: Debug mode, clear data, export/import settings
+---
 
-### Notes
+## Important Notes for Next Session
 
-- All settings stored in browser localStorage (client-side)
-- Exchange testing uses CCXT library on server-side
-- Password fields have visibility toggle buttons
+1. **Old grid bots are retired** - Chuck/Growler (`run_smart_chuck.py`, `run_smart_growler.py`) not in use
+2. **Startup shortcut needs update** - `start_all_bots.bat` points to old scripts
+3. **CrossKiller is day trading** - expects quick in/out on 5m, check frequently
+4. **If bots hang after startup** - check if balance fetch is timing out, may need restart
+5. **UNI and ATOM are losers** on 5m - CrossKiller avoids them
+
+---
+
+## The Bot Family (Updated)
+
+| Bot | Script | Exchange | Strategy | Status |
+|-----|--------|----------|----------|--------|
+| CrossKiller | `run_crosskiller_daytrader.py` | Coinbase | 5m EMA dip/recovery | RUNNING |
+| VET Momentum | `run_vet_momentum.py` | Kraken | 15m RSI+BB | RUNNING |
+| PEPE Momentum | `run_pepe_momentum.py` | Kraken | 30m RSI+EMA | RUNNING |
+| Chuck (old) | `run_smart_chuck.py` | Kraken | Grid | RETIRED |
+| Growler (old) | `run_smart_growler.py` | Kraken | Grid | RETIRED |
+| Marketbot | `stock_trading_assistant.py` | Alpaca | Stocks | Paper mode, weekdays only |
+
+---
+
+## Jeff's AI Ecosystem (Unchanged)
+
+- **GridBot Chuck** (D:\gridbotchuck) - Trading bots - ACTIVE
+- **FrankC** (C:\AI\free-claude) - Local Claude-trained AI - Waiting for Python 3.11
+- **Screen Watcher Frank** (D:\frankc) - Context-aware help - Paused
+- **AI Guardian** (C:\AI\ai-guardian) - Security suite - Working
+- **TheBeast**: RTX 4090, 128GB RAM, Ryzen 9 9950X
+
+---
+
+*Last updated: Jan 11, 2026 @ 2:10 AM*
+*Session with: Claude Opus 4.5*
+*Major change: Switched from grid trading to momentum strategies based on backtests*
