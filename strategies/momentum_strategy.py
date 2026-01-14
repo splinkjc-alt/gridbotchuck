@@ -89,6 +89,10 @@ class MomentumStrategy:
         # Cooldown after sells - wait for pullback before rebuying
         self._last_sell_time = None
         self._last_sell_price = None
+
+        # Track previous EMA for crossover detection
+        self._prev_ema_fast = None
+        self._prev_ema_slow = None
         self._cooldown_minutes = 30  # Wait at least 30 min after sell
         self._pullback_pct = 1.0  # Need 1% pullback from sell price to rebuy
 
@@ -153,10 +157,15 @@ class MomentumStrategy:
                 reasons.append("BB_lower")
 
         if self.use_ema and "ema_fast" in row:
-            # Bullish crossover
-            if row["ema_fast"] > row["ema_slow"]:
+            # Bullish crossover - only trigger when crossing, not just above
+            is_bullish = row["ema_fast"] > row["ema_slow"]
+            was_bearish = (
+                self._prev_ema_fast is not None
+                and self._prev_ema_fast <= self._prev_ema_slow
+            )
+            if is_bullish and was_bearish:
                 signals.append(True)
-                reasons.append(f"EMA({self.ema_fast}>{self.ema_slow})")
+                reasons.append(f"EMA_CROSS({self.ema_fast}x{self.ema_slow})")
 
         # Need at least one signal
         if signals and any(signals):
@@ -421,6 +430,11 @@ class MomentumStrategy:
                             )
                         scan_parts.append("waiting...")
                         self.logger.info(" | ".join(scan_parts))
+
+                # Update EMA tracking for crossover detection
+                if self.use_ema and "ema_fast" in current:
+                    self._prev_ema_fast = current["ema_fast"]
+                    self._prev_ema_slow = current["ema_slow"]
 
                 # Wait for next candle
                 await asyncio.sleep(self._check_interval)
