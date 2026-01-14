@@ -86,6 +86,12 @@ class MomentumStrategy:
         )
         self._check_interval = self._timeframe_to_seconds(timeframe)
 
+        # Cooldown after sells - wait for pullback before rebuying
+        self._last_sell_time = None
+        self._last_sell_price = None
+        self._cooldown_minutes = 30  # Wait at least 30 min after sell
+        self._pullback_pct = 1.0  # Need 1% pullback from sell price to rebuy
+
         self.logger = logging.getLogger(f"Momentum-{symbol.replace('/', '')}")
 
     def _timeframe_to_seconds(self, tf: str) -> int:
@@ -248,6 +254,9 @@ class MomentumStrategy:
                     f"P/L: ${profit_usd:.2f} ({pct_change:+.2f}%)"
                 )
                 self._position = None
+                # Record sell for cooldown
+                self._last_sell_time = datetime.now()
+                self._last_sell_price = price
                 return True
 
         except Exception as e:
@@ -360,9 +369,26 @@ class MomentumStrategy:
 
                 # Check for buy (if not in position)
                 else:
+                    # Check cooldown - need pullback before rebuying
+                    in_cooldown = False
+                    if self._last_sell_time and self._last_sell_price:
+                        mins_since_sell = (
+                            datetime.now() - self._last_sell_time
+                        ).total_seconds() / 60
+                        if mins_since_sell < self._cooldown_minutes:
+                            pullback = (
+                                (self._last_sell_price - price) / self._last_sell_price
+                            ) * 100
+                            if pullback < self._pullback_pct:
+                                in_cooldown = True
+
                     should_buy, reason = self.check_buy_signal(current)
-                    if should_buy:
+                    if should_buy and not in_cooldown:
                         await self.execute_buy(price, reason)
+                    elif should_buy and in_cooldown:
+                        self.logger.info(
+                            f"[COOLDOWN] {self.symbol} | Signal found but waiting for pullback"
+                        )
                     else:
                         # Verbose scanning output
                         scan_parts = [f"[SCAN] {self.symbol} @ ${price:.6f}"]
