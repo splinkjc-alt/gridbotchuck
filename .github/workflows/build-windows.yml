@@ -264,7 +264,7 @@ jobs:
           name: GridBotChuck-${{ steps.version.outputs.VERSION }}-windows-exe
       
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: GridBot Chuck v${{ steps.version.outputs.VERSION }}
           draft: false
