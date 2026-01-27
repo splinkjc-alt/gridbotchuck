@@ -55,6 +55,18 @@ async def main():
         buy_percent = position_config.get("buy_percent_of_total", 20.0)
         min_reserve = position_config.get("min_reserve_percent", 10.0)
 
+        # Safety parameters - protect against holding losers
+        stop_loss = 7.0  # Exit if down 7%
+        take_profit = 5.0  # Exit if up 5%
+        max_hold = 6.0  # Exit after 6 hours max
+
+        logger.info("=" * 60)
+        logger.info("SAFETY FEATURES ENABLED:")
+        logger.info(f"  Stop-Loss: -{stop_loss}%")
+        logger.info(f"  Take-Profit: +{take_profit}%")
+        logger.info(f"  Max Hold Time: {max_hold} hours")
+        logger.info("=" * 60)
+
         # Create strategy
         strategy = EMACrossoverStrategy(
             config_manager=config_manager,
@@ -64,6 +76,10 @@ async def main():
             max_positions=3,
             position_size_percent=buy_percent,
             min_reserve_percent=min_reserve,
+            # Safety parameters
+            stop_loss_pct=stop_loss,
+            take_profit_pct=take_profit,
+            max_hold_hours=max_hold,
         )
 
         # Run strategy

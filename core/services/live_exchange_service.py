@@ -71,7 +71,9 @@ class LiveExchangeService(ExchangeInterface):
                 self._enable_sandbox_mode(exchange)
             return exchange
         except AttributeError:
-            raise UnsupportedExchangeError(f"The exchange '{self.exchange_name}' is not supported.") from None
+            raise UnsupportedExchangeError(
+                f"The exchange '{self.exchange_name}' is not supported."
+            ) from None
 
     # ...existing code...
     def _enable_sandbox_mode(self, exchange) -> None:
@@ -80,13 +82,17 @@ class LiveExchangeService(ExchangeInterface):
         elif self.exchange_name == "kraken":
             # Kraken has no spot sandbox - use live API for paper trading
             # Paper trading is simulated locally, not on exchange
-            self.logger.info("Kraken does not have a spot sandbox. Using live API for price data only.")
+            self.logger.info(
+                "Kraken does not have a spot sandbox. Using live API for price data only."
+            )
         elif self.exchange_name == "bitmex":
             exchange.urls["api"] = "https://testnet.bitmex.com"
         elif self.exchange_name == "bybit":
             exchange.set_sandbox_mode(True)
         else:
-            self.logger.warning(f"No sandbox mode available for {self.exchange_name}. Running in live mode.")
+            self.logger.warning(
+                f"No sandbox mode available for {self.exchange_name}. Running in live mode."
+            )
 
     # ...existing code...
 
@@ -104,7 +110,9 @@ class LiveExchangeService(ExchangeInterface):
             try:
                 ticker = await self.exchange.watch_ticker(pair)
                 current_price: float = ticker["last"]
-                self.logger.info(f"Connected to WebSocket for {pair} ticker current price: {current_price}")
+                self.logger.info(
+                    f"Connected to WebSocket for {pair} ticker current price: {current_price}"
+                )
 
                 if not self.connection_active:
                     break
@@ -122,7 +130,9 @@ class LiveExchangeService(ExchangeInterface):
                 )
 
                 if retry_count >= max_retries:
-                    self.logger.error("Max retries reached. Stopping WebSocket connection.")
+                    self.logger.error(
+                        "Max retries reached. Stopping WebSocket connection."
+                    )
                     self.connection_active = False
                     break
 
@@ -144,7 +154,10 @@ class LiveExchangeService(ExchangeInterface):
                         await self.exchange.close()
 
                     except Exception as e:
-                        self.logger.error(f"Error while closing WebSocket connection: {e}", exc_info=True)
+                        self.logger.error(
+                            f"Error while closing WebSocket connection: {e}",
+                            exc_info=True,
+                        )
 
     async def listen_to_ticker_updates(
         self,
@@ -174,6 +187,16 @@ class LiveExchangeService(ExchangeInterface):
         except BaseError as e:
             raise DataFetchError(f"Error fetching current price: {e!s}") from e
 
+    async def fetch_ticker(self, pair: str) -> dict:
+        """Fetch full ticker data for a trading pair."""
+        try:
+            ticker = await self.exchange.fetch_ticker(pair)
+            return ticker
+
+        except BaseError as e:
+            self.logger.error(f"Error fetching ticker for {pair}: {e}")
+            raise DataFetchError(f"Error fetching ticker: {e!s}") from e
+
     async def place_order(
         self,
         pair: str,
@@ -183,11 +206,15 @@ class LiveExchangeService(ExchangeInterface):
         price: float | None = None,
     ) -> dict[str, str | float]:
         try:
-            order = await self.exchange.create_order(pair, order_type, order_side, amount, price)
+            order = await self.exchange.create_order(
+                pair, order_type, order_side, amount, price
+            )
             return order
 
         except NetworkError as e:
-            raise DataFetchError(f"Network issue occurred while placing order: {e!s}") from e
+            raise DataFetchError(
+                f"Network issue occurred while placing order: {e!s}"
+            ) from e
 
         except BaseError as e:
             raise DataFetchError(f"Error placing order: {e!s}") from e
@@ -204,7 +231,9 @@ class LiveExchangeService(ExchangeInterface):
             return await self.exchange.fetch_order(order_id, pair)
 
         except NetworkError as e:
-            raise DataFetchError(f"Network issue occurred while fetching order status: {e!s}") from e
+            raise DataFetchError(
+                f"Network issue occurred while fetching order status: {e!s}"
+            ) from e
 
         except BaseError as e:
             raise DataFetchError(f"Exchange-specific error occurred: {e!s}") from e
@@ -225,7 +254,9 @@ class LiveExchangeService(ExchangeInterface):
                 self.logger.info(f"Order {order_id} successfully canceled.")
                 return cancellation_result
             else:
-                self.logger.warning(f"Order {order_id} cancellation status: {cancellation_result['status']}")
+                self.logger.warning(
+                    f"Order {order_id} cancellation status: {cancellation_result['status']}"
+                )
                 return cancellation_result
 
         except OrderNotFound:
@@ -234,13 +265,19 @@ class LiveExchangeService(ExchangeInterface):
             ) from None
 
         except NetworkError as e:
-            raise OrderCancellationError(f"Network error while canceling order {order_id}: {e!s}") from e
+            raise OrderCancellationError(
+                f"Network error while canceling order {order_id}: {e!s}"
+            ) from e
 
         except BaseError as e:
-            raise OrderCancellationError(f"Exchange error while canceling order {order_id}: {e!s}") from e
+            raise OrderCancellationError(
+                f"Exchange error while canceling order {order_id}: {e!s}"
+            ) from e
 
         except Exception as e:
-            raise OrderCancellationError(f"Unexpected error while canceling order {order_id}: {e!s}") from e
+            raise OrderCancellationError(
+                f"Unexpected error while canceling order {order_id}: {e!s}"
+            ) from e
 
     async def get_exchange_status(self) -> dict:
         try:
@@ -254,7 +291,10 @@ class LiveExchangeService(ExchangeInterface):
             }
 
         except AttributeError:
-            return {"status": "unsupported", "info": "fetch_status not supported by this exchange."}
+            return {
+                "status": "unsupported",
+                "info": "fetch_status not supported by this exchange.",
+            }
 
         except Exception as e:
             return {"status": "error", "info": f"Failed to fetch exchange status: {e}"}
@@ -266,7 +306,9 @@ class LiveExchangeService(ExchangeInterface):
         start_date: str,
         end_date: str,
     ) -> pd.DataFrame:
-        raise NotImplementedError("fetch_ohlcv is not used in live or paper trading mode.")
+        raise NotImplementedError(
+            "fetch_ohlcv is not used in live or paper trading mode."
+        )
 
     async def fetch_ohlcv_simple(
         self,
@@ -286,7 +328,9 @@ class LiveExchangeService(ExchangeInterface):
                 self.logger.warning(f"No OHLCV data returned for {pair}")
                 return pd.DataFrame()
 
-            df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
+            df = pd.DataFrame(
+                ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+            )
 
             # Convert timestamp to datetime
             df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
@@ -313,10 +357,16 @@ class LiveExchangeService(ExchangeInterface):
             pairs = []
             for symbol, market in self.exchange.markets.items():
                 # Filter for spot markets with the specified quote currency
-                if market.get("quote") == quote_currency and market.get("spot", False) and market.get("active", True):
+                if (
+                    market.get("quote") == quote_currency
+                    and market.get("spot", False)
+                    and market.get("active", True)
+                ):
                     pairs.append(symbol)
 
-            self.logger.info(f"Found {len(pairs)} {quote_currency} pairs on {self.exchange_name}")
+            self.logger.info(
+                f"Found {len(pairs)} {quote_currency} pairs on {self.exchange_name}"
+            )
             return sorted(pairs)
 
         except Exception as e:
@@ -354,7 +404,9 @@ class LiveExchangeService(ExchangeInterface):
             # Sort by price
             filtered_pairs.sort(key=lambda x: x[1])
 
-            self.logger.info(f"Found {len(filtered_pairs)} pairs in ${min_price}-${max_price} range")
+            self.logger.info(
+                f"Found {len(filtered_pairs)} pairs in ${min_price}-${max_price} range"
+            )
             return filtered_pairs
 
         except Exception as e:
@@ -487,7 +539,9 @@ class LiveExchangeService(ExchangeInterface):
                             "pair": symbol,
                             "price": price,
                             "change_pct": change_pct,
-                            "volume": ticker.get("quoteVolume") or ticker.get("baseVolume") or 0,
+                            "volume": ticker.get("quoteVolume")
+                            or ticker.get("baseVolume")
+                            or 0,
                             "high_24h": ticker.get("high"),
                             "low_24h": ticker.get("low"),
                         }
@@ -499,10 +553,14 @@ class LiveExchangeService(ExchangeInterface):
             # Take top N
             top_gainers = gainers[:limit]
 
-            self.logger.info(f"Found {len(gainers)} positive gainers in price range, returning top {len(top_gainers)}")
+            self.logger.info(
+                f"Found {len(gainers)} positive gainers in price range, returning top {len(top_gainers)}"
+            )
 
             for g in top_gainers:
-                self.logger.info(f"  {g['pair']}: ${g['price']:.4f} (+{g['change_pct']:.2f}%)")
+                self.logger.info(
+                    f"  {g['pair']}: ${g['price']:.4f} (+{g['change_pct']:.2f}%)"
+                )
 
             return top_gainers
 

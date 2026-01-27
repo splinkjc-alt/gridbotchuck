@@ -42,18 +42,30 @@ class ActivityMonitor:
         # Configuration
         self.enabled = config.get("enabled", True)
         self.check_interval_minutes = config.get("check_interval_minutes", 15)
-        self.min_volume_usd = config.get("min_volume_24h_usd", 10000)  # Minimum 24h volume
-        self.min_price_change_pct = config.get("min_price_change_pct", 0.5)  # Minimum % movement
+        self.min_volume_usd = config.get(
+            "min_volume_24h_usd", 10000
+        )  # Minimum 24h volume
+        self.min_price_change_pct = config.get(
+            "min_price_change_pct", 0.5
+        )  # Minimum % movement
         self.stale_periods_before_switch = config.get("stale_periods_before_switch", 3)
         self.cooldown_minutes = config.get("cooldown_after_switch_minutes", 60)
 
         # Stagnation Exit Configuration (NEW)
         stagnation_config = config.get("stagnation_exit", {})
         self.stagnation_exit_enabled = stagnation_config.get("enabled", False)
-        self.force_exit_after_minutes = stagnation_config.get("force_exit_after_minutes", 60)
-        self.min_movement_for_active = stagnation_config.get("min_movement_percent", 0.3)
-        self.exit_at_loss = stagnation_config.get("exit_at_loss", True)  # Exit even if at small loss
-        self.max_loss_to_exit_pct = stagnation_config.get("max_loss_percent", 2.0)  # Max loss to accept when force exiting
+        self.force_exit_after_minutes = stagnation_config.get(
+            "force_exit_after_minutes", 60
+        )
+        self.min_movement_for_active = stagnation_config.get(
+            "min_movement_percent", 0.3
+        )
+        self.exit_at_loss = stagnation_config.get(
+            "exit_at_loss", True
+        )  # Exit even if at small loss
+        self.max_loss_to_exit_pct = stagnation_config.get(
+            "max_loss_percent", 2.0
+        )  # Max loss to accept when force exiting
 
         # State
         self.current_pair = None
@@ -63,7 +75,9 @@ class ActivityMonitor:
         self._task = None
         self.price_history = []  # Track recent prices
         self.stagnation_start_time = None  # Track when stagnation started
-        self.last_significant_movement_time = None  # Track last time price moved significantly
+        self.last_significant_movement_time = (
+            None  # Track last time price moved significantly
+        )
 
     async def start(self, trading_pair: str):
         """Start monitoring the given trading pair."""
@@ -115,7 +129,9 @@ class ActivityMonitor:
 
                 # Check if we're in cooldown after a switch
                 if self._in_cooldown():
-                    self.logger.info(f"[STATUS] Trading {self.current_pair} (in cooldown after switch)")
+                    self.logger.info(
+                        f"[STATUS] Trading {self.current_pair} (in cooldown after switch)"
+                    )
                     continue
 
                 # Check activity
@@ -125,7 +141,9 @@ class ActivityMonitor:
                     self.stale_count = 0
                     self.stagnation_start_time = None
                     self.last_significant_movement_time = datetime.now(UTC)
-                    self.logger.info(f"[STATUS] {self.current_pair} is ACTIVE - Continuing to trade")
+                    self.logger.info(
+                        f"[STATUS] {self.current_pair} is ACTIVE - Continuing to trade"
+                    )
                 else:
                     self.stale_count += 1
 
@@ -133,7 +151,9 @@ class ActivityMonitor:
                     if self.stagnation_start_time is None:
                         self.stagnation_start_time = datetime.now(UTC)
 
-                    stagnation_minutes = (datetime.now(UTC) - self.stagnation_start_time).total_seconds() / 60
+                    stagnation_minutes = (
+                        datetime.now(UTC) - self.stagnation_start_time
+                    ).total_seconds() / 60
 
                     self.logger.warning(
                         f"[STATUS] {self.current_pair} is STALE "
@@ -142,7 +162,10 @@ class ActivityMonitor:
                     )
 
                     # Check for force exit due to stagnation
-                    if self.stagnation_exit_enabled and stagnation_minutes >= self.force_exit_after_minutes:
+                    if (
+                        self.stagnation_exit_enabled
+                        and stagnation_minutes >= self.force_exit_after_minutes
+                    ):
                         await self._force_exit_stagnant_position()
                         continue
 
@@ -176,7 +199,7 @@ class ActivityMonitor:
                     "exit_at_loss": self.exit_at_loss,
                     "max_loss_percent": self.max_loss_to_exit_pct,
                     "timestamp": datetime.now(UTC).isoformat(),
-                }
+                },
             )
 
             self.logger.info(f"🔔 Force exit event published for {self.current_pair}")
@@ -198,7 +221,9 @@ class ActivityMonitor:
         """
         try:
             # Get current ticker
-            ticker = await self.exchange_service.exchange.fetch_ticker(self.current_pair)
+            ticker = await self.exchange_service.exchange.fetch_ticker(
+                self.current_pair
+            )
 
             if not ticker:
                 self.logger.warning(f"Could not fetch ticker for {self.current_pair}")
@@ -207,7 +232,9 @@ class ActivityMonitor:
             # Check 24h volume
             volume_usd = ticker.get("quoteVolume", 0) or 0
             if volume_usd < self.min_volume_usd:
-                self.logger.info(f"Low volume: ${volume_usd:,.0f} < ${self.min_volume_usd:,.0f}")
+                self.logger.info(
+                    f"Low volume: ${volume_usd:,.0f} < ${self.min_volume_usd:,.0f}"
+                )
                 return False
 
             # Check price movement
@@ -223,13 +250,17 @@ class ActivityMonitor:
                     if min_price > 0:
                         price_range_pct = ((max_price - min_price) / min_price) * 100
                         if price_range_pct < self.min_price_change_pct:
-                            self.logger.info(f"Low volatility: {price_range_pct:.2f}% < {self.min_price_change_pct}%")
+                            self.logger.info(
+                                f"Low volatility: {price_range_pct:.2f}% < {self.min_price_change_pct}%"
+                            )
                             return False
 
             # Check 24h change percentage
             change_pct = abs(ticker.get("percentage", 0) or 0)
             if change_pct < self.min_price_change_pct:
-                self.logger.info(f"Low 24h change: {change_pct:.2f}% < {self.min_price_change_pct}%")
+                self.logger.info(
+                    f"Low 24h change: {change_pct:.2f}% < {self.min_price_change_pct}%"
+                )
                 return False
 
             return True
@@ -314,7 +345,9 @@ class ActivityMonitor:
     async def _log_status_update(self):
         """Log current trading status with pair info."""
         try:
-            ticker = await self.exchange_service.exchange.fetch_ticker(self.current_pair)
+            ticker = await self.exchange_service.exchange.fetch_ticker(
+                self.current_pair
+            )
             if ticker:
                 price = ticker.get("last") or ticker.get("close", 0)
                 volume = ticker.get("quoteVolume", 0) or 0
@@ -324,7 +357,9 @@ class ActivityMonitor:
                     f"24h Vol: ${volume:,.0f} | 24h Change: {change:+.2f}%"
                 )
             else:
-                self.logger.info(f"[STATUS] TRADING: {self.current_pair} (waiting for ticker data)")
+                self.logger.info(
+                    f"[STATUS] TRADING: {self.current_pair} (waiting for ticker data)"
+                )
         except Exception:
             self.logger.info(f"[STATUS] TRADING: {self.current_pair}")
 

@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from config.config_manager import ConfigManager
@@ -24,14 +25,17 @@ from strategies.ema_crossover_strategy import EMACrossoverStrategy
 
 
 async def main():
-    # Setup logging
+    # Setup logging with absolute path
+    log_dir = Path(__file__).parent / "logs"
+    log_dir.mkdir(exist_ok=True)
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
             logging.StreamHandler(),
-            logging.FileHandler("logs/crosskiller_error.log"),
-        ]
+            logging.FileHandler(log_dir / "crosskiller_error.log"),
+        ],
     )
     logger = logging.getLogger("EMABot")
 
@@ -54,9 +58,9 @@ async def main():
     logger.info(f"Max Positions: {max_positions}")
 
     # Safety parameters
-    stop_loss = 7.0      # Exit if down 7%
-    take_profit = 5.0    # Exit if up 5%
-    max_hold = 6.0       # Exit after 6 hours max
+    stop_loss = 7.0  # Exit if down 7%
+    take_profit = 5.0  # Exit if up 5%
+    max_hold = 6.0  # Exit after 6 hours max
 
     logger.info("=" * 60)
     logger.info("SAFETY FEATURES ENABLED:")

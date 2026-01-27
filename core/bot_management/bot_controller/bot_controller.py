@@ -61,7 +61,9 @@ class BotController:
                 break
 
             except Exception as e:
-                self.logger.error(f"Unexpected error in command listener: {e}", exc_info=True)
+                self.logger.error(
+                    f"Unexpected error in command listener: {e}", exc_info=True
+                )
                 await asyncio.sleep(5)  # Brief pause before retrying
 
     async def _handle_command(self, command: str):
@@ -119,7 +121,16 @@ class BotController:
         formatted_orders = self.bot.strategy.get_formatted_orders()
         orders_table = tabulate(
             formatted_orders,
-            headers=["Order Side", "Type", "Status", "Price", "Quantity", "Timestamp", "Grid Level", "Slippage"],
+            headers=[
+                "Order Side",
+                "Type",
+                "Status",
+                "Price",
+                "Quantity",
+                "Timestamp",
+                "Grid Level",
+                "Slippage",
+            ],
             tablefmt="pipe",
         )
         self.logger.info("\nFormatted Orders:\n" + orders_table)
@@ -149,7 +160,9 @@ class BotController:
             await self.event_bus.publish(Events.START_BOT, "Resuming bot after pause")
 
         except ValueError:
-            raise CommandParsingError("Invalid pause duration. Please specify in seconds.") from None
+            raise CommandParsingError(
+                "Invalid pause duration. Please specify in seconds."
+            ) from None
 
         except Exception as e:
             raise StrategyControlError(f"Error during pause operation: {e}") from e

@@ -202,7 +202,11 @@ class ProfitRotationManager:
 
             # Calculate P&L
             pnl = total_value - self.current_position.entry_value
-            pnl_percent = (pnl / self.current_position.entry_value * 100) if self.current_position.entry_value > 0 else 0
+            pnl_percent = (
+                (pnl / self.current_position.entry_value * 100)
+                if self.current_position.entry_value > 0
+                else 0
+            )
 
             # Update snapshot
             self.current_position.current_value = total_value
@@ -229,12 +233,17 @@ class ProfitRotationManager:
 
         # Check rotation limits
         if self.rotation_count_today >= self.max_rotations_per_day:
-            self.logger.debug(f"Max rotations per day reached ({self.max_rotations_per_day})")
+            self.logger.debug(
+                f"Max rotations per day reached ({self.max_rotations_per_day})"
+            )
             return False
 
         # Check profit target
         if self.use_percent_target:
-            return self.current_position.unrealized_pnl_percent >= self.profit_target_percent
+            return (
+                self.current_position.unrealized_pnl_percent
+                >= self.profit_target_percent
+            )
         else:
             return self.current_position.unrealized_pnl >= self.profit_target_usd
 
@@ -251,7 +260,7 @@ class ProfitRotationManager:
             # Record exit
             self.recently_exited_pairs[self.current_position.pair] = datetime.now()
             profit_realized = exit_value - self.current_position.entry_value
-            profit_percent = (profit_realized / self.current_position.entry_value * 100)
+            profit_percent = profit_realized / self.current_position.entry_value * 100
 
             self.logger.info(
                 f"✅ Position closed: {self.current_position.pair} "
@@ -296,10 +305,14 @@ class ProfitRotationManager:
                         },
                     )
                 else:
-                    self.logger.warning("No suitable pair found for re-entry. Staying in cash.")
+                    self.logger.warning(
+                        "No suitable pair found for re-entry. Staying in cash."
+                    )
                     self.current_position = None
             else:
-                self.logger.info("Auto-enter disabled. Position closed, staying in cash.")
+                self.logger.info(
+                    "Auto-enter disabled. Position closed, staying in cash."
+                )
                 self.current_position = None
 
         except Exception as e:
@@ -340,7 +353,9 @@ class ProfitRotationManager:
                     amount=crypto_balance,
                     price=current_price,
                 )
-                self.logger.info(f"Market sell executed: {crypto_balance} {base} @ ${current_price:.4f}")
+                self.logger.info(
+                    f"Market sell executed: {crypto_balance} {base} @ ${current_price:.4f}"
+                )
 
                 # Wait for order to fill
                 await asyncio.sleep(2)
@@ -360,7 +375,9 @@ class ProfitRotationManager:
         Returns (pair, score) or (None, 0) if no suitable pair found.
         """
         try:
-            self.logger.info(f"Scanning market for top {self.top_pairs_to_scan} opportunities...")
+            self.logger.info(
+                f"Scanning market for top {self.top_pairs_to_scan} opportunities..."
+            )
 
             # Run market analysis
             results = await self.market_analyzer.find_best_trading_pairs(
@@ -378,17 +395,25 @@ class ProfitRotationManager:
             valid_candidates = []
             cutoff_time = datetime.now() - timedelta(minutes=self.cooldown_minutes)
 
-            for analysis in results[:self.top_pairs_to_scan]:
+            for analysis in results[: self.top_pairs_to_scan]:
                 # Skip if score too low
                 if analysis.score < self.min_score_to_enter:
-                    self.logger.debug(f"Skipping {analysis.pair}: score {analysis.score:.1f} too low")
+                    self.logger.debug(
+                        f"Skipping {analysis.pair}: score {analysis.score:.1f} too low"
+                    )
                     continue
 
                 # Skip if recently exited (cooldown)
                 exit_time = self.recently_exited_pairs.get(analysis.pair)
                 if exit_time and exit_time > cutoff_time:
-                    remaining = (cutoff_time + timedelta(minutes=self.cooldown_minutes) - datetime.now()).seconds // 60
-                    self.logger.debug(f"Skipping {analysis.pair}: cooldown active ({remaining}min remaining)")
+                    remaining = (
+                        cutoff_time
+                        + timedelta(minutes=self.cooldown_minutes)
+                        - datetime.now()
+                    ).seconds // 60
+                    self.logger.debug(
+                        f"Skipping {analysis.pair}: cooldown active ({remaining}min remaining)"
+                    )
                     continue
 
                 valid_candidates.append((analysis.pair, analysis.score))
@@ -451,9 +476,17 @@ class ProfitRotationManager:
                     "pnl": self.current_position.unrealized_pnl,
                     "pnl_percent": self.current_position.unrealized_pnl_percent,
                     "progress_to_target": (
-                        (self.current_position.unrealized_pnl_percent / self.profit_target_percent * 100)
+                        (
+                            self.current_position.unrealized_pnl_percent
+                            / self.profit_target_percent
+                            * 100
+                        )
                         if self.use_percent_target
-                        else (self.current_position.unrealized_pnl / self.profit_target_usd * 100)
+                        else (
+                            self.current_position.unrealized_pnl
+                            / self.profit_target_usd
+                            * 100
+                        )
                     ),
                 }
                 if self.current_position

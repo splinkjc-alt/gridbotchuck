@@ -23,9 +23,9 @@ sealed class Result<out T> {
 class BotRepository @Inject constructor(
     private val apiService: GridBotApiService
 ) {
-    
+
     // ============== Connection ==============
-    
+
     suspend fun testConnection(): Result<HealthResponse> {
         return try {
             val response = apiService.checkHealth()
@@ -38,16 +38,16 @@ class BotRepository @Inject constructor(
             Result.Error("Cannot connect to bot: ${e.message}", e)
         }
     }
-    
+
     // ============== Bot Status Polling ==============
-    
+
     fun pollBotStatus(intervalMs: Long = 2000): Flow<Result<BotStatusResponse>> = flow {
         while (true) {
             emit(getBotStatus())
             delay(intervalMs)
         }
     }.flowOn(Dispatchers.IO)
-    
+
     suspend fun getBotStatus(): Result<BotStatusResponse> {
         return try {
             val response = apiService.getBotStatus()
@@ -60,16 +60,16 @@ class BotRepository @Inject constructor(
             Result.Error("Error getting status: ${e.message}", e)
         }
     }
-    
+
     // ============== P&L Polling ==============
-    
+
     fun pollPnL(intervalMs: Long = 5000): Flow<Result<PnLResponse>> = flow {
         while (true) {
             emit(getPnL())
             delay(intervalMs)
         }
     }.flowOn(Dispatchers.IO)
-    
+
     suspend fun getPnL(): Result<PnLResponse> {
         return try {
             val response = apiService.getPnL()
@@ -82,9 +82,9 @@ class BotRepository @Inject constructor(
             Result.Error("Error getting P&L: ${e.message}", e)
         }
     }
-    
+
     // ============== Bot Control ==============
-    
+
     suspend fun startBot(): Result<ActionResponse> {
         return try {
             val response = apiService.startBot()
@@ -97,7 +97,7 @@ class BotRepository @Inject constructor(
             Result.Error("Error starting bot: ${e.message}", e)
         }
     }
-    
+
     suspend fun stopBot(): Result<ActionResponse> {
         return try {
             val response = apiService.stopBot()
@@ -110,7 +110,7 @@ class BotRepository @Inject constructor(
             Result.Error("Error stopping bot: ${e.message}", e)
         }
     }
-    
+
     suspend fun pauseBot(): Result<ActionResponse> {
         return try {
             val response = apiService.pauseBot()
@@ -123,7 +123,7 @@ class BotRepository @Inject constructor(
             Result.Error("Error pausing bot: ${e.message}", e)
         }
     }
-    
+
     suspend fun resumeBot(): Result<ActionResponse> {
         return try {
             val response = apiService.resumeBot()
@@ -136,9 +136,9 @@ class BotRepository @Inject constructor(
             Result.Error("Error resuming bot: ${e.message}", e)
         }
     }
-    
+
     // ============== Orders ==============
-    
+
     suspend fun getOrders(): Result<OrdersResponse> {
         return try {
             val response = apiService.getOrders()
@@ -151,16 +151,16 @@ class BotRepository @Inject constructor(
             Result.Error("Error getting orders: ${e.message}", e)
         }
     }
-    
+
     // ============== MTF Analysis ==============
-    
+
     fun pollMtfStatus(intervalMs: Long = 30000): Flow<Result<MtfResponse>> = flow {
         while (true) {
             emit(getMtfStatus())
             delay(intervalMs)
         }
     }.flowOn(Dispatchers.IO)
-    
+
     suspend fun getMtfStatus(): Result<MtfResponse> {
         return try {
             val response = apiService.getMtfStatus()
@@ -173,9 +173,9 @@ class BotRepository @Inject constructor(
             Result.Error("Error getting MTF status: ${e.message}", e)
         }
     }
-    
+
     // ============== Market Scanner ==============
-    
+
     suspend fun scanMarkets(request: ScanRequest = ScanRequest()): Result<ScanResponse> {
         return try {
             val response = apiService.scanMarkets(request)
@@ -188,7 +188,7 @@ class BotRepository @Inject constructor(
             Result.Error("Error scanning markets: ${e.message}", e)
         }
     }
-    
+
     suspend fun selectPair(pair: String): Result<ActionResponse> {
         return try {
             val response = apiService.selectPair(SelectPairRequest(pair))

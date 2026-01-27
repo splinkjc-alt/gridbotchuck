@@ -87,10 +87,14 @@ class PairPerformanceMonitor:
             volume_24h = sum(candle[5] for candle in ohlcv_1h[-24:])
 
             # Determine if pair is stuck
-            is_stuck = vol_15m < self.MIN_VOLATILITY_15M or vol_1h < self.MIN_VOLATILITY_1H
+            is_stuck = (
+                vol_15m < self.MIN_VOLATILITY_15M or vol_1h < self.MIN_VOLATILITY_1H
+            )
 
             # Calculate performance score (higher is better)
-            performance_score = self._calculate_performance_score(vol_15m, vol_1h, volume_24h, abs(price_change_1h))
+            performance_score = self._calculate_performance_score(
+                vol_15m, vol_1h, volume_24h, abs(price_change_1h)
+            )
 
             metrics = PairPerformance(
                 pair=pair,
@@ -202,7 +206,9 @@ class PairPerformanceMonitor:
 
         return total_score
 
-    async def find_better_pair(self, current_pair: str, candidate_pairs: list[str]) -> str | None:
+    async def find_better_pair(
+        self, current_pair: str, candidate_pairs: list[str]
+    ) -> str | None:
         """
         Find a better performing pair than the current one.
 
@@ -221,7 +227,9 @@ class PairPerformanceMonitor:
         best_pair = None
         best_score = current_metrics.performance_score
 
-        self.logger.info(f"Searching for better alternative to {current_pair} (score: {best_score:.1f})")
+        self.logger.info(
+            f"Searching for better alternative to {current_pair} (score: {best_score:.1f})"
+        )
 
         for pair in candidate_pairs:
             if pair == current_pair:
@@ -229,7 +237,9 @@ class PairPerformanceMonitor:
 
             metrics = await self.analyze_pair(pair)
 
-            if metrics and metrics.performance_score > best_score * 1.3:  # Must be 30% better
+            if (
+                metrics and metrics.performance_score > best_score * 1.3
+            ):  # Must be 30% better
                 best_pair = pair
                 best_score = metrics.performance_score
 
@@ -238,13 +248,19 @@ class PairPerformanceMonitor:
 
         if best_pair:
             improvement = ((best_score / current_metrics.performance_score) - 1) * 100
-            self.logger.info(f"✨ Found better pair: {best_pair} (score: {best_score:.1f}, +{improvement:.0f}% better)")
+            self.logger.info(
+                f"✨ Found better pair: {best_pair} (score: {best_score:.1f}, +{improvement:.0f}% better)"
+            )
         else:
-            self.logger.info(f"No significantly better alternative found for {current_pair}")
+            self.logger.info(
+                f"No significantly better alternative found for {current_pair}"
+            )
 
         return best_pair
 
-    async def should_replace_pair(self, pair: str, last_trade_time: datetime | None = None, trades_count: int = 0) -> bool:
+    async def should_replace_pair(
+        self, pair: str, last_trade_time: datetime | None = None, trades_count: int = 0
+    ) -> bool:
         """
         Determine if a pair should be replaced due to poor performance.
 
@@ -270,12 +286,16 @@ class PairPerformanceMonitor:
         if last_trade_time:
             time_since_trade = datetime.now() - last_trade_time
             if time_since_trade > timedelta(hours=2):
-                self.logger.warning(f"⚠️ {pair} has no trades for {time_since_trade.total_seconds()/3600:.1f} hours")
+                self.logger.warning(
+                    f"⚠️ {pair} has no trades for {time_since_trade.total_seconds()/3600:.1f} hours"
+                )
                 return True
 
         # Check trade frequency
         if trades_count < self.MIN_TRADES_PER_HOUR:
-            self.logger.warning(f"⚠️ {pair} has only {trades_count} trades/hour (minimum: {self.MIN_TRADES_PER_HOUR})")
+            self.logger.warning(
+                f"⚠️ {pair} has only {trades_count} trades/hour (minimum: {self.MIN_TRADES_PER_HOUR})"
+            )
             return True
 
         return False
@@ -290,7 +310,9 @@ class PairPerformanceMonitor:
         Returns:
             List of top performing pairs
         """
-        sorted_pairs = sorted(self.pair_metrics.values(), key=lambda x: x.performance_score, reverse=True)
+        sorted_pairs = sorted(
+            self.pair_metrics.values(), key=lambda x: x.performance_score, reverse=True
+        )
 
         return sorted_pairs[:n]
 

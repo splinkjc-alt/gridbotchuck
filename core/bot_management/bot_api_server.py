@@ -70,10 +70,16 @@ class BotAPIServer:
         # Market Scanner
         self.app.router.add_get("/api/market/pairs", self.handle_get_pairs)
         self.app.router.add_post("/api/market/scan", self.handle_market_scan)
-        self.app.router.add_get("/api/market/scan/results", self.handle_get_scan_results)
+        self.app.router.add_get(
+            "/api/market/scan/results", self.handle_get_scan_results
+        )
         self.app.router.add_post("/api/market/select", self.handle_select_pair)
-        self.app.router.add_get("/api/market/scanner-config", self.handle_get_scanner_config)
-        self.app.router.add_post("/api/market/scanner-config", self.handle_update_scanner_config)
+        self.app.router.add_get(
+            "/api/market/scanner-config", self.handle_get_scanner_config
+        )
+        self.app.router.add_post(
+            "/api/market/scanner-config", self.handle_update_scanner_config
+        )
 
         # Multi-pair trading
         self.app.router.add_get("/api/multi-pair/status", self.handle_multi_pair_status)
@@ -86,14 +92,28 @@ class BotAPIServer:
 
         # Chuck AI Features - Smart Scan & Auto-Portfolio
         self.app.router.add_post("/api/chuck/smart-scan", self.handle_chuck_smart_scan)
-        self.app.router.add_get("/api/chuck/smart-scan/results", self.handle_chuck_scan_results)
-        self.app.router.add_get("/api/chuck/portfolio/status", self.handle_chuck_portfolio_status)
-        self.app.router.add_post("/api/chuck/portfolio/start", self.handle_chuck_portfolio_start)
-        self.app.router.add_post("/api/chuck/portfolio/stop", self.handle_chuck_portfolio_stop)
-        self.app.router.add_post("/api/chuck/entry-signal", self.handle_chuck_entry_signal)
+        self.app.router.add_get(
+            "/api/chuck/smart-scan/results", self.handle_chuck_scan_results
+        )
+        self.app.router.add_get(
+            "/api/chuck/portfolio/status", self.handle_chuck_portfolio_status
+        )
+        self.app.router.add_post(
+            "/api/chuck/portfolio/start", self.handle_chuck_portfolio_start
+        )
+        self.app.router.add_post(
+            "/api/chuck/portfolio/stop", self.handle_chuck_portfolio_stop
+        )
+        self.app.router.add_post(
+            "/api/chuck/entry-signal", self.handle_chuck_entry_signal
+        )
 
         # Get absolute path to dashboard folder
-        dashboard_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "web", "dashboard")
+        dashboard_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "web",
+            "dashboard",
+        )
 
         # Handle root path - serve index.html
         self.app.router.add_get("/", self.handle_dashboard)
@@ -117,7 +137,9 @@ class BotAPIServer:
 
         # Serve static files (dashboard) - use /static prefix to avoid conflict
         if os.path.exists(dashboard_path):
-            self.app.router.add_static("/static", path=dashboard_path, name="dashboard_static")
+            self.app.router.add_static(
+                "/static", path=dashboard_path, name="dashboard_static"
+            )
             # Also serve CSS/JS directly from root for simpler paths
             self.app.router.add_get("/styles.css", self.handle_static_file)
             self.app.router.add_get("/script.js", self.handle_static_file)
@@ -133,7 +155,9 @@ class BotAPIServer:
 
     async def handle_health(self, request):
         """Health check endpoint."""
-        return web.json_response({"status": "ok", "timestamp": datetime.now(UTC).isoformat()})
+        return web.json_response(
+            {"status": "ok", "timestamp": datetime.now(UTC).isoformat()}
+        )
 
     async def handle_bot_start(self, request):
         """Start the bot."""
@@ -149,7 +173,11 @@ class BotAPIServer:
             self.logger.info("Bot start requested via API")
 
             return web.json_response(
-                {"success": True, "message": "Bot starting...", "timestamp": datetime.now(UTC).isoformat()}
+                {
+                    "success": True,
+                    "message": "Bot starting...",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                }
             )
         except Exception as e:
             self.logger.error(f"Error starting bot: {e}")
@@ -169,7 +197,11 @@ class BotAPIServer:
             self.logger.info("Bot stop requested via API")
 
             return web.json_response(
-                {"success": True, "message": "Bot stopping...", "timestamp": datetime.now(UTC).isoformat()}
+                {
+                    "success": True,
+                    "message": "Bot stopping...",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                }
             )
         except Exception as e:
             self.logger.error(f"Error stopping bot: {e}")
@@ -182,7 +214,11 @@ class BotAPIServer:
             self.logger.info("Bot pause requested via API")
 
             return web.json_response(
-                {"success": True, "message": "Bot pausing...", "timestamp": datetime.now(UTC).isoformat()}
+                {
+                    "success": True,
+                    "message": "Bot pausing...",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                }
             )
         except Exception as e:
             self.logger.error(f"Error pausing bot: {e}")
@@ -195,7 +231,11 @@ class BotAPIServer:
             self.logger.info("Bot resume requested via API")
 
             return web.json_response(
-                {"success": True, "message": "Bot resuming...", "timestamp": datetime.now(UTC).isoformat()}
+                {
+                    "success": True,
+                    "message": "Bot resuming...",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                }
             )
         except Exception as e:
             self.logger.error(f"Error resuming bot: {e}")
@@ -224,14 +264,20 @@ class BotAPIServer:
                 current_price = 0.0
                 if hasattr(self.bot, "exchange_service"):
                     try:
-                        current_price = await self.bot.exchange_service.get_current_price()
+                        current_price = (
+                            await self.bot.exchange_service.get_current_price()
+                        )
                     except Exception:
                         current_price = getattr(self.bot, "_last_price", 0.0)
 
                 status["balance"] = {
                     "fiat": balance_tracker.get_adjusted_fiat_balance(),
                     "crypto": balance_tracker.get_adjusted_crypto_balance(),
-                    "total_value": balance_tracker.get_total_balance_value(current_price) if current_price > 0 else 0.0,
+                    "total_value": balance_tracker.get_total_balance_value(
+                        current_price
+                    )
+                    if current_price > 0
+                    else 0.0,
                 }
 
             # Add grid info if available
@@ -264,7 +310,9 @@ class BotAPIServer:
             # Add order info if available
             if hasattr(self.bot, "order_manager"):
                 order_manager = self.bot.order_manager
-                orders = order_manager.orders if hasattr(order_manager, "orders") else []
+                orders = (
+                    order_manager.orders if hasattr(order_manager, "orders") else []
+                )
                 metrics["total_orders"] = len(orders)
                 metrics["open_orders"] = sum(1 for o in orders if not o.is_filled)
                 metrics["filled_orders"] = sum(1 for o in orders if o.is_filled)
@@ -286,17 +334,29 @@ class BotAPIServer:
 
             if hasattr(self.bot, "order_manager"):
                 order_manager = self.bot.order_manager
-                all_orders = order_manager.orders if hasattr(order_manager, "orders") else []
+                all_orders = (
+                    order_manager.orders if hasattr(order_manager, "orders") else []
+                )
 
                 for order in all_orders[:50]:  # Limit to last 50 orders
                     orders.append(
                         {
-                            "id": order.order_id if hasattr(order, "order_id") else "N/A",
-                            "side": str(order.side) if hasattr(order, "side") else "N/A",
+                            "id": order.order_id
+                            if hasattr(order, "order_id")
+                            else "N/A",
+                            "side": str(order.side)
+                            if hasattr(order, "side")
+                            else "N/A",
                             "price": order.price if hasattr(order, "price") else 0,
-                            "quantity": order.quantity if hasattr(order, "quantity") else 0,
-                            "status": order.status if hasattr(order, "status") else "N/A",
-                            "timestamp": str(order.timestamp) if hasattr(order, "timestamp") else "N/A",
+                            "quantity": order.quantity
+                            if hasattr(order, "quantity")
+                            else 0,
+                            "status": order.status
+                            if hasattr(order, "status")
+                            else "N/A",
+                            "timestamp": str(order.timestamp)
+                            if hasattr(order, "timestamp")
+                            else "N/A",
                         }
                     )
 
@@ -346,8 +406,16 @@ class BotAPIServer:
                 "stop_loss_enabled": None,  # Direct value
                 "exchange": ["name", "trading_mode"],  # Nested object
                 "pair": ["quote_currency", "base_currency"],  # Nested object
-                "trading_settings": ["period", "initial_capital"],  # Nested object for backtest
-                "grid_strategy": ["range", "num_grids", "spacing", "type"],  # Grid config
+                "trading_settings": [
+                    "period",
+                    "initial_capital",
+                ],  # Nested object for backtest
+                "grid_strategy": [
+                    "range",
+                    "num_grids",
+                    "spacing",
+                    "type",
+                ],  # Grid config
             }
 
             updated_fields = []
@@ -365,7 +433,10 @@ class BotAPIServer:
                         for subkey in value:
                             if subkey not in allowed_subkeys:
                                 return web.json_response(
-                                    {"success": False, "message": f"Cannot update {key}.{subkey}"},
+                                    {
+                                        "success": False,
+                                        "message": f"Cannot update {key}.{subkey}",
+                                    },
                                     status=400,
                                 )
                         self.logger.info(f"Updated config: {key} = {value}")
@@ -390,7 +461,11 @@ class BotAPIServer:
 
                     # Deep merge the updates
                     for key, value in data.items():
-                        if isinstance(value, dict) and key in config and isinstance(config[key], dict):
+                        if (
+                            isinstance(value, dict)
+                            and key in config
+                            and isinstance(config[key], dict)
+                        ):
                             config[key].update(value)
                         else:
                             config[key] = value
@@ -398,10 +473,16 @@ class BotAPIServer:
                     with open(config_path, "w") as f:
                         json.dump(config, f, indent=2)
 
-                    self.logger.info(f"Config file saved with updates: {updated_fields}")
+                    self.logger.info(
+                        f"Config file saved with updates: {updated_fields}"
+                    )
 
             return web.json_response(
-                {"success": True, "message": "Configuration updated and saved", "updated": updated_fields}
+                {
+                    "success": True,
+                    "message": "Configuration updated and saved",
+                    "updated": updated_fields,
+                }
             )
 
         except Exception as e:
@@ -432,7 +513,10 @@ class BotAPIServer:
                     min_price=min_price,
                     max_price=max_price,
                 )
-                pairs = [{"pair": pair, "price": round(price, 4)} for pair, price in pairs_with_prices]
+                pairs = [
+                    {"pair": pair, "price": round(price, 4)}
+                    for pair, price in pairs_with_prices
+                ]
             else:
                 # Fallback: just get all pairs
                 all_pairs = await exchange_service.get_available_pairs(quote)
@@ -518,7 +602,9 @@ class BotAPIServer:
                     }
                 )
 
-            self.logger.info(f"Starting scan of {len(pairs)} top gaining pairs: {pairs}")
+            self.logger.info(
+                f"Starting scan of {len(pairs)} top gaining pairs: {pairs}"
+            )
 
             # Create MarketAnalyzer and run scan
             from strategies.market_analyzer import MarketAnalyzer
@@ -610,7 +696,10 @@ class BotAPIServer:
             # Parse pair into base and quote currencies
             if "/" not in pair:
                 return web.json_response(
-                    {"success": False, "message": "Invalid pair format. Expected 'BASE/QUOTE'"},
+                    {
+                        "success": False,
+                        "message": "Invalid pair format. Expected 'BASE/QUOTE'",
+                    },
                     status=400,
                 )
 
@@ -625,7 +714,9 @@ class BotAPIServer:
                 config = json.load(f)
 
             # Store old pair for logging
-            old_pair = f"{config['pair']['base_currency']}/{config['pair']['quote_currency']}"
+            old_pair = (
+                f"{config['pair']['base_currency']}/{config['pair']['quote_currency']}"
+            )
 
             # Update pair
             config["pair"]["base_currency"] = base_currency
@@ -772,7 +863,13 @@ class BotAPIServer:
                     },
                 }
 
-            return web.json_response({"success": True, "data": status, "timestamp": datetime.now(UTC).isoformat()})
+            return web.json_response(
+                {
+                    "success": True,
+                    "data": status,
+                    "timestamp": datetime.now(UTC).isoformat(),
+                }
+            )
         except Exception as e:
             self.logger.error(f"Error getting multi-pair status: {e}")
             return web.json_response({"success": False, "message": str(e)}, status=500)
@@ -783,7 +880,10 @@ class BotAPIServer:
             data = await request.json()
             pairs = data.get("pairs", [])  # Optional specific pairs
 
-            if not hasattr(self.bot, "multi_pair_manager") or not self.bot.multi_pair_manager:
+            if (
+                not hasattr(self.bot, "multi_pair_manager")
+                or not self.bot.multi_pair_manager
+            ):
                 return web.json_response(
                     {"success": False, "message": "Multi-pair manager not initialized"},
                     status=400,
@@ -809,14 +909,19 @@ class BotAPIServer:
     async def handle_multi_pair_stop(self, request):
         """Stop multi-pair trading."""
         try:
-            if not hasattr(self.bot, "multi_pair_manager") or not self.bot.multi_pair_manager:
+            if (
+                not hasattr(self.bot, "multi_pair_manager")
+                or not self.bot.multi_pair_manager
+            ):
                 return web.json_response(
                     {"success": False, "message": "Multi-pair manager not initialized"},
                     status=400,
                 )
 
             await self.bot.multi_pair_manager.stop()
-            return web.json_response({"success": True, "message": "Multi-pair trading stopped"})
+            return web.json_response(
+                {"success": True, "message": "Multi-pair trading stopped"}
+            )
         except Exception as e:
             self.logger.error(f"Error stopping multi-pair trading: {e}")
             return web.json_response({"success": False, "message": str(e)}, status=500)
@@ -831,7 +936,9 @@ class BotAPIServer:
                 return web.Response(text=f.read(), content_type="text/html")
         except FileNotFoundError as e:
             self.logger.error(f"Dashboard not found at {dashboard_path}: {e}")
-            return web.Response(text=f"Dashboard not found: {dashboard_path}", status=404)
+            return web.Response(
+                text=f"Dashboard not found: {dashboard_path}", status=404
+            )
         except Exception as e:
             self.logger.error(f"Error serving dashboard: {e}")
             return web.Response(text=str(e), status=500)
@@ -839,13 +946,17 @@ class BotAPIServer:
     async def handle_backtest_page(self, request):
         """Serve the backtest HTML page."""
         try:
-            backtest_path = os.path.join(os.getcwd(), "web", "dashboard", "backtest.html")
+            backtest_path = os.path.join(
+                os.getcwd(), "web", "dashboard", "backtest.html"
+            )
             self.logger.debug(f"Serving backtest page from: {backtest_path}")
             with open(backtest_path, encoding="utf-8") as f:
                 return web.Response(text=f.read(), content_type="text/html")
         except FileNotFoundError as e:
             self.logger.error(f"Backtest page not found at {backtest_path}: {e}")
-            return web.Response(text=f"Backtest page not found: {backtest_path}", status=404)
+            return web.Response(
+                text=f"Backtest page not found: {backtest_path}", status=404
+            )
         except Exception as e:
             self.logger.error(f"Error serving backtest page: {e}")
             return web.Response(text=str(e), status=500)
@@ -853,13 +964,17 @@ class BotAPIServer:
     async def handle_settings_page(self, request):
         """Serve the settings HTML page."""
         try:
-            settings_path = os.path.join(os.getcwd(), "web", "dashboard", "settings.html")
+            settings_path = os.path.join(
+                os.getcwd(), "web", "dashboard", "settings.html"
+            )
             self.logger.debug(f"Serving settings page from: {settings_path}")
             with open(settings_path, encoding="utf-8") as f:
                 return web.Response(text=f.read(), content_type="text/html")
         except FileNotFoundError as e:
             self.logger.error(f"Settings page not found at {settings_path}: {e}")
-            return web.Response(text=f"Settings page not found: {settings_path}", status=404)
+            return web.Response(
+                text=f"Settings page not found: {settings_path}", status=404
+            )
         except Exception as e:
             self.logger.error(f"Error serving settings page: {e}")
             return web.Response(text=str(e), status=500)
@@ -872,7 +987,9 @@ class BotAPIServer:
 
             # Store settings for the bot to use
             # In a real implementation, this would update config files
-            return web.json_response({"status": "success", "message": "Settings saved successfully"})
+            return web.json_response(
+                {"status": "success", "message": "Settings saved successfully"}
+            )
         except Exception as e:
             self.logger.error(f"Error saving settings: {e}")
             return web.json_response({"status": "error", "message": str(e)}, status=500)
@@ -889,7 +1006,10 @@ class BotAPIServer:
             passphrase = data.get("passphrase")
 
             if not exchange_name or not api_key or not api_secret:
-                return web.json_response({"status": "error", "message": "Missing required fields"}, status=400)
+                return web.json_response(
+                    {"status": "error", "message": "Missing required fields"},
+                    status=400,
+                )
 
             # Map exchange names to CCXT
             exchange_map = {
@@ -906,7 +1026,11 @@ class BotAPIServer:
             ccxt_exchange = exchange_map.get(exchange_name)
             if not ccxt_exchange:
                 return web.json_response(
-                    {"status": "error", "message": f"Unsupported exchange: {exchange_name}"}, status=400
+                    {
+                        "status": "error",
+                        "message": f"Unsupported exchange: {exchange_name}",
+                    },
+                    status=400,
                 )
 
             # Create exchange instance
@@ -927,21 +1051,35 @@ class BotAPIServer:
                 total_usd = 0
                 if "total" in balance:
                     for currency, amount in balance["total"].items():
-                        if amount and amount > 0 and currency in ["USD", "USDT", "USDC"]:
+                        if (
+                            amount
+                            and amount > 0
+                            and currency in ["USD", "USDT", "USDC"]
+                        ):
                             total_usd += amount
 
                 return web.json_response(
-                    {"status": "success", "message": "Connection successful", "balance": total_usd}
+                    {
+                        "status": "success",
+                        "message": "Connection successful",
+                        "balance": total_usd,
+                    }
                 )
             finally:
                 await exchange.close()
 
         except ccxt.AuthenticationError:
             return web.json_response(
-                {"status": "error", "message": "Authentication failed: Invalid API credentials"}, status=401
+                {
+                    "status": "error",
+                    "message": "Authentication failed: Invalid API credentials",
+                },
+                status=401,
             )
         except ccxt.NetworkError as e:
-            return web.json_response({"status": "error", "message": f"Network error: {e!s}"}, status=503)
+            return web.json_response(
+                {"status": "error", "message": f"Network error: {e!s}"}, status=503
+            )
         except Exception as e:
             self.logger.error(f"Exchange test error: {e}")
             return web.json_response({"status": "error", "message": str(e)}, status=500)
@@ -953,7 +1091,10 @@ class BotAPIServer:
             data = await request.json()
 
             if self.backtest_running:
-                return web.json_response({"success": False, "message": "Backtest already running"}, status=400)
+                return web.json_response(
+                    {"success": False, "message": "Backtest already running"},
+                    status=400,
+                )
 
             # Extract backtest config
             pair = data.get("pair", "BTC/USD")
@@ -965,7 +1106,9 @@ class BotAPIServer:
             price_range_low = float(data.get("price_range_low", 0))
             price_range_high = float(data.get("price_range_high", 0))
 
-            self.logger.info(f"Starting backtest: {pair} from {start_date} to {end_date}")
+            self.logger.info(
+                f"Starting backtest: {pair} from {start_date} to {end_date}"
+            )
 
             # Reset state
             self.backtest_running = True
@@ -977,11 +1120,20 @@ class BotAPIServer:
             # Start backtest in background
             self.backtest_task = asyncio.create_task(
                 self._run_backtest(
-                    pair, start_date, end_date, capital, grid_levels, strategy, price_range_low, price_range_high
+                    pair,
+                    start_date,
+                    end_date,
+                    capital,
+                    grid_levels,
+                    strategy,
+                    price_range_low,
+                    price_range_high,
                 )
             )
 
-            return web.json_response({"success": True, "message": "Backtest started", "status": "running"})
+            return web.json_response(
+                {"success": True, "message": "Backtest started", "status": "running"}
+            )
 
         except Exception as e:
             self.logger.error(f"Error starting backtest: {e}")
@@ -1017,7 +1169,11 @@ class BotAPIServer:
                 import ccxt
 
                 # Get exchange from config
-                exchange_id = self.config_manager.get("exchange", {}).get("name", "kraken").lower()
+                exchange_id = (
+                    self.config_manager.get("exchange", {})
+                    .get("name", "kraken")
+                    .lower()
+                )
                 exchange_class = getattr(ccxt, exchange_id)
                 exchange = exchange_class({"enableRateLimit": True})
 
@@ -1034,10 +1190,15 @@ class BotAPIServer:
 
                 if raw_ohlcv and len(raw_ohlcv) > 0:
                     ohlcv_data = pd.DataFrame(
-                        raw_ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+                        raw_ohlcv,
+                        columns=["timestamp", "open", "high", "low", "close", "volume"],
                     )
-                    ohlcv_data["timestamp"] = pd.to_datetime(ohlcv_data["timestamp"], unit="ms")
-                    self.logger.info(f"Fetched {len(ohlcv_data)} candles from {exchange_id}")
+                    ohlcv_data["timestamp"] = pd.to_datetime(
+                        ohlcv_data["timestamp"], unit="ms"
+                    )
+                    self.logger.info(
+                        f"Fetched {len(ohlcv_data)} candles from {exchange_id}"
+                    )
 
             except Exception as e:
                 self.logger.warning(f"Could not fetch from exchange: {e}")
@@ -1053,7 +1214,11 @@ class BotAPIServer:
                 end = datetime.fromisoformat(end_date.replace("T", " "))
                 hours = max(int((end - start).total_seconds() / 3600), 24)
 
-                base_price = 100 if price_range_low == 0 else (price_range_low + price_range_high) / 2
+                base_price = (
+                    100
+                    if price_range_low == 0
+                    else (price_range_low + price_range_high) / 2
+                )
                 # Create more realistic price movement
                 np.random.seed(42)  # Reproducible results
                 returns = np.random.randn(hours) * 0.02  # 2% volatility
@@ -1083,9 +1248,13 @@ class BotAPIServer:
                 price_range_high = float(ohlcv_data["high"].max()) * 1.05
 
             grid_spacing = (price_range_high - price_range_low) / grid_levels
-            grid_prices = [price_range_low + i * grid_spacing for i in range(grid_levels + 1)]
+            grid_prices = [
+                price_range_low + i * grid_spacing for i in range(grid_levels + 1)
+            ]
 
-            self.logger.info(f"Grid: {grid_levels} levels from ${price_range_low:.2f} to ${price_range_high:.2f}")
+            self.logger.info(
+                f"Grid: {grid_levels} levels from ${price_range_low:.2f} to ${price_range_high:.2f}"
+            )
 
             # Simulate trading
             balance_quote = capital  # Quote currency (USD)
@@ -1128,7 +1297,10 @@ class BotAPIServer:
                                 }
                             )
 
-                    elif grid_state[grid_price] == "filled" and price >= grid_price * 1.01:
+                    elif (
+                        grid_state[grid_price] == "filled"
+                        and price >= grid_price * 1.01
+                    ):
                         # Sell signal (1% profit target)
                         sell_amount = (capital / grid_levels) / grid_price
                         if balance_base >= sell_amount:
@@ -1149,7 +1321,13 @@ class BotAPIServer:
 
                 # Calculate equity
                 current_equity = balance_quote + (balance_base * price)
-                equity_history.append({"timestamp": str(timestamp), "equity": current_equity, "price": price})
+                equity_history.append(
+                    {
+                        "timestamp": str(timestamp),
+                        "equity": current_equity,
+                        "price": price,
+                    }
+                )
 
                 # Small delay to prevent blocking
                 if i % 100 == 0:
@@ -1199,7 +1377,9 @@ class BotAPIServer:
             self.backtest_status = "complete"
             self.backtest_running = False
 
-            self.logger.info(f"Backtest complete: {len(trades)} trades, return: {total_return:.2f}%")
+            self.logger.info(
+                f"Backtest complete: {len(trades)} trades, return: {total_return:.2f}%"
+            )
 
         except Exception as e:
             self.logger.error(f"Backtest error: {e}", exc_info=True)
@@ -1210,7 +1390,11 @@ class BotAPIServer:
     async def handle_backtest_status(self, request):
         """Get current backtest status."""
         return web.json_response(
-            {"running": self.backtest_running, "status": self.backtest_status, "progress": self.backtest_progress}
+            {
+                "running": self.backtest_running,
+                "status": self.backtest_status,
+                "progress": self.backtest_progress,
+            }
         )
 
     async def handle_backtest_stop(self, request):
@@ -1224,9 +1408,13 @@ class BotAPIServer:
     async def handle_backtest_results(self, request):
         """Get backtest results."""
         if self.backtest_results:
-            return web.json_response({"success": True, "results": self.backtest_results})
+            return web.json_response(
+                {"success": True, "results": self.backtest_results}
+            )
         else:
-            return web.json_response({"success": False, "message": "No results available"})
+            return web.json_response(
+                {"success": False, "message": "No results available"}
+            )
 
     async def handle_static_file(self, request):
         """Serve static CSS/JS files."""
@@ -1279,14 +1467,19 @@ class BotAPIServer:
             # Check if MTF analysis is enabled
             if not self.config_manager.is_multi_timeframe_analysis_enabled():
                 return web.json_response(
-                    {"enabled": False, "message": "Multi-timeframe analysis is disabled in config"}
+                    {
+                        "enabled": False,
+                        "message": "Multi-timeframe analysis is disabled in config",
+                    }
                 )
 
             # Get status from active trading strategy if available
             if hasattr(self, "trading_strategy") and self.trading_strategy:
                 mtf_status = self.trading_strategy.get_mtf_analysis_status()
                 if mtf_status:
-                    return web.json_response({"enabled": True, "status": "active", "analysis": mtf_status})
+                    return web.json_response(
+                        {"enabled": True, "status": "active", "analysis": mtf_status}
+                    )
 
             # Check via grid trading bot
             if hasattr(self.bot, "trading_strategy") and self.bot.trading_strategy:
@@ -1294,7 +1487,13 @@ class BotAPIServer:
                 if hasattr(strategy, "get_mtf_analysis_status"):
                     mtf_status = strategy.get_mtf_analysis_status()
                     if mtf_status:
-                        return web.json_response({"enabled": True, "status": "active", "analysis": mtf_status})
+                        return web.json_response(
+                            {
+                                "enabled": True,
+                                "status": "active",
+                                "analysis": mtf_status,
+                            }
+                        )
 
             return web.json_response(
                 {
@@ -1313,7 +1512,11 @@ class BotAPIServer:
         try:
             if not self.config_manager.is_multi_timeframe_analysis_enabled():
                 return web.json_response(
-                    {"success": False, "message": "Multi-timeframe analysis is disabled in config"}, status=400
+                    {
+                        "success": False,
+                        "message": "Multi-timeframe analysis is disabled in config",
+                    },
+                    status=400,
                 )
 
             # Get the trading strategy
@@ -1321,9 +1524,17 @@ class BotAPIServer:
             if hasattr(self.bot, "trading_strategy"):
                 strategy = self.bot.trading_strategy
 
-            if not strategy or not hasattr(strategy, "_mtf_analyzer") or not strategy._mtf_analyzer:
+            if (
+                not strategy
+                or not hasattr(strategy, "_mtf_analyzer")
+                or not strategy._mtf_analyzer
+            ):
                 return web.json_response(
-                    {"success": False, "message": "Multi-timeframe analyzer not initialized"}, status=400
+                    {
+                        "success": False,
+                        "message": "Multi-timeframe analyzer not initialized",
+                    },
+                    status=400,
                 )
 
             # Force analysis by resetting the last analysis time
@@ -1334,7 +1545,9 @@ class BotAPIServer:
             grid_bottom = min(strategy.grid_manager.price_grids)
 
             # Run analysis
-            result = await strategy._mtf_analyzer.analyze(strategy.trading_pair, grid_bottom, grid_top)
+            result = await strategy._mtf_analyzer.analyze(
+                strategy.trading_pair, grid_bottom, grid_top
+            )
 
             # Update cached result
             strategy._mtf_analysis_result = result
@@ -1381,11 +1594,16 @@ class BotAPIServer:
 
             # Get exchange service
             if not hasattr(self.bot, "exchange_service"):
-                return web.json_response({"success": False, "message": "Exchange service not available"}, status=400)
+                return web.json_response(
+                    {"success": False, "message": "Exchange service not available"},
+                    status=400,
+                )
 
             scanner = PairScanner(self.bot.exchange_service)
 
-            self.logger.info(f"Starting Chuck smart scan for {num_pairs} {quote_currency} pairs...")
+            self.logger.info(
+                f"Starting Chuck smart scan for {num_pairs} {quote_currency} pairs..."
+            )
 
             # Run scan
             results = await scanner.scan_pairs(
@@ -1470,12 +1688,18 @@ class BotAPIServer:
             from strategies.auto_portfolio_manager import AutoPortfolioManager
 
             if not hasattr(self.bot, "exchange_service"):
-                return web.json_response({"success": False, "message": "Exchange service not available"}, status=400)
+                return web.json_response(
+                    {"success": False, "message": "Exchange service not available"},
+                    status=400,
+                )
 
             # Check if already running
             existing = getattr(self, "_chuck_portfolio_manager", None)
             if existing and existing.state.is_running:
-                return web.json_response({"success": False, "message": "Auto-portfolio already running"}, status=400)
+                return web.json_response(
+                    {"success": False, "message": "Auto-portfolio already running"},
+                    status=400,
+                )
 
             # Create manager
             manager = AutoPortfolioManager(
@@ -1498,7 +1722,9 @@ class BotAPIServer:
                 )
             )
 
-            self.logger.info(f"Chuck auto-portfolio started: ${total_capital}, {max_positions} positions")
+            self.logger.info(
+                f"Chuck auto-portfolio started: ${total_capital}, {max_positions} positions"
+            )
 
             return web.json_response(
                 {
@@ -1523,7 +1749,10 @@ class BotAPIServer:
             manager = getattr(self, "_chuck_portfolio_manager", None)
 
             if manager is None or not manager.state.is_running:
-                return web.json_response({"success": False, "message": "Auto-portfolio not running"}, status=400)
+                return web.json_response(
+                    {"success": False, "message": "Auto-portfolio not running"},
+                    status=400,
+                )
 
             await manager.stop()
 
@@ -1550,20 +1779,30 @@ class BotAPIServer:
 
             if not all([pair, grid_top, grid_bottom]):
                 return web.json_response(
-                    {"success": False, "message": "Missing required fields: pair, grid_top, grid_bottom"}, status=400
+                    {
+                        "success": False,
+                        "message": "Missing required fields: pair, grid_top, grid_bottom",
+                    },
+                    status=400,
                 )
 
             # Import analyzer
             from strategies.entry_signals import EntrySignalAnalyzer
 
             if not hasattr(self.bot, "exchange_service"):
-                return web.json_response({"success": False, "message": "Exchange service not available"}, status=400)
+                return web.json_response(
+                    {"success": False, "message": "Exchange service not available"},
+                    status=400,
+                )
 
             # Fetch OHLCV data
             ohlcv = await self.bot.exchange_service.fetch_ohlcv_simple(pair, "1h", 100)
 
             if ohlcv is None or len(ohlcv) < 24:
-                return web.json_response({"success": False, "message": f"Insufficient data for {pair}"}, status=400)
+                return web.json_response(
+                    {"success": False, "message": f"Insufficient data for {pair}"},
+                    status=400,
+                )
 
             # Analyze
             analyzer = EntrySignalAnalyzer()

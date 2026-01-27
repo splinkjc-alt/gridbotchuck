@@ -64,7 +64,9 @@ class EnhancedOrderValidator(OrderValidator):
             InvalidOrderQuantityError: If quantity is invalid
         """
         # First do standard validation
-        adjusted_quantity = super().adjust_and_validate_buy_quantity(balance, order_quantity, price)
+        adjusted_quantity = super().adjust_and_validate_buy_quantity(
+            balance, order_quantity, price
+        )
 
         order_value = adjusted_quantity * price
 
@@ -83,7 +85,9 @@ class EnhancedOrderValidator(OrderValidator):
 
             if position_percent > self.max_position_size_percent:
                 # Reduce order size to fit within limit
-                max_order_value = total_portfolio_value * (self.max_position_size_percent / 100)
+                max_order_value = total_portfolio_value * (
+                    self.max_position_size_percent / 100
+                )
                 adjusted_quantity = max_order_value / price
 
                 self.logger.warning(
@@ -92,7 +96,10 @@ class EnhancedOrderValidator(OrderValidator):
                 )
 
                 # Revalidate after adjustment
-                if adjusted_quantity <= 0 or (adjusted_quantity * price) < self.min_order_value:
+                if (
+                    adjusted_quantity <= 0
+                    or (adjusted_quantity * price) < self.min_order_value
+                ):
                     raise PositionSizeTooLargeError(
                         f"Cannot create valid order within position size limit. "
                         f"Portfolio: ${total_portfolio_value:.2f}, "
@@ -121,7 +128,9 @@ class EnhancedOrderValidator(OrderValidator):
             Adjusted and validated sell order quantity
         """
         # Do standard validation
-        adjusted_quantity = super().adjust_and_validate_sell_quantity(crypto_balance, order_quantity)
+        adjusted_quantity = super().adjust_and_validate_sell_quantity(
+            crypto_balance, order_quantity
+        )
 
         # Check minimum order value if price provided
         if price and (adjusted_quantity * price) < self.min_order_value:
@@ -137,7 +146,9 @@ class EnhancedOrderValidator(OrderValidator):
 
             if position_percent > self.max_position_size_percent:
                 # Reduce sell quantity
-                max_order_value = total_portfolio_value * (self.max_position_size_percent / 100)
+                max_order_value = total_portfolio_value * (
+                    self.max_position_size_percent / 100
+                )
                 adjusted_quantity = max_order_value / price
 
                 self.logger.warning(

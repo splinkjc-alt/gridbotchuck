@@ -3452,14 +3452,14 @@ section h3 {
 }
 
 @keyframes status-blink {
-  0%, 100% { 
-    opacity: 1; 
-    box-shadow: 0 0 4px #00ff88; 
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 4px #00ff88;
     transform: scale(1);
   }
-  50% { 
-    opacity: 0.6; 
-    box-shadow: 0 0 12px #00ff88, 0 0 20px rgba(0, 255, 136, 0.4); 
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 12px #00ff88, 0 0 20px rgba(0, 255, 136, 0.4);
     transform: scale(1.2);
   }
 }
@@ -3469,11 +3469,11 @@ section h3 {
   .btn-status .status-text {
     display: none;
   }
-  
+
   .btn-status {
     padding: 0.5rem 0.75rem;
   }
-  
+
   .brand-logo-img {
     width: 40px;
     height: 40px;

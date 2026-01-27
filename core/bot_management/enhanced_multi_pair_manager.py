@@ -52,14 +52,24 @@ class EnhancedMultiPairManager(MultiPairManager):
         super().__init__(config_manager, exchange_service, event_bus, market_analyzer)
 
         # Performance monitoring
-        self.performance_monitor = PairPerformanceMonitor(exchange_service, check_interval=300)
+        self.performance_monitor = PairPerformanceMonitor(
+            exchange_service, check_interval=300
+        )
 
         # Auto-switching configuration
-        auto_switch_config = config_manager.config.get("multi_pair", {}).get("auto_switch", {})
+        auto_switch_config = config_manager.config.get("multi_pair", {}).get(
+            "auto_switch", {}
+        )
         self.auto_switch_enabled = auto_switch_config.get("enabled", True)
-        self.check_interval = auto_switch_config.get("check_interval_minutes", 15) * 60  # Convert to seconds
-        self.min_stuck_checks = auto_switch_config.get("min_stuck_checks_before_switch", 2)  # Confirm stuck before switching
-        self.switch_cooldown = auto_switch_config.get("switch_cooldown_minutes", 30) * 60  # Prevent rapid switching
+        self.check_interval = (
+            auto_switch_config.get("check_interval_minutes", 15) * 60
+        )  # Convert to seconds
+        self.min_stuck_checks = auto_switch_config.get(
+            "min_stuck_checks_before_switch", 2
+        )  # Confirm stuck before switching
+        self.switch_cooldown = (
+            auto_switch_config.get("switch_cooldown_minutes", 30) * 60
+        )  # Prevent rapid switching
 
         # Candidate pairs for replacement
         self.candidate_pairs = auto_switch_config.get(
@@ -89,7 +99,9 @@ class EnhancedMultiPairManager(MultiPairManager):
 
         # Start performance monitoring task
         if self.auto_switch_enabled:
-            self.performance_check_task = asyncio.create_task(self._performance_monitoring_loop())
+            self.performance_check_task = asyncio.create_task(
+                self._performance_monitoring_loop()
+            )
             self.logger.info(
                 f"🔍 Auto-switching enabled: checking every {self.check_interval/60:.0f} minutes, "
                 f"cooldown {self.switch_cooldown/60:.0f} minutes"
@@ -124,7 +136,9 @@ class EnhancedMultiPairManager(MultiPairManager):
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                self.logger.error(f"Error in performance monitoring loop: {e}", exc_info=True)
+                self.logger.error(
+                    f"Error in performance monitoring loop: {e}", exc_info=True
+                )
                 await asyncio.sleep(60)  # Brief pause before retrying
 
     async def _check_and_switch_if_needed(self, pair: str):
@@ -189,10 +203,14 @@ class EnhancedMultiPairManager(MultiPairManager):
             # Find a better replacement
             self.logger.warning(f"🔴 {pair} is STUCK. Searching for replacement...")
 
-            better_pair = await self.performance_monitor.find_better_pair(pair, self.candidate_pairs)
+            better_pair = await self.performance_monitor.find_better_pair(
+                pair, self.candidate_pairs
+            )
 
             if not better_pair:
-                self.logger.info(f"No better alternative found for {pair}. Keeping it for now.")
+                self.logger.info(
+                    f"No better alternative found for {pair}. Keeping it for now."
+                )
                 return
 
             # Don't switch to a pair we're already trading
@@ -215,7 +233,9 @@ class EnhancedMultiPairManager(MultiPairManager):
             new_pair: Pair to start trading
             reason: Reason for switch (for logging)
         """
-        self.logger.info(f"🔄 SWITCHING PAIR: {old_pair} → {new_pair} (reason: {reason})")
+        self.logger.info(
+            f"🔄 SWITCHING PAIR: {old_pair} → {new_pair} (reason: {reason})"
+        )
 
         try:
             # Use the base class replace_pair method
@@ -241,7 +261,9 @@ class EnhancedMultiPairManager(MultiPairManager):
                 self.logger.error(f"❌ Failed to switch to {new_pair}")
 
         except Exception as e:
-            self.logger.error(f"Error switching from {old_pair} to {new_pair}: {e}", exc_info=True)
+            self.logger.error(
+                f"Error switching from {old_pair} to {new_pair}: {e}", exc_info=True
+            )
 
     async def manually_switch_pair(self, old_pair: str, new_pair: str):
         """
@@ -275,7 +297,9 @@ class EnhancedMultiPairManager(MultiPairManager):
                 last_switch = self.last_switch_time.get(pair)
                 if last_switch:
                     time_since_switch = datetime.now() - last_switch
-                    pair_status["time_since_switch_minutes"] = time_since_switch.total_seconds() / 60
+                    pair_status["time_since_switch_minutes"] = (
+                        time_since_switch.total_seconds() / 60
+                    )
 
         return base_status
 

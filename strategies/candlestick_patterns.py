@@ -419,7 +419,13 @@ def detect_piercing_line(data: pd.DataFrame) -> bool:
     # But not above open of first candle (would be engulfing)
     not_engulfing = curr["close"] < prev["open"]
 
-    return first_bearish and second_bullish and opens_below and closes_above_midpoint and not_engulfing
+    return (
+        first_bearish
+        and second_bullish
+        and opens_below
+        and closes_above_midpoint
+        and not_engulfing
+    )
 
 
 def detect_dark_cloud_cover(data: pd.DataFrame) -> bool:
@@ -451,7 +457,13 @@ def detect_dark_cloud_cover(data: pd.DataFrame) -> bool:
     # But not below open of first candle (would be engulfing)
     not_engulfing = curr["close"] > prev["open"]
 
-    return first_bullish and second_bearish and opens_above and closes_below_midpoint and not_engulfing
+    return (
+        first_bullish
+        and second_bearish
+        and opens_above
+        and closes_below_midpoint
+        and not_engulfing
+    )
 
 
 def detect_bullish_harami(data: pd.DataFrame) -> bool:

@@ -4,7 +4,22 @@
       "Bash(npm install)",
       "Bash(dir \"C:\\\\Users\\\\splin\\\\OneDrive\\\\Documents\\\\grid_trading_bot-master\\\\setup_wizard\\\\templates\\\\index.html\")",
       "Bash(node -e \"const Store = require\\(''electron-store''\\); const store = new Store\\(\\); store.clear\\(\\); console.log\\(''Setup state cleared - will show wizard on next launch''\\);\")",
-      "Bash(timeout 3:*)"
+      "Bash(timeout 3:*)",
+      "Bash(D:)",
+      "Bash(D:/gridbotchuck/.venv/Scripts/python.exe:*)",
+      "Bash(wmic process:*)",
+      "Bash(start \"CrossKiller - EMA Bot\" cmd /k \"cd /d D:\\\\gridbotchuck && .venv\\\\Scripts\\\\activate && python run_crosskiller.py\")",
+      "Bash(start \"\" cmd /k \"cd /d D:\\\\gridbotchuck && D:\\\\gridbotchuck\\\\.venv\\\\Scripts\\\\python.exe D:\\\\gridbotchuck\\\\run_crosskiller.py\")",
+      "Bash(D:\\\\gridbotchuck\\\\.venv\\\\Scripts\\\\python.exe:*)",
+      "Bash(Select-Object -First 20)",
+      "Bash(..venvScriptspython.exe run_pepe_momentum.py)",
+      "Bash(timeout:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd //c \"cscript //nologo D:\\\\gridbotchuck\\\\make_shortcut.vbs\")",
+      "Bash(cmd //c \"del D:\\\\gridbotchuck\\\\make_shortcut.vbs\")",
+      "Bash(cd:*)",
+      "Bash(start \"Watchdog\" cmd /k \"D:\\\\gridbotchuck\\\\.venv\\\\Scripts\\\\python.exe bot_watchdog.py\")",
+      "Bash(start \"CrossKiller-Paper\" cmd /k \"D:\\\\gridbotchuck\\\\.venv\\\\Scripts\\\\python.exe run_crosskiller_daytrader.py --paper\")"
     ]
   }
 }

@@ -21,7 +21,12 @@ class TestGridManager:
         mock_config_manager.get_spacing_type.return_value = SpacingType.ARITHMETIC
         # Add config attribute for position sizing
         mock_config_manager.config = {
-            "risk_management": {"position_sizing": {"buy_percent_of_total": 20.0, "min_reserve_percent": 10.0}}
+            "risk_management": {
+                "position_sizing": {
+                    "buy_percent_of_total": 20.0,
+                    "min_reserve_percent": 10.0,
+                }
+            }
         }
         return mock_config_manager
 
@@ -63,7 +68,9 @@ class TestGridManager:
         total_balance = 10000  # Mocked initial balance
         # With buy_percent_of_total = 20.0, order_size = total_balance * 0.20 / current_price
         expected_order_size = total_balance * 0.20 / current_price  # = 1.0
-        result = grid_manager.get_order_size_for_grid_level(total_balance, current_price)
+        result = grid_manager.get_order_size_for_grid_level(
+            total_balance, current_price
+        )
         assert result == expected_order_size
 
     def test_get_initial_order_quantity(self, grid_manager):
@@ -74,13 +81,17 @@ class TestGridManager:
             (current_fiat_balance + (current_crypto_balance * current_price)) / 2
             - (current_crypto_balance * current_price)
         ) / current_price
-        result = grid_manager.get_initial_order_quantity(current_fiat_balance, current_crypto_balance, current_price)
+        result = grid_manager.get_initial_order_quantity(
+            current_fiat_balance, current_crypto_balance, current_price
+        )
         assert result == expected_quantity
 
     def test_pair_grid_levels(self, grid_manager):
         source_grid_level = Mock(spec=GridLevel, price=1000)
         target_grid_level = Mock(spec=GridLevel, price=1100)
-        grid_manager.pair_grid_levels(source_grid_level, target_grid_level, pairing_type="buy")
+        grid_manager.pair_grid_levels(
+            source_grid_level, target_grid_level, pairing_type="buy"
+        )
         assert source_grid_level.paired_buy_level == target_grid_level
         assert target_grid_level.paired_sell_level == source_grid_level
 
@@ -89,7 +100,9 @@ class TestGridManager:
         target_grid_level = Mock(spec=GridLevel, price=1100)
 
         with pytest.raises(ValueError, match="Invalid pairing type"):
-            grid_manager.pair_grid_levels(source_grid_level, target_grid_level, pairing_type="invalid")
+            grid_manager.pair_grid_levels(
+                source_grid_level, target_grid_level, pairing_type="invalid"
+            )
 
     def test_get_paired_sell_level_simple_grid(self, grid_manager):
         grid_manager.initialize_grids_and_levels()
@@ -107,7 +120,10 @@ class TestGridManager:
 
         assert paired_sell_level is not None
         assert paired_sell_level.price > buy_grid_level.price
-        assert paired_sell_level.state in {GridCycleState.READY_TO_SELL, GridCycleState.READY_TO_BUY_OR_SELL}
+        assert paired_sell_level.state in {
+            GridCycleState.READY_TO_SELL,
+            GridCycleState.READY_TO_BUY_OR_SELL,
+        }
 
     def test_get_grid_level_below(self, grid_manager):
         grid_manager.initialize_grids_and_levels()

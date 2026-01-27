@@ -30,7 +30,7 @@ def test_sentiment():
         result = analyzer.analyze(headline)
         emoji = "+" if result.score > 0.15 else ("-" if result.score < -0.15 else "~")
         print(f"\n{emoji} {result.label.upper()} ({result.score:+.2f})")
-        print(f"  \"{headline[:60]}...\"")
+        print(f'  "{headline[:60]}..."')
         print(f"  Keywords: {', '.join([k[0] for k in result.keywords[:5]])}")
 
 

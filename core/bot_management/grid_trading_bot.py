@@ -68,7 +68,9 @@ class GridTradingBot:
                 self.config_manager,
                 self.trading_mode,
             )
-            order_execution_strategy = OrderExecutionStrategyFactory.create(self.config_manager, self.exchange_service)
+            order_execution_strategy = OrderExecutionStrategyFactory.create(
+                self.config_manager, self.exchange_service
+            )
             grid_manager = GridManager(self.config_manager, strategy_type)
             order_validator = OrderValidator()
             fee_calculator = FeeCalculator(self.config_manager)
@@ -103,8 +105,14 @@ class GridTradingBot:
                 strategy_type,
             )
 
-            trading_performance_analyzer = TradingPerformanceAnalyzer(self.config_manager, order_book)
-            plotter = Plotter(grid_manager, order_book) if self.trading_mode == TradingMode.BACKTEST else None
+            trading_performance_analyzer = TradingPerformanceAnalyzer(
+                self.config_manager, order_book
+            )
+            plotter = (
+                Plotter(grid_manager, order_book)
+                if self.trading_mode == TradingMode.BACKTEST
+                else None
+            )
             self.strategy = GridTradingStrategy(
                 self.config_manager,
                 self.event_bus,
@@ -124,7 +132,9 @@ class GridTradingBot:
             market_analyzer = None
 
             if self.trading_mode in (TradingMode.LIVE, TradingMode.PAPER_TRADING):
-                market_analyzer = MarketAnalyzer(self.exchange_service, self.config_manager)
+                market_analyzer = MarketAnalyzer(
+                    self.exchange_service, self.config_manager
+                )
 
                 # Activity monitor
                 activity_config = self.config_manager.config.get("activity_monitor", {})
@@ -136,9 +146,13 @@ class GridTradingBot:
                         config=activity_config,
                     )
                     # Subscribe to switch events
-                    self.event_bus.subscribe(Events.SWITCH_PAIR, self._handle_switch_pair)
+                    self.event_bus.subscribe(
+                        Events.SWITCH_PAIR, self._handle_switch_pair
+                    )
                     # Subscribe to force exit events (stagnation)
-                    self.event_bus.subscribe(Events.FORCE_EXIT_POSITION, self._handle_force_exit)
+                    self.event_bus.subscribe(
+                        Events.FORCE_EXIT_POSITION, self._handle_force_exit
+                    )
 
                 # Multi-pair manager
                 multi_pair_config = self.config_manager.config.get("multi_pair", {})
@@ -151,7 +165,11 @@ class GridTradingBot:
                     )
                     self.logger.info("Multi-pair trading enabled")
 
-        except (UnsupportedExchangeError, DataFetchError, UnsupportedTimeframeError) as e:
+        except (
+            UnsupportedExchangeError,
+            DataFetchError,
+            UnsupportedTimeframeError,
+        ) as e:
             self.logger.error(f"{type(e).__name__}: {e}")
             raise
 
@@ -200,7 +218,9 @@ class GridTradingBot:
             quote_currency = scanner_config.get("quote_currency", "USD")
             min_price = scanner_config.get("min_price", 1.0)
             max_price = scanner_config.get("max_price", 20.0)
-            min_volume_24h = scanner_config.get("min_volume_24h", 500000)  # Default $500k minimum volume
+            min_volume_24h = scanner_config.get(
+                "min_volume_24h", 500000
+            )  # Default $500k minimum volume
             timeframe = scanner_config.get("timeframe", "15m")
 
             # First try to get top gainers dynamically
@@ -220,10 +240,14 @@ class GridTradingBot:
                 pairs = scanner_config.get("candidate_pairs", [])
 
             if not pairs:
-                self.logger.warning("[AUTO-SELECT] No pairs to scan, using configured pair")
+                self.logger.warning(
+                    "[AUTO-SELECT] No pairs to scan, using configured pair"
+                )
                 return
 
-            self.logger.info(f"[AUTO-SELECT] Analyzing {len(pairs)} pairs (min volume: ${min_volume_24h:,.0f})...")
+            self.logger.info(
+                f"[AUTO-SELECT] Analyzing {len(pairs)} pairs (min volume: ${min_volume_24h:,.0f})..."
+            )
 
             # Run analysis with volume filter
             results = await analyzer.find_best_trading_pairs(
@@ -235,7 +259,9 @@ class GridTradingBot:
             )
 
             if not results:
-                self.logger.warning("[AUTO-SELECT] No pairs passed analysis, using configured pair")
+                self.logger.warning(
+                    "[AUTO-SELECT] No pairs passed analysis, using configured pair"
+                )
                 return
 
             # Pick the best one
@@ -245,7 +271,9 @@ class GridTradingBot:
                 self.logger.info(
                     f"[AUTO-SELECT] Best pair: {best.pair} (score: {best.score:.1f}, signal: {best.signal})"
                 )
-                self.logger.info(f"[AUTO-SELECT] Switching from {self.trading_pair} to {best.pair}")
+                self.logger.info(
+                    f"[AUTO-SELECT] Switching from {self.trading_pair} to {best.pair}"
+                )
 
                 # Update trading pair
                 self.trading_pair = best.pair
@@ -256,21 +284,31 @@ class GridTradingBot:
                 self.config_manager.config["pair"]["quote_currency"] = quote
 
                 # Calculate new grid range based on current price (10% range)
-                current_price = best.price  # CoinAnalysis uses 'price' not 'current_price'
-                range_percent = self.config_manager.config.get("market_scanner", {}).get("range_percent", 0.10)
+                current_price = (
+                    best.price
+                )  # CoinAnalysis uses 'price' not 'current_price'
+                range_percent = self.config_manager.config.get(
+                    "market_scanner", {}
+                ).get("range_percent", 0.10)
                 new_lower = round(current_price * (1 - range_percent / 2), 4)
                 new_upper = round(current_price * (1 + range_percent / 2), 4)
 
                 # Update grid_strategy range (config uses 'grid_strategy.range.bottom/top')
-                self.config_manager.config["grid_strategy"]["range"]["bottom"] = new_lower
+                self.config_manager.config["grid_strategy"]["range"]["bottom"] = (
+                    new_lower
+                )
                 self.config_manager.config["grid_strategy"]["range"]["top"] = new_upper
-                self.logger.info(f"[AUTO-SELECT] Grid range: ${new_lower:.4f} - ${new_upper:.4f} (around ${current_price:.4f})")
+                self.logger.info(
+                    f"[AUTO-SELECT] Grid range: ${new_lower:.4f} - ${new_upper:.4f} (around ${current_price:.4f})"
+                )
 
                 # Reinitialize grid manager with new prices
                 strategy_type = self.config_manager.get_strategy_type()
                 self.grid_manager = GridManager(self.config_manager, strategy_type)
                 self.grid_manager.initialize_grids_and_levels()
-                self.logger.info(f"[AUTO-SELECT] Grid manager reinitialized for {best.pair}")
+                self.logger.info(
+                    f"[AUTO-SELECT] Grid manager reinitialized for {best.pair}"
+                )
 
                 # Update strategy references
                 self.strategy.trading_pair = best.pair
@@ -281,15 +319,23 @@ class GridTradingBot:
                 # Update balance tracker base currency for new pair
                 self.balance_tracker.base_currency = base
                 self.strategy.order_manager.balance_tracker.base_currency = base
-                self.logger.info(f"[AUTO-SELECT] Updated balance tracker for {base}/{quote}")
+                self.logger.info(
+                    f"[AUTO-SELECT] Updated balance tracker for {base}/{quote}"
+                )
 
-                self.logger.info(f"[AUTO-SELECT] Successfully selected {best.pair} for trading")
+                self.logger.info(
+                    f"[AUTO-SELECT] Successfully selected {best.pair} for trading"
+                )
             else:
-                self.logger.info(f"[AUTO-SELECT] Configured pair {self.trading_pair} is already the best!")
+                self.logger.info(
+                    f"[AUTO-SELECT] Configured pair {self.trading_pair} is already the best!"
+                )
 
         except Exception as e:
             self.logger.error(f"[AUTO-SELECT] Error during auto-selection: {e}")
-            self.logger.info(f"[AUTO-SELECT] Falling back to configured pair: {self.trading_pair}")
+            self.logger.info(
+                f"[AUTO-SELECT] Falling back to configured pair: {self.trading_pair}"
+            )
 
     async def run(self) -> dict[str, Any] | None:
         try:
@@ -334,7 +380,9 @@ class GridTradingBot:
         new_pair = data.get("new_pair")
         reason = data.get("reason", "Activity monitor triggered switch")
 
-        self.logger.info(f"Switching trading pair from {self.trading_pair} to {new_pair}: {reason}")
+        self.logger.info(
+            f"Switching trading pair from {self.trading_pair} to {new_pair}: {reason}"
+        )
 
         try:
             # Stop current trading
@@ -394,7 +442,9 @@ class GridTradingBot:
 
                 # Check if loss is too high
                 if not exit_at_loss and pnl_pct < 0:
-                    self.logger.info(f"Position at loss ({pnl_pct:.2f}%), exit_at_loss=False, skipping")
+                    self.logger.info(
+                        f"Position at loss ({pnl_pct:.2f}%), exit_at_loss=False, skipping"
+                    )
                     return
 
                 if pnl_pct < -max_loss_pct:
@@ -411,13 +461,12 @@ class GridTradingBot:
             await self.order_manager.cancel_all_orders(pair)
 
             # Place market sell order
-            self.logger.info(f"Selling {crypto_balance:.6f} {base_currency} at market price ${current_price:.4f}")
+            self.logger.info(
+                f"Selling {crypto_balance:.6f} {base_currency} at market price ${current_price:.4f}"
+            )
 
             sell_order = await self.order_manager.create_market_order(
-                pair=pair,
-                side="sell",
-                amount=crypto_balance,
-                reason="stagnation_exit"
+                pair=pair, side="sell", amount=crypto_balance, reason="stagnation_exit"
             )
 
             if sell_order:
@@ -476,7 +525,9 @@ class GridTradingBot:
         self.logger.info("Grid Trading Bot has been restarted.")
 
     def _generate_and_log_performance(self) -> dict[str, Any] | None:
-        performance_summary, formatted_orders = self.strategy.generate_performance_report()
+        performance_summary, formatted_orders = (
+            self.strategy.generate_performance_report()
+        )
         return {
             "config": self.config_path,
             "performance_summary": performance_summary,

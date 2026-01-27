@@ -51,20 +51,48 @@ Examples:
         help="Exchange to scan (default: kraken)",
     )
 
-    parser.add_argument("--pairs", "-p", type=int, default=10, help="Number of pairs to return (default: 10)")
-
-    parser.add_argument("--quote", "-q", type=str, default="USD", help="Quote currency to filter by (default: USD)")
-
-    parser.add_argument("--min-price", type=float, default=0.01, help="Minimum price filter (default: 0.01)")
-
-    parser.add_argument("--max-price", type=float, default=100.0, help="Maximum price filter (default: 100.0)")
-
     parser.add_argument(
-        "--min-volume", type=float, default=100000, help="Minimum 24h volume in quote currency (default: 100000)"
+        "--pairs",
+        "-p",
+        type=int,
+        default=10,
+        help="Number of pairs to return (default: 10)",
     )
 
     parser.add_argument(
-        "--balance", type=float, default=100.0, help="Initial balance per pair in configs (default: 100.0)"
+        "--quote",
+        "-q",
+        type=str,
+        default="USD",
+        help="Quote currency to filter by (default: USD)",
+    )
+
+    parser.add_argument(
+        "--min-price",
+        type=float,
+        default=0.01,
+        help="Minimum price filter (default: 0.01)",
+    )
+
+    parser.add_argument(
+        "--max-price",
+        type=float,
+        default=100.0,
+        help="Maximum price filter (default: 100.0)",
+    )
+
+    parser.add_argument(
+        "--min-volume",
+        type=float,
+        default=100000,
+        help="Minimum 24h volume in quote currency (default: 100000)",
+    )
+
+    parser.add_argument(
+        "--balance",
+        type=float,
+        default=100.0,
+        help="Initial balance per pair in configs (default: 100.0)",
     )
 
     parser.add_argument(
@@ -75,7 +103,11 @@ Examples:
         help="Output directory for configs (default: config/scanned_pairs)",
     )
 
-    parser.add_argument("--no-save", action="store_true", help="Don't save config files, just print results")
+    parser.add_argument(
+        "--no-save",
+        action="store_true",
+        help="Don't save config files, just print results",
+    )
 
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
 

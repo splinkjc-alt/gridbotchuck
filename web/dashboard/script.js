@@ -1106,7 +1106,7 @@ function showCoinDetails(index) {
       <div class="detail-item"><label>Score:</label><span style="color: ${getScoreColor(coin.score)}">${coin.score.toFixed(2)}/100</span></div>
       <div class="detail-item"><label>Signal:</label><span>${getSignalEmoji(coin.signal)} ${formatSignal(coin.signal)}</span></div>
     </div >
-    
+
     <div class="detail-section">
       <h4>📈 Moving Averages (EMA)</h4>
       <div class="detail-item"><label>EMA 9:</label><span>$${coin.indicators.ema_9.toFixed(4)}</span></div>
@@ -1115,14 +1115,14 @@ function showCoinDetails(index) {
       <div class="detail-item"><label>Price Above EMAs:</label><span>${coin.flags.price_above_emas ? '✅ Yes' : '❌ No'}</span></div>
       <div class="detail-item"><label>EMA Score:</label><span>${coin.scores.ema_crossover.toFixed(1)}</span></div>
     </div>
-    
+
     <div class="detail-section">
       <h4>⚡ CCI Momentum</h4>
       <div class="detail-item"><label>CCI Value:</label><span>${coin.indicators.cci.toFixed(2)}</span></div>
       <div class="detail-item"><label>Bullish:</label><span>${coin.flags.cci_bullish ? '✅ Yes' : '❌ No'}</span></div>
       <div class="detail-item"><label>CCI Score:</label><span>${coin.scores.cci.toFixed(1)}</span></div>
     </div>
-    
+
     <div class="detail-section">
       <h4>📊 MACD</h4>
       <div class="detail-item"><label>MACD Line:</label><span>${coin.indicators.macd.toFixed(6)}</span></div>
@@ -1130,7 +1130,7 @@ function showCoinDetails(index) {
       <div class="detail-item"><label>Bullish:</label><span>${coin.flags.macd_bullish ? '✅ Yes' : '❌ No'}</span></div>
       <div class="detail-item"><label>MACD Score:</label><span>${coin.scores.macd.toFixed(1)}</span></div>
     </div>
-    
+
     <div class="detail-section">
       <h4>📉 Other Indicators</h4>
       <div class="detail-item"><label>RSI:</label><span>${coin.indicators.rsi.toFixed(2)}</span></div>
@@ -2461,7 +2461,7 @@ function displayEntrySignal(signal) {
         <div class="signal-recommendation">${signal.recommendation || 'NEUTRAL'}</div>
         <div class="signal-strength ${strengthClass}">${signal.strength || 'Neutral'}</div>
       </div>
-      
+
       <div class="signal-score ${scoreClass}">
         <div class="score-circle">
           <span class="score-number">${signal.score?.toFixed(0) || 0}</span>
@@ -2469,7 +2469,7 @@ function displayEntrySignal(signal) {
         </div>
         <span class="score-label">Entry Score</span>
       </div>
-      
+
       <div class="signal-indicators">
         <h4>Technical Indicators</h4>
         <div class="indicator-grid">
@@ -2490,7 +2490,7 @@ function displayEntrySignal(signal) {
   html += `
         </div>
       </div>
-      
+
       <div class="signal-reasoning">
         <h4>Analysis</h4>
         <p>${signal.reasoning || 'No detailed analysis available.'}</p>

@@ -29,8 +29,12 @@ class TestGridLevel:
 
     def test_str_representation(self):
         grid_level = GridLevel(price=1000, state=GridCycleState.READY_TO_BUY)
-        grid_level.paired_buy_level = GridLevel(price=900, state=GridCycleState.READY_TO_SELL)
-        grid_level.paired_sell_level = GridLevel(price=1100, state=GridCycleState.READY_TO_BUY)
+        grid_level.paired_buy_level = GridLevel(
+            price=900, state=GridCycleState.READY_TO_SELL
+        )
+        grid_level.paired_sell_level = GridLevel(
+            price=1100, state=GridCycleState.READY_TO_BUY
+        )
 
         repr_str = str(grid_level)
         assert "price=1000" in repr_str

@@ -314,7 +314,7 @@ If bot crashes:
 
 **Most likely cause:** Bot took too long to start or crashed
 
-**Quick fix:** 
+**Quick fix:**
 1. Look at Terminal 1 where bot runs
 2. Make sure you see "Bot API Server started"
 3. Wait 10 seconds

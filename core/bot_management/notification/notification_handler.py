@@ -27,12 +27,17 @@ class NotificationHandler:
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.event_bus = event_bus
-        self.enabled = bool(urls) and trading_mode in {TradingMode.LIVE, TradingMode.PAPER_TRADING}
+        self.enabled = bool(urls) and trading_mode in {
+            TradingMode.LIVE,
+            TradingMode.PAPER_TRADING,
+        }
         self.lock = asyncio.Lock()
         self.apprise_instance = apprise.Apprise() if self.enabled else None
 
         if self.enabled and urls is not None:
-            self.event_bus.subscribe(Events.ORDER_FILLED, self._send_notification_on_order_filled)
+            self.event_bus.subscribe(
+                Events.ORDER_FILLED, self._send_notification_on_order_filled
+            )
 
             for url in urls:
                 self.apprise_instance.add(url)
@@ -47,7 +52,9 @@ class NotificationHandler:
                 title = content.value.title
                 message_template = content.value.message
                 required_placeholders = {
-                    key.strip("{}") for key in message_template.split() if "{" in key and "}" in key
+                    key.strip("{}")
+                    for key in message_template.split()
+                    if "{" in key and "}" in key
                 }
                 missing_placeholders = required_placeholders - kwargs.keys()
 
@@ -57,7 +64,9 @@ class NotificationHandler:
                         "Defaulting to 'N/A' for missing values.",
                     )
 
-                message = message_template.format(**{key: kwargs.get(key, "N/A") for key in required_placeholders})
+                message = message_template.format(
+                    **{key: kwargs.get(key, "N/A") for key in required_placeholders}
+                )
             else:
                 title = "Notification"
                 message = content
@@ -73,11 +82,16 @@ class NotificationHandler:
             loop = asyncio.get_running_loop()
             try:
                 await asyncio.wait_for(
-                    loop.run_in_executor(self._executor, lambda: self.send_notification(content, **kwargs)),
+                    loop.run_in_executor(
+                        self._executor,
+                        lambda: self.send_notification(content, **kwargs),
+                    ),
                     timeout=5,
                 )
             except Exception as e:
                 self.logger.error(f"Failed to send notification: {e!s}")
 
     async def _send_notification_on_order_filled(self, order: Order) -> None:
-        await self.async_send_notification(NotificationType.ORDER_FILLED, order_details=str(order))
+        await self.async_send_notification(
+            NotificationType.ORDER_FILLED, order_details=str(order)
+        )

@@ -4,4 +4,4 @@ from .sentiment import SentimentAnalyzer
 from .tracker import NewsTracker
 from .backtester import NewsBacktester
 
-__all__ = ['NewsAnalyzer', 'SentimentAnalyzer', 'NewsTracker', 'NewsBacktester']
+__all__ = ["NewsAnalyzer", "SentimentAnalyzer", "NewsTracker", "NewsBacktester"]

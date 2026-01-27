@@ -27,7 +27,9 @@ class TestOrderExecutionStrategyFactory:
 
     def test_create_live_strategy(self, config_manager, exchange_service):
         config_manager.get_trading_mode.return_value = TradingMode.LIVE
-        strategy = OrderExecutionStrategyFactory.create(config_manager, exchange_service)
+        strategy = OrderExecutionStrategyFactory.create(
+            config_manager, exchange_service
+        )
 
         assert isinstance(
             strategy,
@@ -39,7 +41,9 @@ class TestOrderExecutionStrategyFactory:
 
     def test_create_paper_trading_strategy(self, config_manager, exchange_service):
         config_manager.get_trading_mode.return_value = TradingMode.PAPER_TRADING
-        strategy = OrderExecutionStrategyFactory.create(config_manager, exchange_service)
+        strategy = OrderExecutionStrategyFactory.create(
+            config_manager, exchange_service
+        )
 
         assert isinstance(
             strategy,
@@ -51,7 +55,9 @@ class TestOrderExecutionStrategyFactory:
 
     def test_create_backtest_strategy(self, config_manager, exchange_service):
         config_manager.get_trading_mode.return_value = TradingMode.BACKTEST
-        strategy = OrderExecutionStrategyFactory.create(config_manager, exchange_service)
+        strategy = OrderExecutionStrategyFactory.create(
+            config_manager, exchange_service
+        )
 
         assert isinstance(
             strategy,
@@ -59,6 +65,8 @@ class TestOrderExecutionStrategyFactory:
         ), "Expected BacktestOrderExecutionStrategy instance for backtesting mode"
 
     def test_invalid_trading_mode_raises_error(self, config_manager, exchange_service):
-        config_manager.get_trading_mode.return_value = "UNKNOWN_MODE"  # Simulate an invalid mode
+        config_manager.get_trading_mode.return_value = (
+            "UNKNOWN_MODE"  # Simulate an invalid mode
+        )
         with pytest.raises(ValueError, match="Unknown trading mode: UNKNOWN_MODE"):
             OrderExecutionStrategyFactory.create(config_manager, exchange_service)

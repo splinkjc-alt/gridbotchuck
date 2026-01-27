@@ -45,14 +45,14 @@ class SharedPairTracker:
     def _load(self) -> dict:
         """Load current tracking data."""
         try:
-            with open(self.tracker_file, 'r') as f:
+            with open(self.tracker_file, "r") as f:
                 return json.load(f)
         except (json.JSONDecodeError, FileNotFoundError):
             return {}
 
     def _save(self, data: dict):
         """Save tracking data."""
-        with open(self.tracker_file, 'w') as f:
+        with open(self.tracker_file, "w") as f:
             json.dump(data, f, indent=2)
 
     def claim_pair(self, bot_name: str, pair: str):
@@ -67,7 +67,7 @@ class SharedPairTracker:
         data[bot_name] = {
             "pair": pair,
             "claimed_at": time.time(),
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         }
         self._save(data)
         logger.info(f"[TRACKER] {bot_name} claimed {pair}")
@@ -130,7 +130,9 @@ class SharedPairTracker:
 
             if pair:
                 avoid_pairs.append(pair)
-                logger.info(f"[TRACKER] {bot_name} should avoid {pair} (claimed by {other_bot})")
+                logger.info(
+                    f"[TRACKER] {bot_name} should avoid {pair} (claimed by {other_bot})"
+                )
 
         return avoid_pairs
 
@@ -143,7 +145,9 @@ class SharedPairTracker:
         """
         return self._load()
 
-    def is_pair_available(self, pair: str, requester: str = None, stale_hours: float = 6) -> bool:
+    def is_pair_available(
+        self, pair: str, requester: str = None, stale_hours: float = 6
+    ) -> bool:
         """
         Check if a pair is available to trade.
 
@@ -214,4 +218,6 @@ if __name__ == "__main__":
 
     # Chuck releases
     tracker.release_pair("chuck")
-    print(f"\nAfter Chuck releases: ADA/USD available: {tracker.is_pair_available('ADA/USD')}")
+    print(
+        f"\nAfter Chuck releases: ADA/USD available: {tracker.is_pair_available('ADA/USD')}"
+    )

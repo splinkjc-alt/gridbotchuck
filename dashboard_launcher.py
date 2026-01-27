@@ -61,10 +61,18 @@ class DashboardLauncher:
 
         unsafe_tokens = ("\n", "\r", "\x00")
         if any(token in str(config_path) for token in unsafe_tokens):
-            self.logger.error("Config file path contains unsafe characters and cannot be used.")
+            self.logger.error(
+                "Config file path contains unsafe characters and cannot be used."
+            )
             return None
 
-        return [sys.executable, str(main_script_path), "--config", str(config_path), "--wait-for-start"]
+        return [
+            sys.executable,
+            str(main_script_path),
+            "--config",
+            str(config_path),
+            "--wait-for-start",
+        ]
 
     def _validate_command(self, command: list[str]) -> bool:
         """Ensure the launch command cannot execute untrusted input."""
@@ -75,7 +83,9 @@ class DashboardLauncher:
         expected_executable = Path(sys.executable).resolve()
         actual_executable = Path(command[0]).resolve()
         if expected_executable != actual_executable:
-            self.logger.error("Executable mismatch detected when preparing bot command.")
+            self.logger.error(
+                "Executable mismatch detected when preparing bot command."
+            )
             return False
 
         unsafe_tokens = ("\n", "\r", "\x00", "&", "|", ";", ">", "<", "`")
@@ -88,7 +98,9 @@ class DashboardLauncher:
     def start_bot(self) -> None:
         """Start the trading bot in a background process."""
         if self.bot_process and self.bot_process.poll() is None:
-            self.logger.info("Bot process already running (PID: %s)", self.bot_process.pid)
+            self.logger.info(
+                "Bot process already running (PID: %s)", self.bot_process.pid
+            )
             return
 
         if self.check_api_running():
@@ -137,7 +149,9 @@ class DashboardLauncher:
     def create_icon_image(self) -> PILImage:
         """Create a simple robot icon for the system tray."""
         if Image is None or ImageDraw is None:
-            raise RuntimeError("Cannot create tray icon because Pillow is not installed.")
+            raise RuntimeError(
+                "Cannot create tray icon because Pillow is not installed."
+            )
 
         size = 64
         img = Image.new("RGB", (size, size), color="black")
@@ -191,7 +205,11 @@ class DashboardLauncher:
 
     def on_status(self, icon, item) -> None:  # type: ignore[override]
         """Log current dashboard availability from the tray menu."""
-        message = "Dashboard is running." if self.check_api_running() else "Dashboard is not responding."
+        message = (
+            "Dashboard is running."
+            if self.check_api_running()
+            else "Dashboard is not responding."
+        )
         if hasattr(icon, "notify"):
             icon.notify(message)
         self.logger.info(message)
@@ -239,7 +257,9 @@ class DashboardLauncher:
             self.logger.info("Dashboard opened in your browser. Press Ctrl+C to exit.")
         else:
             self.logger.error("Could not connect to bot API server.")
-            self.logger.warning("Ensure the bot is running: python main.py --config config/config.json")
+            self.logger.warning(
+                "Ensure the bot is running: python main.py --config config/config.json"
+            )
 
         try:
             while self.bot_process and self.bot_process.poll() is None:
@@ -258,17 +278,27 @@ class DashboardLauncher:
         """Start a background thread that waits for the API and opens the dashboard."""
         if self._opener_thread and self._opener_thread.is_alive():
             return
-        self._opener_thread = threading.Thread(target=self.wait_and_open, name="dashboard-opener", daemon=True)
+        self._opener_thread = threading.Thread(
+            target=self.wait_and_open, name="dashboard-opener", daemon=True
+        )
         self._opener_thread.start()
 
 
 def main() -> None:
     """Command-line entry point for the launcher."""
     parser = argparse.ArgumentParser(description="Grid Trading Bot Dashboard Launcher")
-    parser.add_argument("--port", type=int, default=8080, help="Bot API port (default: 8080)")
-    parser.add_argument("--config", type=str, default="config/config.json", help="Path to config file")
-    parser.add_argument("--no-tray", action="store_true", help="Run without system tray")
-    parser.add_argument("--log-level", default="INFO", help="Logging level (default: INFO)")
+    parser.add_argument(
+        "--port", type=int, default=8080, help="Bot API port (default: 8080)"
+    )
+    parser.add_argument(
+        "--config", type=str, default="config/config.json", help="Path to config file"
+    )
+    parser.add_argument(
+        "--no-tray", action="store_true", help="Run without system tray"
+    )
+    parser.add_argument(
+        "--log-level", default="INFO", help="Logging level (default: INFO)"
+    )
     args = parser.parse_args()
 
     log_level_name = args.log_level.upper()

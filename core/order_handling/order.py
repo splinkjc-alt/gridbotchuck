@@ -48,12 +48,16 @@ class Order:
         self.status = status  # 'open', 'closed', 'canceled', 'expired', 'rejected'
         self.order_type = order_type  # 'market', 'limit'
         self.side = side  # 'buy', 'sell'
-        self.price = price  # float price in quote currency (may be empty for market orders)
+        self.price = (
+            price  # float price in quote currency (may be empty for market orders)
+        )
         self.average = average  # float average filling price
         self.amount = amount  # ordered amount of base currency
         self.filled = filled  # filled amount of base currency
         self.remaining = remaining  # remaining amount to fill
-        self.timestamp = timestamp  # order placing/opening Unix timestamp in milliseconds
+        self.timestamp = (
+            timestamp  # order placing/opening Unix timestamp in milliseconds
+        )
         self.datetime = datetime  # ISO8601 datetime of 'timestamp' with milliseconds
         self.last_trade_timestamp = last_trade_timestamp  # Unix timestamp of the most recent trade on this order
         self.symbol = symbol  # symbol

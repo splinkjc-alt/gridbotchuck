@@ -26,8 +26,16 @@ async def find_best_pair():
 
     # Quick scan of top candidates
     top_pairs = [
-        "VET/USD", "PEPE/USD", "CRV/USD", "ADA/USD", "LINK/USD",
-        "UNI/USD", "NEAR/USD", "SOL/USD", "DOGE/USD", "ETH/USD"
+        "VET/USD",
+        "PEPE/USD",
+        "CRV/USD",
+        "ADA/USD",
+        "LINK/USD",
+        "UNI/USD",
+        "NEAR/USD",
+        "SOL/USD",
+        "DOGE/USD",
+        "ETH/USD",
     ]
 
     results = await backtester.run_full_scan(pairs=top_pairs, timeframes=["1h"])
@@ -44,7 +52,9 @@ async def find_best_pair():
     print("-" * 50)
 
     for i, r in enumerate(results[:5], 1):
-        print(f"{i:<5} {r.pair:<12} {r.grid_score:<7.0f} {r.total_return_pct:<9.1f} {r.volatility:<7.1f}")
+        print(
+            f"{i:<5} {r.pair:<12} {r.grid_score:<7.0f} {r.total_return_pct:<9.1f} {r.volatility:<7.1f}"
+        )
 
     best = results[0]
     return best
@@ -55,7 +65,7 @@ def get_current_price(pair: str) -> float:
     try:
         exchange = ccxt.kraken()
         ticker = exchange.fetch_ticker(pair)
-        return ticker['last']
+        return ticker["last"]
     except Exception as e:
         print(f"Error getting price: {e}")
         return None
@@ -90,7 +100,7 @@ def create_config(pair_info, capital: float = 100) -> str:
             "name": "kraken",
             "pair": pair,
             "api_key_env": "EXCHANGE_API_KEY",
-            "secret_key_env": "EXCHANGE_SECRET_KEY"
+            "secret_key_env": "EXCHANGE_SECRET_KEY",
         },
         "strategy": {
             "type": "SIMPLE_GRID",
@@ -98,35 +108,37 @@ def create_config(pair_info, capital: float = 100) -> str:
             "grid_count": pair_info.recommended_grids,
             "price_range": {
                 "low": round(price_low, decimals),
-                "high": round(price_high, decimals)
-            }
+                "high": round(price_high, decimals),
+            },
         },
         "risk_management": {
             "max_position_pct": 90,
             "stop_loss_pct": 15,
-            "take_profit_pct": 20
+            "take_profit_pct": 20,
         },
         "paper_trading": False,
         "auto_selected": {
             "score": pair_info.grid_score,
             "volatility": pair_info.volatility,
             "backtest_return": pair_info.total_return_pct,
-            "selected_at": datetime.now().isoformat()
-        }
+            "selected_at": datetime.now().isoformat(),
+        },
     }
 
     # Save config
-    pair_safe = pair.replace('/', '_')
+    pair_safe = pair.replace("/", "_")
     config_path = f"config/config_{pair_safe}_auto.json"
 
-    with open(config_path, 'w') as f:
+    with open(config_path, "w") as f:
         json.dump(config, f, indent=2)
 
     print(f"\nConfig saved to: {config_path}")
     print("\nCONFIGURATION:")
     print(f"  Pair: {pair}")
     print(f"  Current Price: ${price:.6f}")
-    print(f"  Grid Range: ${price_low:.6f} - ${price_high:.6f} ({pair_info.best_range_pct:.1f}%)")
+    print(
+        f"  Grid Range: ${price_low:.6f} - ${price_high:.6f} ({pair_info.best_range_pct:.1f}%)"
+    )
     print(f"  Grid Count: {pair_info.recommended_grids}")
     print(f"  Grid Score: {pair_info.grid_score}/100")
 

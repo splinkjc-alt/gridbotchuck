@@ -23,6 +23,7 @@ import pandas as pd
 
 # ============== TECHNICAL INDICATORS ==============
 
+
 def calculate_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
     """Calculate RSI indicator."""
     deltas = prices.diff()
@@ -39,7 +40,9 @@ def calculate_ema(prices: pd.Series, period: int) -> pd.Series:
     return prices.ewm(span=period, adjust=False).mean()
 
 
-def calculate_bollinger_bands(prices: pd.Series, period: int = 20, std_dev: float = 2.0):
+def calculate_bollinger_bands(
+    prices: pd.Series, period: int = 20, std_dev: float = 2.0
+):
     """Calculate Bollinger Bands."""
     sma = prices.rolling(window=period).mean()
     std = prices.rolling(window=period).std()
@@ -60,9 +63,11 @@ def calculate_macd(prices: pd.Series, fast: int = 12, slow: int = 26, signal: in
 
 # ============== BACKTEST RESULT ==============
 
+
 @dataclass
 class BacktestResult:
     """Results from a single backtest run."""
+
     symbol: str
     timeframe: str
     indicator_combo: str
@@ -75,6 +80,7 @@ class BacktestResult:
 
 
 # ============== ASSET OPTIMIZER ==============
+
 
 class AssetOptimizer:
     """Optimizes trading parameters for a single asset."""
@@ -93,10 +99,7 @@ class AssetOptimizer:
         while True:
             try:
                 candles = self.exchange.fetch_ohlcv(
-                    self.symbol,
-                    timeframe,
-                    since=since,
-                    limit=500
+                    self.symbol, timeframe, since=since, limit=500
                 )
                 if not candles:
                     break
@@ -111,12 +114,16 @@ class AssetOptimizer:
         if not all_candles:
             return pd.DataFrame()
 
-        df = pd.DataFrame(all_candles, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        df = pd.DataFrame(
+            all_candles, columns=["timestamp", "open", "high", "low", "close", "volume"]
+        )
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
         df.set_index("timestamp", inplace=True)
         return df
 
-    def run_backtest(self, df: pd.DataFrame, combo_name: str, strategy: str) -> BacktestResult | None:
+    def run_backtest(
+        self, df: pd.DataFrame, combo_name: str, strategy: str
+    ) -> BacktestResult | None:
         """Run backtest with specific indicator combo and strategy."""
         if df.empty or len(df) < 50:
             return None
@@ -130,8 +137,10 @@ class AssetOptimizer:
         df_copy["rsi"] = calculate_rsi(close, params.get("rsi_period", 14))
 
         if "bb_period" in params:
-            df_copy["bb_upper"], df_copy["bb_mid"], df_copy["bb_lower"] = calculate_bollinger_bands(
-                close, params["bb_period"], params.get("bb_std", 2.0)
+            df_copy["bb_upper"], df_copy["bb_mid"], df_copy["bb_lower"] = (
+                calculate_bollinger_bands(
+                    close, params["bb_period"], params.get("bb_std", 2.0)
+                )
             )
 
         if "ema_fast" in params:
@@ -139,8 +148,13 @@ class AssetOptimizer:
             df_copy["ema_slow"] = calculate_ema(close, params["ema_slow"])
 
         if "macd_fast" in params:
-            df_copy["macd"], df_copy["macd_signal"], df_copy["macd_hist"] = calculate_macd(
-                close, params["macd_fast"], params["macd_slow"], params["macd_signal"]
+            df_copy["macd"], df_copy["macd_signal"], df_copy["macd_hist"] = (
+                calculate_macd(
+                    close,
+                    params["macd_fast"],
+                    params["macd_slow"],
+                    params["macd_signal"],
+                )
             )
 
         # Run strategy simulation
@@ -153,7 +167,9 @@ class AssetOptimizer:
 
         return result
 
-    def _simulate_grid(self, df: pd.DataFrame, params: dict, combo_name: str) -> BacktestResult:
+    def _simulate_grid(
+        self, df: pd.DataFrame, params: dict, combo_name: str
+    ) -> BacktestResult:
         """Simulate grid trading strategy."""
         close = df["close"]
         balance = self.initial_balance
@@ -203,7 +219,9 @@ class AssetOptimizer:
             balance_history.append(total)
 
         final_balance = balance + (crypto * close.iloc[-1])
-        profit_pct = ((final_balance - self.initial_balance) / self.initial_balance) * 100
+        profit_pct = (
+            (final_balance - self.initial_balance) / self.initial_balance
+        ) * 100
 
         sells = [t for t in trades if t["type"] == "sell"]
         win_rate = 100.0 if sells else 0.0
@@ -217,10 +235,12 @@ class AssetOptimizer:
             win_rate=win_rate,
             total_trades=len(trades),
             max_drawdown=round(self._max_drawdown(balance_history), 2),
-            sharpe_ratio=round(self._sharpe_ratio(balance_history), 2)
+            sharpe_ratio=round(self._sharpe_ratio(balance_history), 2),
         )
 
-    def _simulate_mean_reversion(self, df: pd.DataFrame, params: dict, combo_name: str) -> BacktestResult:
+    def _simulate_mean_reversion(
+        self, df: pd.DataFrame, params: dict, combo_name: str
+    ) -> BacktestResult:
         """Simulate mean reversion strategy."""
         close = df["close"]
         balance = self.initial_balance
@@ -257,7 +277,9 @@ class AssetOptimizer:
             balance_history.append(balance + (crypto * price))
 
         final_balance = balance + (crypto * close.iloc[-1])
-        profit_pct = ((final_balance - self.initial_balance) / self.initial_balance) * 100
+        profit_pct = (
+            (final_balance - self.initial_balance) / self.initial_balance
+        ) * 100
 
         wins = len([t for t in trades if t.get("pnl", 0) > 0])
         total_sells = len([t for t in trades if t["type"] == "sell"])
@@ -272,10 +294,12 @@ class AssetOptimizer:
             win_rate=round(win_rate, 1),
             total_trades=len(trades),
             max_drawdown=round(self._max_drawdown(balance_history), 2),
-            sharpe_ratio=round(self._sharpe_ratio(balance_history), 2)
+            sharpe_ratio=round(self._sharpe_ratio(balance_history), 2),
         )
 
-    def _simulate_momentum(self, df: pd.DataFrame, params: dict, combo_name: str) -> BacktestResult:
+    def _simulate_momentum(
+        self, df: pd.DataFrame, params: dict, combo_name: str
+    ) -> BacktestResult:
         """Simulate momentum/trend following strategy."""
         close = df["close"]
         balance = self.initial_balance
@@ -322,7 +346,9 @@ class AssetOptimizer:
             balance_history.append(balance + (crypto * price))
 
         final_balance = balance + (crypto * close.iloc[-1])
-        profit_pct = ((final_balance - self.initial_balance) / self.initial_balance) * 100
+        profit_pct = (
+            (final_balance - self.initial_balance) / self.initial_balance
+        ) * 100
 
         return BacktestResult(
             symbol=self.symbol,
@@ -333,7 +359,7 @@ class AssetOptimizer:
             win_rate=100.0 if trades else 0.0,
             total_trades=len(trades),
             max_drawdown=round(self._max_drawdown(balance_history), 2),
-            sharpe_ratio=round(self._sharpe_ratio(balance_history), 2)
+            sharpe_ratio=round(self._sharpe_ratio(balance_history), 2),
         )
 
     def _max_drawdown(self, balance_history: list) -> float:
@@ -347,7 +373,9 @@ class AssetOptimizer:
             max_dd = max(max_dd, dd)
         return max_dd
 
-    def _sharpe_ratio(self, balance_history: list, risk_free_rate: float = 0.02) -> float:
+    def _sharpe_ratio(
+        self, balance_history: list, risk_free_rate: float = 0.02
+    ) -> float:
         """Calculate Sharpe ratio."""
         if len(balance_history) < 2:
             return 0.0
@@ -397,15 +425,18 @@ class AssetOptimizer:
             "max_drawdown": best.max_drawdown,
             "sharpe_ratio": best.sharpe_ratio,
             "total_trades": best.total_trades,
-            "last_optimized": datetime.now(tz=UTC).strftime("%Y-%m-%d %H:%M")
+            "last_optimized": datetime.now(tz=UTC).strftime("%Y-%m-%d %H:%M"),
         }
 
-        print(f"    Best: {best.timeframe} / {best.strategy} / {best.indicator_combo} = {best.profit_pct:+.2f}%")
+        print(
+            f"    Best: {best.timeframe} / {best.strategy} / {best.indicator_combo} = {best.profit_pct:+.2f}%"
+        )
 
         return config
 
 
 # ============== BATCH OPTIMIZATION ==============
+
 
 def optimize_asset(symbol: str) -> dict:
     """Optimize a single asset."""
@@ -420,7 +451,9 @@ def optimize_all(symbols: list[str], output_file: str | None = None) -> dict:
     print("=" * 60)
     print("ASSET OPTIMIZATION")
     n_tf, n_combo, n_strat = len(TIMEFRAMES), len(INDICATOR_COMBOS), len(STRATEGIES)
-    print(f"Testing {len(symbols)} assets x {n_tf} TFs x {n_combo} combos x {n_strat} strategies")
+    print(
+        f"Testing {len(symbols)} assets x {n_tf} TFs x {n_combo} combos x {n_strat} strategies"
+    )
     print("=" * 60)
 
     for i, symbol in enumerate(symbols, 1):
@@ -447,7 +480,9 @@ def optimize_all(symbols: list[str], output_file: str | None = None) -> dict:
     print("\nBest configurations:")
     print("-" * 60)
     for symbol, config in configs.items():
-        print(f"{symbol:12} | {config['best_timeframe']:4} | {config['strategy']:15} | {config['profit_pct']:+6.2f}%")
+        print(
+            f"{symbol:12} | {config['best_timeframe']:4} | {config['strategy']:15} | {config['profit_pct']:+6.2f}%"
+        )
 
     return configs
 
@@ -466,9 +501,14 @@ def load_optimal_configs(config_file: str | None = None) -> dict:
 
 # ============== CLI ==============
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Optimize trading parameters per asset")
-    parser.add_argument("--optimize-all", action="store_true", help="Optimize all assets in watchlist")
+    parser = argparse.ArgumentParser(
+        description="Optimize trading parameters per asset"
+    )
+    parser.add_argument(
+        "--optimize-all", action="store_true", help="Optimize all assets in watchlist"
+    )
     parser.add_argument("--symbol", type=str, help="Optimize a specific symbol")
     parser.add_argument("--watchlist", type=str, help="Path to watchlist.json")
 
@@ -480,7 +520,9 @@ def main():
 
     elif args.optimize_all:
         # Load watchlist
-        watchlist_file = args.watchlist or Path(__file__).parent.parent / "config" / "watchlist.json"
+        watchlist_file = (
+            args.watchlist or Path(__file__).parent.parent / "config" / "watchlist.json"
+        )
 
         if Path(watchlist_file).exists():
             with open(watchlist_file) as f:
@@ -489,9 +531,21 @@ def main():
         else:
             # Default watchlist
             symbols = [
-                "BTC/USD", "ETH/USD", "ADA/USD", "SOL/USD", "XRP/USD",
-                "DOGE/USD", "AVAX/USD", "MATIC/USD", "DOT/USD", "LINK/USD",
-                "ATOM/USD", "UNI/USD", "LTC/USD", "NEAR/USD", "APT/USD"
+                "BTC/USD",
+                "ETH/USD",
+                "ADA/USD",
+                "SOL/USD",
+                "XRP/USD",
+                "DOGE/USD",
+                "AVAX/USD",
+                "MATIC/USD",
+                "DOT/USD",
+                "LINK/USD",
+                "ATOM/USD",
+                "UNI/USD",
+                "LTC/USD",
+                "NEAR/USD",
+                "APT/USD",
             ]
 
         optimize_all(symbols)

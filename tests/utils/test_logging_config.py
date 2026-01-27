@@ -37,7 +37,9 @@ def test_setup_logging_console_only(mock_basic_config):
 @patch("os.makedirs")
 @patch("logging.basicConfig")
 @patch("logging.handlers.RotatingFileHandler")
-def test_setup_logging_file_logging(mock_rotating_file_handler, mock_basic_config, mock_makedirs):
+def test_setup_logging_file_logging(
+    mock_rotating_file_handler, mock_basic_config, mock_makedirs
+):
     setup_logging(
         log_level=logging.DEBUG,
         log_to_file=True,
@@ -57,7 +59,9 @@ def test_setup_logging_file_logging(mock_rotating_file_handler, mock_basic_confi
 @patch("os.makedirs")
 @patch("logging.basicConfig")
 @patch("logging.handlers.RotatingFileHandler")
-def test_setup_logging_default_file_logging(mock_rotating_file_handler, mock_basic_config, mock_makedirs):
+def test_setup_logging_default_file_logging(
+    mock_rotating_file_handler, mock_basic_config, mock_makedirs
+):
     setup_logging(log_level=logging.WARNING, log_to_file=True)
 
     mock_makedirs.assert_called_once_with("logs", exist_ok=True)
@@ -70,7 +74,9 @@ def test_setup_logging_default_file_logging(mock_rotating_file_handler, mock_bas
 
 def test_setup_logging_logs_info(mock_basic_config, mock_rotating_file_handler, caplog):
     with caplog.at_level(logging.INFO):
-        setup_logging(log_level=logging.INFO, log_to_file=True, config_name="test_config")
+        setup_logging(
+            log_level=logging.INFO, log_to_file=True, config_name="test_config"
+        )
 
     assert "Logging initialized. Log level: INFO" in caplog.text
     # Use os.path.join to handle platform-specific path separators

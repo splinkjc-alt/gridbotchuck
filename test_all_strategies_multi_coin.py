@@ -2,6 +2,7 @@
 Multi-Coin Strategy Tester
 Tests different strategy options across multiple coins to find best approach.
 """
+
 from datetime import datetime, timedelta
 
 import ccxt
@@ -27,7 +28,10 @@ def calculate_volume_ratio(data: pd.Series, period: int = 20) -> pd.Series:
 
 class Strategy:
     """Defines a trading strategy."""
-    def __init__(self, name: str, entry_fn, target_pct: float = 4.0, stop_pct: float = 3.0):
+
+    def __init__(
+        self, name: str, entry_fn, target_pct: float = 4.0, stop_pct: float = 3.0
+    ):
         self.name = name
         self.entry_fn = entry_fn
         self.target_pct = target_pct
@@ -63,24 +67,28 @@ def backtest_strategy(df: pd.DataFrame, strategy: Strategy) -> Strategy:
                 profit = strategy.target_pct
                 strategy.wins += 1
                 strategy.total_profit += profit
-                strategy.trades.append({
-                    "entry_time": df.iloc[entry_idx]["timestamp"],
-                    "exit_time": row["timestamp"],
-                    "profit_pct": profit,
-                    "result": "WIN"
-                })
+                strategy.trades.append(
+                    {
+                        "entry_time": df.iloc[entry_idx]["timestamp"],
+                        "exit_time": row["timestamp"],
+                        "profit_pct": profit,
+                        "result": "WIN",
+                    }
+                )
                 in_trade = False
 
             elif pct_change <= -strategy.stop_pct:
                 loss = -strategy.stop_pct
                 strategy.losses += 1
                 strategy.total_profit += loss
-                strategy.trades.append({
-                    "entry_time": df.iloc[entry_idx]["timestamp"],
-                    "exit_time": row["timestamp"],
-                    "profit_pct": loss,
-                    "result": "LOSS"
-                })
+                strategy.trades.append(
+                    {
+                        "entry_time": df.iloc[entry_idx]["timestamp"],
+                        "exit_time": row["timestamp"],
+                        "profit_pct": loss,
+                        "result": "LOSS",
+                    }
+                )
                 in_trade = False
 
     return strategy
@@ -89,10 +97,14 @@ def backtest_strategy(df: pd.DataFrame, strategy: Strategy) -> Strategy:
 def test_coin(exchange, pair: str, hours_lookback: int = 24) -> dict:
     """Test all strategies on a single coin."""
     try:
-        since = exchange.parse8601((datetime.now() - timedelta(hours=hours_lookback)).isoformat())
+        since = exchange.parse8601(
+            (datetime.now() - timedelta(hours=hours_lookback)).isoformat()
+        )
         ohlcv = exchange.fetch_ohlcv(pair, "5m", since=since, limit=1000)
 
-        df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        df = pd.DataFrame(
+            ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+        )
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
 
         # Calculate indicators
@@ -114,31 +126,31 @@ def test_coin(exchange, pair: str, hours_lookback: int = 24) -> dict:
                 "Current Bot (RSI<45)",
                 lambda row: row["rsi_14"] < 45,
                 target_pct=4.0,
-                stop_pct=3.0
+                stop_pct=3.0,
             ),
             "Moderate (RSI 45-55)": Strategy(
                 "Moderate (RSI 45-55)",
                 lambda row: 45 <= row["rsi_14"] <= 55,
                 target_pct=2.0,  # Smaller target
-                stop_pct=1.5     # Tighter stop
+                stop_pct=1.5,  # Tighter stop
             ),
             "Looser (RSI<50)": Strategy(
                 "Looser (RSI<50)",
                 lambda row: row["rsi_14"] < 50,
                 target_pct=4.0,
-                stop_pct=3.0
+                stop_pct=3.0,
             ),
             "Aggressive (RSI<35)": Strategy(
                 "Aggressive (RSI<35)",
                 lambda row: row["rsi_14"] < 35,
                 target_pct=5.0,  # Bigger target
-                stop_pct=3.0
+                stop_pct=3.0,
             ),
             "RSI(7) Fast": Strategy(
                 "RSI(7) Fast",
                 lambda row: row["rsi_7"] < 30,
                 target_pct=4.0,
-                stop_pct=3.0
+                stop_pct=3.0,
             ),
         }
 
@@ -154,14 +166,14 @@ def test_coin(exchange, pair: str, hours_lookback: int = 24) -> dict:
                 "wins": strategy.wins,
                 "losses": strategy.losses,
                 "win_rate": win_rate,
-                "profit": strategy.total_profit
+                "profit": strategy.total_profit,
             }
 
         return {
             "pair": pair,
             "volatility": volatility,
             "rsi_range": f"{rsi_min:.0f}-{rsi_max:.0f}",
-            "strategies": results
+            "strategies": results,
         }
 
     except Exception:
@@ -187,7 +199,6 @@ def test_all_coins():
         "ARB/USD",
     ]
 
-
     coin_results = []
     for pair in pairs:
         result = test_coin(exchange, pair, hours_lookback=168)  # 7 days
@@ -197,7 +208,6 @@ def test_all_coins():
     # Print results
 
     for result in coin_results:
-
         for strategy_name, stats in result["strategies"].items():
             if stats["trades"] > 0:
                 " <-- BEST" if stats["profit"] > 0 else ""
@@ -215,7 +225,7 @@ def test_all_coins():
                     "total_wins": 0,
                     "total_losses": 0,
                     "total_profit": 0.0,
-                    "coins_traded": 0
+                    "coins_traded": 0,
                 }
 
             if stats["trades"] > 0:
@@ -226,8 +236,9 @@ def test_all_coins():
                 strategy_totals[strategy_name]["coins_traded"] += 1
 
     # Sort by profit
-    sorted_strategies = sorted(strategy_totals.items(), key=lambda x: x[1]["total_profit"], reverse=True)
-
+    sorted_strategies = sorted(
+        strategy_totals.items(), key=lambda x: x[1]["total_profit"], reverse=True
+    )
 
     for strategy_name, totals in sorted_strategies:
         total_trades = totals["total_trades"]
@@ -246,7 +257,6 @@ def test_all_coins():
         best_strategy[0]
         stats = best_strategy[1]
 
-
         if stats["total_profit"] > 0:
             pass
         else:
@@ -255,10 +265,10 @@ def test_all_coins():
         pass
 
 
-
 if __name__ == "__main__":
     try:
         test_all_coins()
     except Exception:
         import traceback
+
         traceback.print_exc()

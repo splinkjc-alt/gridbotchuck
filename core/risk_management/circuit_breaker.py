@@ -82,11 +82,15 @@ class CircuitBreaker:
         # Check current state
         if self.state == CircuitState.OPEN:
             if self._should_attempt_recovery():
-                self.logger.info(f"🔧 Circuit {self.name} entering HALF-OPEN state (testing recovery)")
+                self.logger.info(
+                    f"🔧 Circuit {self.name} entering HALF-OPEN state (testing recovery)"
+                )
                 self.state = CircuitState.HALF_OPEN
                 self.success_count = 0
             else:
-                time_until_recovery = self.recovery_timeout - (time.time() - self.last_failure_time)
+                time_until_recovery = self.recovery_timeout - (
+                    time.time() - self.last_failure_time
+                )
                 raise CircuitBreakerError(
                     f"Circuit breaker '{self.name}' is OPEN. "
                     f"Will retry in {time_until_recovery:.0f}s. "
@@ -114,12 +118,14 @@ class CircuitBreaker:
         if self.state == CircuitState.HALF_OPEN:
             self.success_count += 1
             self.logger.debug(
-                f"Circuit {self.name} half-open success " f"({self.success_count}/{self.success_threshold})"
+                f"Circuit {self.name} half-open success "
+                f"({self.success_count}/{self.success_threshold})"
             )
 
             if self.success_count >= self.success_threshold:
                 self.logger.info(
-                    f"✅ Circuit {self.name} CLOSED (recovered after " f"{self.total_failures} total failures)"
+                    f"✅ Circuit {self.name} CLOSED (recovered after "
+                    f"{self.total_failures} total failures)"
                 )
                 self.state = CircuitState.CLOSED
                 self.failure_count = 0
@@ -128,7 +134,9 @@ class CircuitBreaker:
         else:
             # In CLOSED state, reset failure count on success
             if self.failure_count > 0:
-                self.logger.debug(f"Circuit {self.name} success, resetting failure count from {self.failure_count} to 0")
+                self.logger.debug(
+                    f"Circuit {self.name} success, resetting failure count from {self.failure_count} to 0"
+                )
                 self.failure_count = 0
 
     def _on_failure(self, error: Exception):
@@ -137,12 +145,15 @@ class CircuitBreaker:
         self.total_failures += 1
         self.last_failure_time = time.time()
 
-        self.logger.warning(f"Circuit {self.name} failure #{self.failure_count}: {error}")
+        self.logger.warning(
+            f"Circuit {self.name} failure #{self.failure_count}: {error}"
+        )
 
         if self.state == CircuitState.HALF_OPEN:
             # Failed during recovery test - go back to OPEN
             self.logger.error(
-                f"❌ Circuit {self.name} OPENED (recovery test failed). " f"Will retry in {self.recovery_timeout}s"
+                f"❌ Circuit {self.name} OPENED (recovery test failed). "
+                f"Will retry in {self.recovery_timeout}s"
             )
             self.state = CircuitState.OPEN
             self.success_count = 0
@@ -151,7 +162,8 @@ class CircuitBreaker:
         elif self.failure_count >= self.failure_threshold:
             # Too many failures - open the circuit
             self.logger.error(
-                f"🚨 Circuit {self.name} OPENED ({self.failure_count} failures). " f"Trading halted for {self.recovery_timeout}s"
+                f"🚨 Circuit {self.name} OPENED ({self.failure_count} failures). "
+                f"Trading halted for {self.recovery_timeout}s"
             )
             self.state = CircuitState.OPEN
             self.last_state_change = time.time()
@@ -184,7 +196,9 @@ class CircuitBreaker:
             "total_failures": self.total_failures,
             "total_successes": self.total_successes,
             "success_rate": (
-                self.total_successes / (self.total_successes + self.total_failures) * 100
+                self.total_successes
+                / (self.total_successes + self.total_failures)
+                * 100
                 if (self.total_successes + self.total_failures) > 0
                 else 0
             ),
@@ -213,7 +227,9 @@ class TradingCircuitBreaker(CircuitBreaker):
         self.initial_balance = None
         self.current_balance = None
 
-    def check_balance(self, current_balance: float, initial_balance: float | None = None):
+    def check_balance(
+        self, current_balance: float, initial_balance: float | None = None
+    ):
         """
         Check if current balance triggers circuit breaker.
 
@@ -229,12 +245,15 @@ class TradingCircuitBreaker(CircuitBreaker):
 
         self.current_balance = current_balance
         loss = self.initial_balance - current_balance
-        loss_percent = (loss / self.initial_balance) * 100 if self.initial_balance > 0 else 0
+        loss_percent = (
+            (loss / self.initial_balance) * 100 if self.initial_balance > 0 else 0
+        )
 
         # Check percentage loss
         if self.max_loss_percent and loss_percent >= self.max_loss_percent:
             self.logger.error(
-                f"🚨 LOSS LIMIT EXCEEDED: {loss_percent:.1f}% loss " f"(${loss:.2f}). Opening circuit breaker!"
+                f"🚨 LOSS LIMIT EXCEEDED: {loss_percent:.1f}% loss "
+                f"(${loss:.2f}). Opening circuit breaker!"
             )
             self.state = CircuitState.OPEN
             self.last_failure_time = time.time()
@@ -244,7 +263,8 @@ class TradingCircuitBreaker(CircuitBreaker):
         # Check absolute loss
         if self.max_loss_absolute and loss >= self.max_loss_absolute:
             self.logger.error(
-                f"🚨 LOSS LIMIT EXCEEDED: ${loss:.2f} loss " f"(limit: ${self.max_loss_absolute}). Opening circuit breaker!"
+                f"🚨 LOSS LIMIT EXCEEDED: ${loss:.2f} loss "
+                f"(limit: ${self.max_loss_absolute}). Opening circuit breaker!"
             )
             self.state = CircuitState.OPEN
             self.last_failure_time = time.time()

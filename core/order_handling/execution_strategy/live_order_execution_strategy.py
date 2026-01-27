@@ -32,7 +32,9 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
     ) -> Order | None:
         """Execute a market order. Market orders typically fill immediately."""
         try:
-            self.logger.info(f"Placing market {order_side.name} order for {quantity} {pair} at ~${price}")
+            self.logger.info(
+                f"Placing market {order_side.name} order for {quantity} {pair} at ~${price}"
+            )
 
             raw_order = await self.exchange_service.place_order(
                 pair,
@@ -70,15 +72,21 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
 
             # If somehow still open, wait briefly and check again
             if order_result.status == OrderStatus.OPEN:
-                self.logger.info(f"Order {order_result.identifier} still open, waiting for fill...")
+                self.logger.info(
+                    f"Order {order_result.identifier} still open, waiting for fill..."
+                )
                 await asyncio.sleep(2)
 
                 try:
-                    updated_order = await self.exchange_service.fetch_order(order_result.identifier, pair)
+                    updated_order = await self.exchange_service.fetch_order(
+                        order_result.identifier, pair
+                    )
                     if updated_order:
                         order_result = await self._parse_order_result(updated_order)
                         if order_result.status == OrderStatus.CLOSED:
-                            self.logger.info(f"Order {order_result.identifier} now filled")
+                            self.logger.info(
+                                f"Order {order_result.identifier} now filled"
+                            )
                             return order_result
                 except Exception as e:
                     self.logger.warning(f"Could not recheck order status: {e}")
@@ -154,7 +162,9 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
             raise e
 
         except Exception as e:
-            raise DataFetchError(f"Unexpected error during order status retrieval: {e!s}") from e
+            raise DataFetchError(
+                f"Unexpected error during order status retrieval: {e!s}"
+            ) from e
 
     async def _parse_order_result(
         self,
@@ -202,17 +212,25 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
         attempt: int,
     ) -> float:
         adjustment = self.max_slippage / self.max_retries * attempt
-        return price * (1 + adjustment) if order_side == OrderSide.BUY else price * (1 - adjustment)
+        return (
+            price * (1 + adjustment)
+            if order_side == OrderSide.BUY
+            else price * (1 - adjustment)
+        )
 
     async def _handle_partial_fill(
         self,
         order: Order,
         pair: str,
     ) -> dict | None:
-        self.logger.info(f"Order partially filled with {order.filled}. Attempting to cancel and retry full quantity.")
+        self.logger.info(
+            f"Order partially filled with {order.filled}. Attempting to cancel and retry full quantity."
+        )
 
         if not await self._retry_cancel_order(order.identifier, pair):
-            self.logger.error(f"Unable to cancel partially filled order {order.identifier} after retries.")
+            self.logger.error(
+                f"Unable to cancel partially filled order {order.identifier} after retries."
+            )
 
     async def _retry_cancel_order(
         self,
@@ -227,10 +245,14 @@ class LiveOrderExecutionStrategy(OrderExecutionStrategyInterface):
                     self.logger.info(f"Successfully canceled order {order_id}.")
                     return True
 
-                self.logger.warning(f"Cancel attempt {cancel_attempt + 1} for order {order_id} failed.")
+                self.logger.warning(
+                    f"Cancel attempt {cancel_attempt + 1} for order {order_id} failed."
+                )
 
             except Exception as e:
-                self.logger.warning(f"Error during cancel attempt {cancel_attempt + 1} for order {order_id}: {e!s}")
+                self.logger.warning(
+                    f"Error during cancel attempt {cancel_attempt + 1} for order {order_id}: {e!s}"
+                )
 
             await asyncio.sleep(self.retry_delay)
         return False

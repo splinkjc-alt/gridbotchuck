@@ -35,7 +35,7 @@ Ran backtests on 15 cryptos.
 
 Results:
 - APT: +22.9% (1h, RSI+EMA)
-- LINK: +17.9% (1h, RSI+BB)  
+- LINK: +17.9% (1h, RSI+BB)
 - SOL: +15.9% (1h, RSI+BB)
 
 Each coin has its own optimal setup.

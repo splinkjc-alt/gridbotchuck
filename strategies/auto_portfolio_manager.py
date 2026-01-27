@@ -137,12 +137,16 @@ class PortfolioState:
             "performance": {
                 "realized_pnl": round(self.total_realized_pnl, 2),
                 "unrealized_pnl": round(self.total_unrealized_pnl, 2),
-                "total_pnl": round(self.total_realized_pnl + self.total_unrealized_pnl, 2),
+                "total_pnl": round(
+                    self.total_realized_pnl + self.total_unrealized_pnl, 2
+                ),
             },
             "status": {
                 "is_running": self.is_running,
                 "scan_cycle": self.scan_cycle,
-                "last_scan_at": self.last_scan_at.isoformat() if self.last_scan_at else None,
+                "last_scan_at": self.last_scan_at.isoformat()
+                if self.last_scan_at
+                else None,
             },
         }
 
@@ -288,7 +292,9 @@ class AutoPortfolioManager:
                 if self.state.active_positions < self.state.max_positions:
                     await self._scan_for_entries()
                 else:
-                    self.logger.info(f"At max positions ({self.state.active_positions}/{self.state.max_positions})")
+                    self.logger.info(
+                        f"At max positions ({self.state.active_positions}/{self.state.max_positions})"
+                    )
 
                 # Update existing positions
                 await self._update_positions()
@@ -298,7 +304,9 @@ class AutoPortfolioManager:
 
                 # Wait for next cycle
                 try:
-                    await asyncio.wait_for(self._stop_event.wait(), timeout=self.scan_interval)
+                    await asyncio.wait_for(
+                        self._stop_event.wait(), timeout=self.scan_interval
+                    )
                 except TimeoutError:
                     pass  # Normal timeout, continue loop
 
@@ -316,7 +324,8 @@ class AutoPortfolioManager:
         for pair in self._monitored_pairs:
             # Skip pairs we already have positions in
             if any(
-                p.pair == pair and p.status in (PositionStatus.ACTIVE, PositionStatus.ENTERING)
+                p.pair == pair
+                and p.status in (PositionStatus.ACTIVE, PositionStatus.ENTERING)
                 for p in self.state.positions
             ):
                 continue
@@ -328,7 +337,9 @@ class AutoPortfolioManager:
                     continue
 
                 # Get grid range from scan results or calculate
-                scan_result = next((r for r in self._scan_results if r.pair == pair), None)
+                scan_result = next(
+                    (r for r in self._scan_results if r.pair == pair), None
+                )
                 if scan_result:
                     grid_top = scan_result.suggested_grid_top
                     grid_bottom = scan_result.suggested_grid_bottom
@@ -383,14 +394,18 @@ class AutoPortfolioManager:
 
         self.logger.info(f"\n{'*' * 40}")
         self.logger.info(f"ENTERING POSITION: {signal.pair}")
-        self.logger.info(f"  Signal Score: {signal.score:.1f} ({signal.strength.value})")
+        self.logger.info(
+            f"  Signal Score: {signal.score:.1f} ({signal.strength.value})"
+        )
         self.logger.info(f"  Capital: ${position_size:.2f}")
         self.logger.info(f"  Entry Price: ${signal.current_price:.6f}")
         self.logger.info(f"  Reason: {signal.reason}")
         self.logger.info(f"{'*' * 40}\n")
 
         # Get scan result for grid config
-        scan_result = next((r for r in self._scan_results if r.pair == signal.pair), None)
+        scan_result = next(
+            (r for r in self._scan_results if r.pair == signal.pair), None
+        )
 
         # Create position
         position = PortfolioPosition(
@@ -424,11 +439,15 @@ class AutoPortfolioManager:
                 continue
 
             try:
-                current_price = await self.exchange_service.get_current_price(position.pair)
+                current_price = await self.exchange_service.get_current_price(
+                    position.pair
+                )
                 position.current_price = current_price
 
                 # Calculate unrealized PnL (simplified)
-                price_change_pct = (current_price - position.entry_price) / position.entry_price
+                price_change_pct = (
+                    current_price - position.entry_price
+                ) / position.entry_price
                 position.unrealized_pnl = position.allocated_capital * price_change_pct
 
             except Exception as e:
@@ -436,7 +455,9 @@ class AutoPortfolioManager:
 
         # Update totals
         self.state.total_unrealized_pnl = sum(
-            p.unrealized_pnl for p in self.state.positions if p.status == PositionStatus.ACTIVE
+            p.unrealized_pnl
+            for p in self.state.positions
+            if p.status == PositionStatus.ACTIVE
         )
 
     def _calculate_position_size(self) -> float:
@@ -455,7 +476,6 @@ class AutoPortfolioManager:
                     else 0
                 )
 
-
     async def close_position(self, pair: str) -> bool:
         """
         Close a specific position.
@@ -466,7 +486,14 @@ class AutoPortfolioManager:
         Returns:
             True if position was closed
         """
-        position = next((p for p in self.state.positions if p.pair == pair and p.status == PositionStatus.ACTIVE), None)
+        position = next(
+            (
+                p
+                for p in self.state.positions
+                if p.pair == pair and p.status == PositionStatus.ACTIVE
+            ),
+            None,
+        )
 
         if not position:
             self.logger.warning(f"No active position found for {pair}")
@@ -478,13 +505,17 @@ class AutoPortfolioManager:
         # Update state
         self.state.active_positions -= 1
         self.state.deployed_capital -= position.allocated_capital
-        self.state.available_capital += position.allocated_capital + position.unrealized_pnl
+        self.state.available_capital += (
+            position.allocated_capital + position.unrealized_pnl
+        )
         self.state.total_realized_pnl += position.unrealized_pnl
 
         position.realized_pnl = position.unrealized_pnl
         position.unrealized_pnl = 0
 
-        self.logger.info(f"Closed position in {pair}: PnL=${position.realized_pnl:+.2f}")
+        self.logger.info(
+            f"Closed position in {pair}: PnL=${position.realized_pnl:+.2f}"
+        )
 
         if self.on_position_closed:
             self.on_position_closed(position)
@@ -500,7 +531,9 @@ class AutoPortfolioManager:
         """
         closed = 0
         for position in self.state.positions:
-            if position.status == PositionStatus.ACTIVE and await self.close_position(position.pair):
+            if position.status == PositionStatus.ACTIVE and await self.close_position(
+                position.pair
+            ):
                 closed += 1
         return closed
 

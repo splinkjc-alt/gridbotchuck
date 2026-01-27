@@ -87,3 +87,4 @@ tmp/
 # Private/Proprietary Code (keep hidden)
 news_market_learner.py
 data/news_learning.db
+desktop/node_modules/

@@ -19,7 +19,9 @@ class TestExchangeServiceFactory:
 
     @patch("core.services.live_exchange_service.ccxtpro")
     @patch("core.services.live_exchange_service.getattr")
-    def test_create_live_exchange_service_with_env_vars(self, mock_getattr, mock_ccxtpro, config_manager, monkeypatch):
+    def test_create_live_exchange_service_with_env_vars(
+        self, mock_getattr, mock_ccxtpro, config_manager, monkeypatch
+    ):
         monkeypatch.setenv("EXCHANGE_API_KEY", "test_api_key")
         monkeypatch.setenv("EXCHANGE_SECRET_KEY", "test_secret_key")
 
@@ -27,9 +29,13 @@ class TestExchangeServiceFactory:
         mock_ccxtpro.binance.return_value = mock_exchange_instance
         mock_getattr.return_value = mock_ccxtpro.binance
 
-        service = ExchangeServiceFactory.create_exchange_service(config_manager, TradingMode.LIVE)
+        service = ExchangeServiceFactory.create_exchange_service(
+            config_manager, TradingMode.LIVE
+        )
 
-        assert isinstance(service, LiveExchangeService), "Expected a LiveExchangeService instance"
+        assert isinstance(
+            service, LiveExchangeService
+        ), "Expected a LiveExchangeService instance"
         mock_getattr.assert_called_once_with(mock_ccxtpro, "binance")
         mock_ccxtpro.binance.assert_called_once_with(
             {
@@ -41,12 +47,20 @@ class TestExchangeServiceFactory:
 
     @patch("core.services.live_exchange_service.ccxtpro")
     @patch("core.services.live_exchange_service.getattr")
-    def test_create_backtest_exchange_service(self, mock_getattr, mock_ccxtpro, config_manager):
+    def test_create_backtest_exchange_service(
+        self, mock_getattr, mock_ccxtpro, config_manager
+    ):
         config_manager.get_trading_mode.return_value = TradingMode.BACKTEST
-        service = ExchangeServiceFactory.create_exchange_service(config_manager, TradingMode.BACKTEST)
-        assert isinstance(service, BacktestExchangeService), "Expected a BacktestExchangeService instance"
+        service = ExchangeServiceFactory.create_exchange_service(
+            config_manager, TradingMode.BACKTEST
+        )
+        assert isinstance(
+            service, BacktestExchangeService
+        ), "Expected a BacktestExchangeService instance"
 
     def test_invalid_trading_mode(self, config_manager):
         config_manager.get_trading_mode.return_value = "invalid_mode"
         with pytest.raises(ValueError, match="Unsupported trading mode: invalid_mode"):
-            ExchangeServiceFactory.create_exchange_service(config_manager, "invalid_mode")
+            ExchangeServiceFactory.create_exchange_service(
+                config_manager, "invalid_mode"
+            )

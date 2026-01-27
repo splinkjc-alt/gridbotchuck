@@ -45,7 +45,10 @@ class TestConfigValidator:
         assert "trading_settings.timeframe" in invalid_fields
 
     def test_validate_invalid_exchange(self, config_validator, valid_config):
-        valid_config["exchange"] = {"name": "", "trading_fee": -0.01}  # Invalid exchange
+        valid_config["exchange"] = {
+            "name": "",
+            "trading_fee": -0.01,
+        }  # Invalid exchange
         with pytest.raises(ConfigValidationError) as excinfo:
             config_validator.validate(valid_config)
         assert "exchange.name" in excinfo.value.invalid_fields
@@ -91,7 +94,10 @@ class TestConfigValidator:
         assert "grid_strategy.num_grids" in excinfo.value.missing_fields
 
         # Test invalid top/bottom range (bottom should be less than top)
-        valid_config["grid_strategy"]["range"] = {"top": 2800, "bottom": 2850}  # Invalid range
+        valid_config["grid_strategy"]["range"] = {
+            "top": 2800,
+            "bottom": 2850,
+        }  # Invalid range
         with pytest.raises(ConfigValidationError) as excinfo:
             config_validator.validate(valid_config)
         assert "grid_strategy.range.top" in excinfo.value.invalid_fields

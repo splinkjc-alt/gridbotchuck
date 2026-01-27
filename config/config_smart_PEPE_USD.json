@@ -1,0 +1,16 @@
+{
+  "exchange": "kraken",
+  "pair": "PEPE/USD",
+  "strategy": "SIMPLE_GRID",
+  "grid_spacing": "GEOMETRIC",
+  "grid_count": 4,
+  "price_range": {
+    "low": 6e-06,
+    "high": 6e-06
+  },
+  "order_size_usd": 25.0,
+  "live_mode": true,
+  "auto_selected": true,
+  "selection_score": 70,
+  "selection_time": "2026-01-08T06:45:44.003997"
+}

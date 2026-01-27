@@ -23,7 +23,9 @@ def validate_args(args):
     if args.save_performance_results:
         save_performance_dir = os.path.dirname(args.save_performance_results)
         if save_performance_dir and not os.path.exists(save_performance_dir):
-            raise ValueError(f"The directory for saving performance results does not exist: {save_performance_dir}")
+            raise ValueError(
+                f"The directory for saving performance results does not exist: {save_performance_dir}"
+            )
 
 
 def parse_and_validate_console_args(cli_args=None):
@@ -87,7 +89,9 @@ def parse_and_validate_console_args(cli_args=None):
         if e.code == 0:  # Exit code 0 indicates a successful --help invocation
             raise
         logging.error(f"Argument parsing failed: {e}")
-        raise RuntimeError("Failed to parse arguments. Please check your inputs.") from e
+        raise RuntimeError(
+            "Failed to parse arguments. Please check your inputs."
+        ) from e
 
     except ValueError as e:
         logging.error(f"Validation failed: {e}")
@@ -96,4 +100,6 @@ def parse_and_validate_console_args(cli_args=None):
     except Exception as e:
         logging.error(f"An unexpected error occurred while parsing arguments: {e}")
         logging.error(traceback.format_exc())
-        raise RuntimeError("An unexpected error occurred during argument parsing.") from e
+        raise RuntimeError(
+            "An unexpected error occurred during argument parsing."
+        ) from e

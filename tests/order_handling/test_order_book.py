@@ -85,8 +85,12 @@ class TestOrderBook:
 
     def test_get_open_orders(self, setup_order_book):
         order_book = setup_order_book
-        open_order = Mock(spec=Order, side=OrderSide.BUY, is_open=Mock(return_value=True))
-        closed_order = Mock(spec=Order, side=OrderSide.SELL, is_open=Mock(return_value=False))
+        open_order = Mock(
+            spec=Order, side=OrderSide.BUY, is_open=Mock(return_value=True)
+        )
+        closed_order = Mock(
+            spec=Order, side=OrderSide.SELL, is_open=Mock(return_value=False)
+        )
 
         order_book.add_order(open_order)
         order_book.add_order(closed_order)
@@ -97,8 +101,12 @@ class TestOrderBook:
 
     def test_get_completed_orders(self, setup_order_book):
         order_book = setup_order_book
-        completed_order = Mock(spec=Order, side=OrderSide.BUY, is_filled=Mock(return_value=True))
-        pending_order = Mock(spec=Order, side=OrderSide.BUY, is_filled=Mock(return_value=False))
+        completed_order = Mock(
+            spec=Order, side=OrderSide.BUY, is_filled=Mock(return_value=True)
+        )
+        pending_order = Mock(
+            spec=Order, side=OrderSide.BUY, is_filled=Mock(return_value=False)
+        )
 
         order_book.add_order(completed_order)
         order_book.add_order(pending_order)
@@ -119,7 +127,12 @@ class TestOrderBook:
 
     def test_update_order_status(self, setup_order_book):
         order_book = setup_order_book
-        order = Mock(spec=Order, identifier="order_123", side=OrderSide.BUY, status=OrderStatus.OPEN)
+        order = Mock(
+            spec=Order,
+            identifier="order_123",
+            side=OrderSide.BUY,
+            status=OrderStatus.OPEN,
+        )
 
         order_book.add_order(order)
         order_book.update_order_status("order_123", OrderStatus.CLOSED)
@@ -134,4 +147,6 @@ class TestOrderBook:
         order_book.add_order(order)
         order_book.update_order_status("nonexistent_order", OrderStatus.CLOSED)
 
-        assert order.status == OrderStatus.OPEN  # Ensure no changes for non-existent orders
+        assert (
+            order.status == OrderStatus.OPEN
+        )  # Ensure no changes for non-existent orders

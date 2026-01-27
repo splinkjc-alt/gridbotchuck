@@ -26,8 +26,12 @@ class TestOrderStatusTracker:
     @pytest.mark.asyncio
     async def test_process_open_orders_success(self, setup_tracker):
         tracker, order_book, order_execution_strategy, _ = setup_tracker
-        mock_order = Mock(identifier="order_1", symbol="BTC/usd", status=OrderStatus.OPEN)
-        mock_remote_order = Mock(identifier="order_1", symbol="BTC/usd", status=OrderStatus.CLOSED)
+        mock_order = Mock(
+            identifier="order_1", symbol="BTC/usd", status=OrderStatus.OPEN
+        )
+        mock_remote_order = Mock(
+            identifier="order_1", symbol="BTC/usd", status=OrderStatus.CLOSED
+        )
 
         order_book.get_open_orders.return_value = [mock_order]
         order_execution_strategy.get_order = AsyncMock(return_value=mock_remote_order)
@@ -35,21 +39,29 @@ class TestOrderStatusTracker:
 
         await tracker._process_open_orders()
 
-        order_execution_strategy.get_order.assert_awaited_once_with("order_1", "BTC/usd")
+        order_execution_strategy.get_order.assert_awaited_once_with(
+            "order_1", "BTC/usd"
+        )
         tracker._handle_order_status_change.assert_called_once_with(mock_remote_order)
 
     @pytest.mark.asyncio
     async def test_process_open_orders_failure(self, setup_tracker):
         tracker, order_book, order_execution_strategy, _ = setup_tracker
-        mock_order = Mock(identifier="order_1", symbol="BTC/usd", status=OrderStatus.OPEN)
+        mock_order = Mock(
+            identifier="order_1", symbol="BTC/usd", status=OrderStatus.OPEN
+        )
 
         order_book.get_open_orders.return_value = [mock_order]
-        order_execution_strategy.get_order = AsyncMock(side_effect=Exception("Failed to fetch order"))
+        order_execution_strategy.get_order = AsyncMock(
+            side_effect=Exception("Failed to fetch order")
+        )
 
         with patch.object(tracker.logger, "error") as mock_logger_error:
             await tracker._process_open_orders()
 
-            order_execution_strategy.get_order.assert_awaited_once_with("order_1", "BTC/usd")
+            order_execution_strategy.get_order.assert_awaited_once_with(
+                "order_1", "BTC/usd"
+            )
             mock_logger_error.assert_called_once_with(
                 "Failed to query remote order with identifier order_1: Failed to fetch order",
                 exc_info=True,
@@ -62,8 +74,12 @@ class TestOrderStatusTracker:
         with patch.object(tracker.logger, "info") as mock_logger_info:
             tracker._handle_order_status_change(mock_remote_order)
 
-            order_book.update_order_status.assert_called_once_with("order_1", OrderStatus.CLOSED)
-            event_bus.publish_sync.assert_called_once_with(Events.ORDER_FILLED, mock_remote_order)
+            order_book.update_order_status.assert_called_once_with(
+                "order_1", OrderStatus.CLOSED
+            )
+            event_bus.publish_sync.assert_called_once_with(
+                Events.ORDER_FILLED, mock_remote_order
+            )
             mock_logger_info.assert_called_once_with("Order order_1 filled.")
 
     def test_handle_order_status_change_canceled(self, setup_tracker):
@@ -73,8 +89,12 @@ class TestOrderStatusTracker:
         with patch.object(tracker.logger, "warning") as mock_logger_warning:
             tracker._handle_order_status_change(mock_remote_order)
 
-            order_book.update_order_status.assert_called_once_with("order_1", OrderStatus.CANCELED)
-            event_bus.publish_sync.assert_called_once_with(Events.ORDER_CANCELLED, mock_remote_order)
+            order_book.update_order_status.assert_called_once_with(
+                "order_1", OrderStatus.CANCELED
+            )
+            event_bus.publish_sync.assert_called_once_with(
+                Events.ORDER_CANCELLED, mock_remote_order
+            )
 
             mock_logger_warning.assert_any_call("Order order_1 was canceled.")
 
@@ -97,16 +117,22 @@ class TestOrderStatusTracker:
 
     def test_handle_order_status_change_open(self, setup_tracker):
         tracker, _, _, _ = setup_tracker
-        mock_remote_order = Mock(identifier="order_1", status=OrderStatus.OPEN, filled=0)
+        mock_remote_order = Mock(
+            identifier="order_1", status=OrderStatus.OPEN, filled=0
+        )
 
         with patch.object(tracker.logger, "info") as mock_logger_info:
             tracker._handle_order_status_change(mock_remote_order)
 
-            mock_logger_info.assert_called_once_with(f"Order {mock_remote_order} is still open. No fills yet.")
+            mock_logger_info.assert_called_once_with(
+                f"Order {mock_remote_order} is still open. No fills yet."
+            )
 
     def test_handle_order_status_change_partially_filled(self, setup_tracker):
         tracker, _, _, _ = setup_tracker
-        mock_remote_order = Mock(identifier="order_1", status=OrderStatus.OPEN, filled=0.5, remaining=0.5)
+        mock_remote_order = Mock(
+            identifier="order_1", status=OrderStatus.OPEN, filled=0.5, remaining=0.5
+        )
 
         with patch.object(tracker.logger, "info") as mock_logger_info:
             tracker._handle_order_status_change(mock_remote_order)
@@ -123,7 +149,9 @@ class TestOrderStatusTracker:
         with patch.object(tracker.logger, "warning") as mock_logger_warning:
             tracker._handle_order_status_change(mock_remote_order)
 
-            mock_logger_warning.assert_called_once_with("Unhandled order status 'unexpected_status' for order order_1.")
+            mock_logger_warning.assert_called_once_with(
+                "Unhandled order status 'unexpected_status' for order order_1."
+            )
 
     @pytest.mark.asyncio
     async def test_start_tracking_creates_monitoring_task(self, setup_tracker):
@@ -142,7 +170,9 @@ class TestOrderStatusTracker:
         tracker.start_tracking()
         with patch.object(tracker.logger, "warning") as mock_logger_warning:
             tracker.start_tracking()
-            mock_logger_warning.assert_called_once_with("OrderStatusTracker is already running.")
+            mock_logger_warning.assert_called_once_with(
+                "OrderStatusTracker is already running."
+            )
 
         await tracker.stop_tracking()
 
@@ -168,7 +198,9 @@ class TestOrderStatusTracker:
         assert tracker._monitoring_task is None
 
     @pytest.mark.asyncio
-    async def test_track_open_order_statuses_handles_unexpected_error(self, setup_tracker):
+    async def test_track_open_order_statuses_handles_unexpected_error(
+        self, setup_tracker
+    ):
         tracker, order_book, _, _ = setup_tracker
 
         order_book.get_open_orders.side_effect = Exception("Unexpected error")
@@ -216,14 +248,24 @@ class TestOrderStatusTracker:
     async def test_process_open_orders_with_multiple_orders(self, setup_tracker):
         tracker, order_book, order_execution_strategy, _ = setup_tracker
 
-        mock_order1 = Mock(identifier="order_1", symbol="BTC/usd", status=OrderStatus.OPEN)
-        mock_order2 = Mock(identifier="order_2", symbol="ETH/usd", status=OrderStatus.OPEN)
+        mock_order1 = Mock(
+            identifier="order_1", symbol="BTC/usd", status=OrderStatus.OPEN
+        )
+        mock_order2 = Mock(
+            identifier="order_2", symbol="ETH/usd", status=OrderStatus.OPEN
+        )
 
-        mock_remote_order1 = Mock(identifier="order_1", symbol="BTC/usd", status=OrderStatus.CLOSED)
-        mock_remote_order2 = Mock(identifier="order_2", symbol="ETH/usd", status=OrderStatus.CANCELED)
+        mock_remote_order1 = Mock(
+            identifier="order_1", symbol="BTC/usd", status=OrderStatus.CLOSED
+        )
+        mock_remote_order2 = Mock(
+            identifier="order_2", symbol="ETH/usd", status=OrderStatus.CANCELED
+        )
 
         order_book.get_open_orders.return_value = [mock_order1, mock_order2]
-        order_execution_strategy.get_order = AsyncMock(side_effect=[mock_remote_order1, mock_remote_order2])
+        order_execution_strategy.get_order = AsyncMock(
+            side_effect=[mock_remote_order1, mock_remote_order2]
+        )
         tracker._handle_order_status_change = Mock()
 
         await tracker._process_open_orders()

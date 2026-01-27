@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class NewsSignal:
     """A trading signal from news analysis."""
+
     symbol: str
     sentiment: str  # "bullish", "bearish", "neutral"
     score: float  # -1 to +1
@@ -46,21 +47,21 @@ class NewsAnalyzer:
 
         # Company name mappings for better news search
         self.company_names = {
-            'AAPL': 'Apple',
-            'MSFT': 'Microsoft',
-            'GOOGL': 'Google Alphabet',
-            'AMZN': 'Amazon',
-            'META': 'Meta Facebook',
-            'TSLA': 'Tesla',
-            'NVDA': 'NVIDIA',
-            'AMD': 'AMD Advanced Micro',
-            'PLTR': 'Palantir',
-            'HOOD': 'Robinhood',
-            'COIN': 'Coinbase',
-            'SHOP': 'Shopify',
-            'SOFI': 'SoFi',
-            'MARA': 'Marathon Digital',
-            'RIOT': 'Riot Platforms',
+            "AAPL": "Apple",
+            "MSFT": "Microsoft",
+            "GOOGL": "Google Alphabet",
+            "AMZN": "Amazon",
+            "META": "Meta Facebook",
+            "TSLA": "Tesla",
+            "NVDA": "NVIDIA",
+            "AMD": "AMD Advanced Micro",
+            "PLTR": "Palantir",
+            "HOOD": "Robinhood",
+            "COIN": "Coinbase",
+            "SHOP": "Shopify",
+            "SOFI": "SoFi",
+            "MARA": "Marathon Digital",
+            "RIOT": "Riot Platforms",
         }
 
     def get_current_price(self, symbol: str) -> Optional[float]:
@@ -69,7 +70,7 @@ class NewsAnalyzer:
             ticker = yf.Ticker(symbol)
             data = ticker.history(period="1d")
             if not data.empty:
-                return data['Close'].iloc[-1]
+                return data["Close"].iloc[-1]
         except Exception as e:
             logger.error(f"Error getting price for {symbol}: {e}")
         return None
@@ -100,7 +101,7 @@ class NewsAnalyzer:
                 top_headlines=[],
                 sources=[],
                 recommendation="hold",
-                reason="No recent news found"
+                reason="No recent news found",
             )
 
         # Analyze sentiment of all headlines
@@ -128,7 +129,7 @@ class NewsAnalyzer:
                     sentiment_label=result.label,
                     confidence=result.confidence,
                     price_at_news=current_price,
-                    news_published_at=article.published
+                    news_published_at=article.published,
                 )
 
         # Generate recommendation
@@ -145,12 +146,12 @@ class NewsAnalyzer:
             top_headlines=headlines[:5],
             sources=sources[:10],
             recommendation=recommendation,
-            reason=reason
+            reason=reason,
         )
 
-    def _generate_recommendation(self, sentiment: SentimentResult,
-                                  article_count: int,
-                                  sources: list) -> tuple[str, str]:
+    def _generate_recommendation(
+        self, sentiment: SentimentResult, article_count: int, sources: list
+    ) -> tuple[str, str]:
         """Generate trading recommendation from sentiment analysis."""
 
         # Need minimum data
@@ -159,7 +160,10 @@ class NewsAnalyzer:
 
         # High confidence bullish
         if sentiment.score > 0.3 and sentiment.confidence > 0.5:
-            return "buy", f"Strong bullish sentiment ({sentiment.score:.2f}) with high confidence"
+            return (
+                "buy",
+                f"Strong bullish sentiment ({sentiment.score:.2f}) with high confidence",
+            )
 
         # Moderate bullish
         elif sentiment.score > 0.15 and sentiment.confidence > 0.3:
@@ -167,7 +171,10 @@ class NewsAnalyzer:
 
         # High confidence bearish
         elif sentiment.score < -0.3 and sentiment.confidence > 0.5:
-            return "avoid", f"Strong bearish sentiment ({sentiment.score:.2f}) - wait for reversal"
+            return (
+                "avoid",
+                f"Strong bearish sentiment ({sentiment.score:.2f}) - wait for reversal",
+            )
 
         # Moderate bearish
         elif sentiment.score < -0.15 and sentiment.confidence > 0.3:
@@ -175,9 +182,14 @@ class NewsAnalyzer:
 
         # Neutral or low confidence
         else:
-            return "hold", f"Neutral sentiment ({sentiment.score:.2f}) or low confidence"
+            return (
+                "hold",
+                f"Neutral sentiment ({sentiment.score:.2f}) or low confidence",
+            )
 
-    def scan_watchlist(self, symbols: list[str], track: bool = True) -> list[NewsSignal]:
+    def scan_watchlist(
+        self, symbols: list[str], track: bool = True
+    ) -> list[NewsSignal]:
         """
         Scan multiple symbols and return sorted signals.
 
@@ -189,7 +201,9 @@ class NewsAnalyzer:
             try:
                 signal = self.analyze_symbol(symbol, track=track)
                 signals.append(signal)
-                logger.info(f"{symbol}: {signal.sentiment} ({signal.score:.2f}) - {signal.recommendation}")
+                logger.info(
+                    f"{symbol}: {signal.sentiment} ({signal.score:.2f}) - {signal.recommendation}"
+                )
             except Exception as e:
                 logger.error(f"Error analyzing {symbol}: {e}")
 
@@ -220,8 +234,9 @@ class NewsAnalyzer:
         """Get news source accuracy rankings."""
         return self.tracker.generate_report()
 
-    def filter_by_trusted_sources(self, signal: NewsSignal,
-                                   min_accuracy: float = 55) -> bool:
+    def filter_by_trusted_sources(
+        self, signal: NewsSignal, min_accuracy: float = 55
+    ) -> bool:
         """
         Check if signal comes from trusted (accurate) sources.
 

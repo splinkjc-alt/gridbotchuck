@@ -1,0 +1,223 @@
+//@version=5
+indicator("Multi-Indicator Strategy", overlay=true, max_labels_count=500)
+
+// ============================================================================
+// MULTI-INDICATOR BUY SIGNAL STRATEGY
+// ============================================================================
+// Combines multiple technical indicators for robust signal generation:
+// - EMA 9 (Red), EMA 30 (Blue), EMA 200 (White)
+// - Bollinger Bands (Period 16, Std Dev 3.4)
+// - CCI (Commodity Channel Index, Period 14)
+// - MACD (12, 26, 9)
+//
+// BUY Signal when ALL conditions are met:
+// 1. Price > EMA 9
+// 2. Price > EMA 30
+// 3. Price > EMA 200
+// 4. Price > Bollinger Middle Band
+// 5. CCI > 0
+// 6. MACD Line > Signal Line
+// ============================================================================
+
+// ==================== INPUT PARAMETERS ====================
+
+// EMA Settings
+ema_fast_length = input.int(9, "EMA Fast (Red)", minval=1)
+ema_medium_length = input.int(30, "EMA Medium (Blue)", minval=1)
+ema_slow_length = input.int(200, "EMA Slow (White)", minval=1)
+
+// Bollinger Bands Settings
+bb_length = input.int(16, "Bollinger Period", minval=1)
+bb_mult = input.float(3.4, "Bollinger Std Dev", minval=0.1, step=0.1)
+
+// CCI Settings
+cci_length = input.int(14, "CCI Period", minval=1)
+
+// MACD Settings
+macd_fast = input.int(12, "MACD Fast", minval=1)
+macd_slow = input.int(26, "MACD Slow", minval=1)
+macd_signal_length = input.int(9, "MACD Signal", minval=1)
+
+// Signal Settings
+min_conditions = input.int(4, "Min Conditions for Buy (1-6)", minval=1, maxval=6)
+show_labels = input.bool(true, "Show Buy/Sell Labels")
+show_table = input.bool(true, "Show Signal Strength Table")
+
+// ==================== INDICATOR CALCULATIONS ====================
+
+// EMAs
+ema_9 = ta.ema(close, ema_fast_length)
+ema_30 = ta.ema(close, ema_medium_length)
+ema_200 = ta.ema(close, ema_slow_length)
+
+// Bollinger Bands
+bb_basis = ta.sma(close, bb_length)
+bb_dev = bb_mult * ta.stdev(close, bb_length)
+bb_upper = bb_basis + bb_dev
+bb_lower = bb_basis - bb_dev
+
+// CCI
+cci = ta.cci(close, cci_length)
+
+// MACD
+[macd_line, signal_line, hist] = ta.macd(close, macd_fast, macd_slow, macd_signal_length)
+
+// ==================== CONDITION CHECKS ====================
+
+// Individual conditions
+cond_ema9 = close > ema_9
+cond_ema30 = close > ema_30
+cond_ema200 = close > ema_200
+cond_bb = close > bb_basis
+cond_cci = cci > 0
+cond_macd = macd_line > signal_line
+
+// Count conditions met
+conditions_met = (cond_ema9 ? 1 : 0) + (cond_ema30 ? 1 : 0) + (cond_ema200 ? 1 : 0) + (cond_bb ? 1 : 0) + (cond_cci ? 1 : 0) + (cond_macd ? 1 : 0)
+
+// Signal conditions
+buy_signal = conditions_met >= min_conditions and conditions_met[1] < min_conditions
+sell_signal = conditions_met < 2 and conditions_met[1] >= 2
+strong_buy = conditions_met >= 5
+strong_sell = conditions_met <= 1
+
+// ==================== PLOTTING - PRICE CHART ====================
+
+// Plot EMAs
+plot(ema_9, "EMA 9", color=color.red, linewidth=2)
+plot(ema_30, "EMA 30", color=color.blue, linewidth=2)
+plot(ema_200, "EMA 200", color=color.white, linewidth=2)
+
+// Plot Bollinger Bands
+p_bb_upper = plot(bb_upper, "BB Upper", color=color.gray, linewidth=1)
+plot(bb_basis, "BB Middle", color=color.gray, linewidth=1, style=plot.style_circles)
+p_bb_lower = plot(bb_lower, "BB Lower", color=color.gray, linewidth=1)
+fill(p_bb_upper, p_bb_lower, color=color.new(color.blue, 90), title="BB Fill")
+
+// ==================== PLOTTING - BUY/SELL SIGNALS ====================
+
+// Plot buy signals
+plotshape(
+    buy_signal,
+    title="Buy Signal",
+    text="BUY",
+    style=shape.triangleup,
+    location=location.belowbar,
+    color=color.green,
+    textcolor=color.white,
+    size=size.small
+)
+
+// Plot strong buy signals (5-6 conditions)
+plotshape(
+    strong_buy and buy_signal,
+    title="Strong Buy",
+    text="STRONG",
+    style=shape.triangleup,
+    location=location.belowbar,
+    color=color.lime,
+    textcolor=color.white,
+    size=size.normal,
+    offset=-1
+)
+
+// Plot sell signals
+plotshape(
+    sell_signal,
+    title="Sell Signal",
+    text="SELL",
+    style=shape.triangledown,
+    location=location.abovebar,
+    color=color.red,
+    textcolor=color.white,
+    size=size.small
+)
+
+// ==================== BACKGROUND COLORING ====================
+
+// Color background based on signal strength
+bg_color = conditions_met >= 5 ? color.new(color.green, 90) :
+           conditions_met >= 4 ? color.new(color.green, 95) :
+           conditions_met <= 1 ? color.new(color.red, 90) :
+           na
+bgcolor(bg_color, title="Signal Strength Background")
+
+// ==================== SIGNAL STRENGTH TABLE ====================
+
+if show_table
+    var table signal_table = table.new(position.top_right, 2, 8, bgcolor=color.new(color.black, 70), frame_width=1)
+
+    // Header
+    table.cell(signal_table, 0, 0, "Indicator", text_color=color.white, text_size=size.small)
+    table.cell(signal_table, 1, 0, "Status", text_color=color.white, text_size=size.small)
+
+    // EMA 9
+    table.cell(signal_table, 0, 1, "EMA 9", text_color=color.red, text_size=size.tiny)
+    table.cell(signal_table, 1, 1, cond_ema9 ? "ABOVE" : "BELOW",
+               text_color=cond_ema9 ? color.green : color.red, text_size=size.tiny)
+
+    // EMA 30
+    table.cell(signal_table, 0, 2, "EMA 30", text_color=color.blue, text_size=size.tiny)
+    table.cell(signal_table, 1, 2, cond_ema30 ? "ABOVE" : "BELOW",
+               text_color=cond_ema30 ? color.green : color.red, text_size=size.tiny)
+
+    // EMA 200
+    table.cell(signal_table, 0, 3, "EMA 200", text_color=color.white, text_size=size.tiny)
+    table.cell(signal_table, 1, 3, cond_ema200 ? "ABOVE" : "BELOW",
+               text_color=cond_ema200 ? color.green : color.red, text_size=size.tiny)
+
+    // Bollinger
+    table.cell(signal_table, 0, 4, "BB Middle", text_color=color.gray, text_size=size.tiny)
+    table.cell(signal_table, 1, 4, cond_bb ? "ABOVE" : "BELOW",
+               text_color=cond_bb ? color.green : color.red, text_size=size.tiny)
+
+    // CCI
+    table.cell(signal_table, 0, 5, "CCI", text_color=color.purple, text_size=size.tiny)
+    table.cell(signal_table, 1, 5, cond_cci ? str.tostring(cci, "#.0") : str.tostring(cci, "#.0"),
+               text_color=cond_cci ? color.green : color.red, text_size=size.tiny)
+
+    // MACD
+    table.cell(signal_table, 0, 6, "MACD", text_color=color.orange, text_size=size.tiny)
+    table.cell(signal_table, 1, 6, cond_macd ? "BULLISH" : "BEARISH",
+               text_color=cond_macd ? color.green : color.red, text_size=size.tiny)
+
+    // Signal Strength
+    strength_color = conditions_met >= 5 ? color.lime :
+                     conditions_met >= 4 ? color.green :
+                     conditions_met >= 3 ? color.yellow :
+                     conditions_met >= 2 ? color.orange :
+                     color.red
+    table.cell(signal_table, 0, 7, "STRENGTH", text_color=color.white, text_size=size.small)
+    table.cell(signal_table, 1, 7, str.tostring(conditions_met) + "/6",
+               text_color=strength_color, text_size=size.normal)
+
+// ==================== ALERTS ====================
+
+// Alert conditions
+alertcondition(buy_signal, title="Buy Signal", message="Multi-Indicator BUY Signal: {{ticker}} at {{close}}")
+alertcondition(sell_signal, title="Sell Signal", message="Multi-Indicator SELL Signal: {{ticker}} at {{close}}")
+alertcondition(strong_buy and buy_signal, title="Strong Buy", message="STRONG BUY Signal: {{ticker}} - All conditions aligned!")
+alertcondition(conditions_met >= min_conditions, title="Conditions Met", message="{{ticker}}: {{plot_0}} conditions met")
+
+// ==================== INFO LABELS ====================
+
+// Add price labels on signals
+if show_labels and buy_signal
+    label.new(
+        bar_index, low,
+        str.tostring(conditions_met) + "/6\n$" + str.tostring(close, "#.####"),
+        style=label.style_label_up,
+        color=color.green,
+        textcolor=color.white,
+        size=size.tiny
+    )
+
+if show_labels and sell_signal
+    label.new(
+        bar_index, high,
+        str.tostring(conditions_met) + "/6\n$" + str.tostring(close, "#.####"),
+        style=label.style_label_down,
+        color=color.red,
+        textcolor=color.white,
+        size=size.tiny
+    )

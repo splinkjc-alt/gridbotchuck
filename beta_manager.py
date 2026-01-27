@@ -101,11 +101,9 @@ class BetaManager:
         if not self.signups["signups"]:
             return
 
-
         for _i, signup in enumerate(self.signups["signups"], 1):
             "🔑 Key Generated" if signup["key_generated"] else "⏳ Awaiting Key"
             datetime.fromisoformat(signup["signup_date"]).strftime("%Y-%m-%d %H:%M")
-
 
     def export_signups(self, filename: str = "beta_testers.csv"):
         """Export signups to CSV."""
@@ -128,7 +126,6 @@ class BetaManager:
                 )
 
 
-
 def main():
     parser = argparse.ArgumentParser(
         description="GridBot Pro Beta Program Manager",
@@ -145,9 +142,15 @@ Beta keys are valid for 14 days from generation.
         """,
     )
 
-    parser.add_argument("command", choices=["generate", "add", "list", "export"], help="Command to run")
-    parser.add_argument("email", nargs="?", help="Email address (required for generate/add commands)")
-    parser.add_argument("--machine-id", help="Optional machine ID to lock the key to specific hardware")
+    parser.add_argument(
+        "command", choices=["generate", "add", "list", "export"], help="Command to run"
+    )
+    parser.add_argument(
+        "email", nargs="?", help="Email address (required for generate/add commands)"
+    )
+    parser.add_argument(
+        "--machine-id", help="Optional machine ID to lock the key to specific hardware"
+    )
 
     args = parser.parse_args()
     manager = BetaManager()

@@ -404,11 +404,17 @@ class EntrySignalAnalyzer:
         close_prices = ohlcv_data["close"]
         volume = ohlcv_data["volume"]
         current_price = float(close_prices.iloc[-1])
-        timestamp = ohlcv_data["timestamp"].iloc[-1] if "timestamp" in ohlcv_data.columns else pd.Timestamp.now()
+        timestamp = (
+            ohlcv_data["timestamp"].iloc[-1]
+            if "timestamp" in ohlcv_data.columns
+            else pd.Timestamp.now()
+        )
 
         # Calculate indicators
         rsi = self.calculate_rsi(close_prices)
-        price_position_pct = self.calculate_price_position(current_price, grid_top, grid_bottom)
+        price_position_pct = self.calculate_price_position(
+            current_price, grid_top, grid_bottom
+        )
         volume_trend, volume_ratio = self.analyze_volume_trend(volume)
 
         # Calculate component scores
@@ -431,7 +437,9 @@ class EntrySignalAnalyzer:
         should_enter = composite_score >= min_entry_score
 
         # Generate reason
-        reason = self.generate_entry_reason(strength, rsi, price_position_pct, volume_trend)
+        reason = self.generate_entry_reason(
+            strength, rsi, price_position_pct, volume_trend
+        )
 
         self.logger.info(
             f"Entry signal for {pair}: Score={composite_score:.1f} ({strength.value}), "
@@ -493,7 +501,9 @@ class EntrySignalAnalyzer:
                 )
                 signals.append(signal)
             except Exception as e:
-                self.logger.error(f"Error analyzing entry for {data.get('pair', 'unknown')}: {e}")
+                self.logger.error(
+                    f"Error analyzing entry for {data.get('pair', 'unknown')}: {e}"
+                )
 
         # Sort by score (highest first)
         signals.sort(key=lambda x: x.score, reverse=True)
@@ -526,9 +536,19 @@ class EntrySignalAnalyzer:
             return []
 
         # Separate by strength
-        excellent = [s for s in signals if s.strength == SignalStrength.EXCELLENT and s.should_enter]
-        good = [s for s in signals if s.strength == SignalStrength.GOOD and s.should_enter]
-        moderate = [s for s in signals if s.strength == SignalStrength.MODERATE and s.should_enter]
+        excellent = [
+            s
+            for s in signals
+            if s.strength == SignalStrength.EXCELLENT and s.should_enter
+        ]
+        good = [
+            s for s in signals if s.strength == SignalStrength.GOOD and s.should_enter
+        ]
+        moderate = [
+            s
+            for s in signals
+            if s.strength == SignalStrength.MODERATE and s.should_enter
+        ]
 
         best_entries = []
 

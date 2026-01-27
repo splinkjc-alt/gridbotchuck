@@ -26,6 +26,7 @@ import pytz
 # Signal logging for accuracy tracking
 try:
     from signal_logger import log_signal
+
     SIGNAL_LOGGING = True
 except ImportError:
     SIGNAL_LOGGING = False
@@ -34,19 +35,19 @@ except ImportError:
 # Try importing yfinance for stocks
 try:
     import yfinance as yf
+
     YFINANCE_AVAILABLE = True
 except ImportError:
     YFINANCE_AVAILABLE = False
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(message)s",
-    datefmt="%H:%M:%S"
+    level=logging.INFO, format="%(asctime)s | %(message)s", datefmt="%H:%M:%S"
 )
 log = logging.getLogger("AdaptiveScanner")
 
 
 # ============== TECHNICAL INDICATORS ==============
+
 
 def calculate_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
     """Calculate RSI indicator."""
@@ -64,7 +65,9 @@ def calculate_ema(prices: pd.Series, period: int) -> pd.Series:
     return prices.ewm(span=period, adjust=False).mean()
 
 
-def calculate_bollinger_bands(prices: pd.Series, period: int = 20, std_dev: float = 2.0):
+def calculate_bollinger_bands(
+    prices: pd.Series, period: int = 20, std_dev: float = 2.0
+):
     """Calculate Bollinger Bands."""
     sma = prices.rolling(window=period).mean()
     std = prices.rolling(window=period).std()
@@ -84,9 +87,11 @@ def calculate_macd(prices: pd.Series, fast: int = 12, slow: int = 26, signal: in
 
 # ============== OPPORTUNITY ==============
 
+
 @dataclass
 class Opportunity:
     """Trading opportunity."""
+
     symbol: str
     timeframe: str
     strategy: str
@@ -110,24 +115,29 @@ DEFAULT_CONFIG = {
         "rsi_buy": 35,
         "rsi_sell": 65,
         "bb_period": 20,
-        "bb_std": 2.0
+        "bb_std": 2.0,
     },
     "profit_pct": 0.0,
-    "win_rate": 0.0
+    "win_rate": 0.0,
 }
 
 
 # ============== ADAPTIVE SCANNER ==============
 
+
 class AdaptiveScanner:
     """Scans multiple assets using their optimal configurations."""
 
-    def __init__(self, watchlist_file: str | None = None, configs_file: str | None = None):
+    def __init__(
+        self, watchlist_file: str | None = None, configs_file: str | None = None
+    ):
         self.exchange = ccxt.kraken()
         self.et_tz = pytz.timezone("US/Eastern")
 
         # Load watchlist
-        watchlist_path = watchlist_file or Path(__file__).parent / "config" / "watchlist.json"
+        watchlist_path = (
+            watchlist_file or Path(__file__).parent / "config" / "watchlist.json"
+        )
         if Path(watchlist_path).exists():
             with open(watchlist_path) as f:
                 data = json.load(f)
@@ -138,7 +148,10 @@ class AdaptiveScanner:
             self.stock_watchlist = []
 
         # Load optimal configs
-        configs_path = configs_file or Path(__file__).parent / "optimization" / "optimal_configs.json"
+        configs_path = (
+            configs_file
+            or Path(__file__).parent / "optimization" / "optimal_configs.json"
+        )
         if Path(configs_path).exists():
             with open(configs_path) as f:
                 self.configs = json.load(f)
@@ -155,7 +168,9 @@ class AdaptiveScanner:
         """Fetch OHLCV data for symbol."""
         try:
             candles = self.exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
-            df = pd.DataFrame(candles, columns=["timestamp", "open", "high", "low", "close", "volume"])
+            df = pd.DataFrame(
+                candles, columns=["timestamp", "open", "high", "low", "close", "volume"]
+            )
             return df
         except Exception as e:
             log.error(f"Error fetching {symbol}: {e}")
@@ -186,8 +201,10 @@ class AdaptiveScanner:
             bb_upper, _bb_mid, bb_lower = calculate_bollinger_bands(
                 close, params["bb_period"], params.get("bb_std", 2.0)
             )
-            bb_pos = ((current_price - bb_lower.iloc[-1]) /
-                      (bb_upper.iloc[-1] - bb_lower.iloc[-1])) * 100
+            bb_pos = (
+                (current_price - bb_lower.iloc[-1])
+                / (bb_upper.iloc[-1] - bb_lower.iloc[-1])
+            ) * 100
             indicators["BB_pos"] = round(bb_pos, 1)
 
         if "ema_fast" in params:
@@ -199,10 +216,14 @@ class AdaptiveScanner:
             macd, macd_signal = calculate_macd(
                 close, params["macd_fast"], params["macd_slow"], params["macd_signal"]
             )
-            indicators["MACD"] = "BULL" if macd.iloc[-1] > macd_signal.iloc[-1] else "BEAR"
+            indicators["MACD"] = (
+                "BULL" if macd.iloc[-1] > macd_signal.iloc[-1] else "BEAR"
+            )
 
         # Generate signal based on strategy
-        signal, strength, reasons = self._generate_signal(strategy, params, indicators, current_rsi)
+        signal, strength, reasons = self._generate_signal(
+            strategy, params, indicators, current_rsi
+        )
 
         return Opportunity(
             symbol=symbol,
@@ -213,10 +234,12 @@ class AdaptiveScanner:
             price=current_price,
             reason=" | ".join(reasons) if reasons else "Neutral",
             indicators=indicators,
-            timestamp=datetime.now(tz=UTC)
+            timestamp=datetime.now(tz=UTC),
         )
 
-    def _generate_signal(self, strategy: str, params: dict, indicators: dict, rsi: float) -> tuple:
+    def _generate_signal(
+        self, strategy: str, params: dict, indicators: dict, rsi: float
+    ) -> tuple:
         """Generate trading signal based on strategy and indicators."""
         signal = "WAIT"
         strength = 0
@@ -291,7 +314,7 @@ class AdaptiveScanner:
                 price=0,
                 reason="yfinance not installed",
                 indicators={},
-                timestamp=datetime.now(tz=UTC)
+                timestamp=datetime.now(tz=UTC),
             )
 
         # Check market hours
@@ -306,7 +329,7 @@ class AdaptiveScanner:
                 price=0,
                 reason="Weekend",
                 indicators={"market": "CLOSED"},
-                timestamp=datetime.now(tz=UTC)
+                timestamp=datetime.now(tz=UTC),
             )
 
         market_open = time(9, 30)
@@ -321,7 +344,7 @@ class AdaptiveScanner:
                 price=0,
                 reason=f'Market closed ({now.strftime("%I:%M %p ET")})',
                 indicators={"market": "CLOSED"},
-                timestamp=datetime.now(tz=UTC)
+                timestamp=datetime.now(tz=UTC),
             )
 
         try:
@@ -361,7 +384,7 @@ class AdaptiveScanner:
                 price=current_price,
                 reason=" | ".join(reasons) if reasons else "Neutral",
                 indicators={"RSI": round(rsi, 1)},
-                timestamp=datetime.now(tz=UTC)
+                timestamp=datetime.now(tz=UTC),
             )
 
         except Exception as e:
@@ -394,7 +417,9 @@ class AdaptiveScanner:
         print("\n" + "=" * 80)
         print("  ADAPTIVE MULTI-ASSET SCANNER")
         print("=" * 80)
-        print(f"  Crypto: {len(self.crypto_watchlist)} assets | Stocks: {len(self.stock_watchlist)} assets")
+        print(
+            f"  Crypto: {len(self.crypto_watchlist)} assets | Stocks: {len(self.stock_watchlist)} assets"
+        )
         print(f"  Configs loaded: {len(self.configs)} assets with optimal settings")
         print("=" * 80)
         print("  Signals: BUY | WATCH | WAIT | SELL | SLEEPING")
@@ -410,7 +435,9 @@ class AdaptiveScanner:
             print("  No optimized configs found. Run with --optimize first.")
             return
 
-        print(f"\n{'Symbol':<12} {'TF':<5} {'Strategy':<16} {'Indicators':<35} {'Profit':>8}")
+        print(
+            f"\n{'Symbol':<12} {'TF':<5} {'Strategy':<16} {'Indicators':<35} {'Profit':>8}"
+        )
         print("-" * 80)
 
         for symbol, config in sorted(self.configs.items()):
@@ -418,7 +445,9 @@ class AdaptiveScanner:
             strategy = config.get("strategy", "?")
             indicators = ", ".join(config.get("indicators", [])[:3])
             profit = config.get("profit_pct", 0)
-            print(f"{symbol:<12} {tf:<5} {strategy:<16} {indicators:<35} {profit:>+7.2f}%")
+            print(
+                f"{symbol:<12} {tf:<5} {strategy:<16} {indicators:<35} {profit:>+7.2f}%"
+            )
 
         print("=" * 80)
 
@@ -445,7 +474,9 @@ class AdaptiveScanner:
 
         config_str = f"{opp.timeframe}/{opp.strategy}"
 
-        print(f"{opp.symbol:<12} | {config_str:<20} | {signal_str:<14} | {opp.strength:>3}% | {price_str:>12}")
+        print(
+            f"{opp.symbol:<12} | {config_str:<20} | {signal_str:<14} | {opp.strength:>3}% | {price_str:>12}"
+        )
 
         if opp.reason and opp.signal in ["BUY", "SELL", "WATCH"]:
             print(f"{'':12} | Reason: {opp.reason}")
@@ -469,8 +500,17 @@ class AdaptiveScanner:
                 opportunities = await self.scan_all()
 
                 # Sort by signal priority then strength
-                priority = {"BUY": 0, "SELL": 1, "WATCH": 2, "SLEEPING": 3, "WAIT": 4, "DISABLED": 5}
-                opportunities.sort(key=lambda x: (priority.get(x.signal, 6), -x.strength))
+                priority = {
+                    "BUY": 0,
+                    "SELL": 1,
+                    "WATCH": 2,
+                    "SLEEPING": 3,
+                    "WAIT": 4,
+                    "DISABLED": 5,
+                }
+                opportunities.sort(
+                    key=lambda x: (priority.get(x.signal, 6), -x.strength)
+                )
 
                 for opp in opportunities:
                     self.print_opportunity(opp)
@@ -481,7 +521,9 @@ class AdaptiveScanner:
                     print("\n" + "!" * 80)
                     print("  OPPORTUNITIES DETECTED!")
                     for opp in actionable:
-                        print(f"  -> {opp.symbol}: {opp.signal} @ {opp.price:.4f} (Strength: {opp.strength}%)")
+                        print(
+                            f"  -> {opp.symbol}: {opp.signal} @ {opp.price:.4f} (Strength: {opp.strength}%)"
+                        )
                         # Log signal for accuracy tracking
                         if SIGNAL_LOGGING:
                             log_signal(
@@ -509,19 +551,21 @@ class AdaptiveScanner:
 
 # ============== CLI ==============
 
+
 async def main():
     parser = argparse.ArgumentParser(description="Adaptive Multi-Asset Scanner")
-    parser.add_argument("--show-configs", action="store_true", help="Show current optimal configs")
-    parser.add_argument("--optimize", action="store_true", help="Run optimization before scanning")
+    parser.add_argument(
+        "--show-configs", action="store_true", help="Show current optimal configs"
+    )
+    parser.add_argument(
+        "--optimize", action="store_true", help="Run optimization before scanning"
+    )
     parser.add_argument("--watchlist", type=str, help="Path to watchlist.json")
     parser.add_argument("--configs", type=str, help="Path to optimal_configs.json")
 
     args = parser.parse_args()
 
-    scanner = AdaptiveScanner(
-        watchlist_file=args.watchlist,
-        configs_file=args.configs
-    )
+    scanner = AdaptiveScanner(watchlist_file=args.watchlist, configs_file=args.configs)
 
     if args.show_configs:
         scanner.print_configs()
@@ -530,11 +574,11 @@ async def main():
     if args.optimize:
         print("Running optimization first...")
         from optimization.asset_optimizer import optimize_all
+
         optimize_all(scanner.crypto_watchlist)
         # Reload configs
         scanner = AdaptiveScanner(
-            watchlist_file=args.watchlist,
-            configs_file=args.configs
+            watchlist_file=args.watchlist, configs_file=args.configs
         )
 
     await scanner.run()

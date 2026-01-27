@@ -42,7 +42,7 @@ class JournalizedBot:
         bot_name: str,
         exchange_service: Any = None,
         config_manager: Any = None,
-        db_path: str = "data/decision_journal.db"
+        db_path: str = "data/decision_journal.db",
     ):
         """
         Initialize the journalized bot wrapper.
@@ -70,15 +70,17 @@ class JournalizedBot:
 
         try:
             # Try to get ticker data
-            ticker = self.exchange_service.fetch_ticker_sync(pair) if hasattr(
-                self.exchange_service, 'fetch_ticker_sync'
-            ) else None
+            ticker = (
+                self.exchange_service.fetch_ticker_sync(pair)
+                if hasattr(self.exchange_service, "fetch_ticker_sync")
+                else None
+            )
 
             if ticker:
-                conditions['price'] = ticker.get('last', 0)
-                conditions['bid'] = ticker.get('bid', 0)
-                conditions['ask'] = ticker.get('ask', 0)
-                conditions['volume'] = ticker.get('baseVolume', 0)
+                conditions["price"] = ticker.get("last", 0)
+                conditions["bid"] = ticker.get("bid", 0)
+                conditions["ask"] = ticker.get("ask", 0)
+                conditions["volume"] = ticker.get("baseVolume", 0)
         except Exception as e:
             logger.debug(f"Could not fetch market conditions: {e}")
 
@@ -144,46 +146,32 @@ class JournalizedBot:
         decision_id = self.journal.log_decision(decision)
         self._decision_counter += 1
 
-        logger.info(f"[JOURNAL] {self.bot_name} #{decision_id}: {action} {pair} @ ${price:.4f} - {reasoning[:50]}")
+        logger.info(
+            f"[JOURNAL] {self.bot_name} #{decision_id}: {action} {pair} @ ${price:.4f} - {reasoning[:50]}"
+        )
 
         return decision_id
 
     def log_buy_decision(
-        self,
-        pair: str,
-        price: float,
-        reasoning: str,
-        **kwargs
+        self, pair: str, price: float, reasoning: str, **kwargs
     ) -> int:
         """Log a BUY decision."""
         return self.log_decision("BUY", pair, price, reasoning, **kwargs)
 
     def log_sell_decision(
-        self,
-        pair: str,
-        price: float,
-        reasoning: str,
-        **kwargs
+        self, pair: str, price: float, reasoning: str, **kwargs
     ) -> int:
         """Log a SELL decision."""
         return self.log_decision("SELL", pair, price, reasoning, **kwargs)
 
     def log_hold_decision(
-        self,
-        pair: str,
-        price: float,
-        reasoning: str,
-        **kwargs
+        self, pair: str, price: float, reasoning: str, **kwargs
     ) -> int:
         """Log a HOLD decision (waiting for conditions)."""
         return self.log_decision("HOLD", pair, price, reasoning, **kwargs)
 
     def log_skip_decision(
-        self,
-        pair: str,
-        price: float,
-        reasoning: str,
-        **kwargs
+        self, pair: str, price: float, reasoning: str, **kwargs
     ) -> int:
         """Log a SKIP decision (conditions not met)."""
         return self.log_decision("SKIP", pair, price, reasoning, **kwargs)
@@ -194,12 +182,11 @@ class JournalizedBot:
         price: float,
         reasoning: str,
         exchange_status: str = "error",
-        **kwargs
+        **kwargs,
     ) -> int:
         """Log an ERROR (failed to execute)."""
         return self.log_decision(
-            "ERROR", pair, price, reasoning,
-            exchange_status=exchange_status, **kwargs
+            "ERROR", pair, price, reasoning, exchange_status=exchange_status, **kwargs
         )
 
     def update_outcome(
@@ -207,7 +194,7 @@ class JournalizedBot:
         decision_id: int,
         outcome: str,
         outcome_price: float = None,
-        pnl: float = None
+        pnl: float = None,
     ):
         """
         Update the outcome of a previous decision.
@@ -219,7 +206,11 @@ class JournalizedBot:
             pnl: Profit/loss from this trade
         """
         self.journal.update_outcome(decision_id, outcome, outcome_price, pnl)
-        logger.info(f"[JOURNAL] Updated #{decision_id}: {outcome}, P/L: ${pnl:.2f}" if pnl else f"[JOURNAL] Updated #{decision_id}: {outcome}")
+        logger.info(
+            f"[JOURNAL] Updated #{decision_id}: {outcome}, P/L: ${pnl:.2f}"
+            if pnl
+            else f"[JOURNAL] Updated #{decision_id}: {outcome}"
+        )
 
     def print_journal_summary(self):
         """Print a summary of all decisions."""
@@ -255,8 +246,8 @@ def add_journal_to_bot(bot_instance: Any, bot_name: str) -> JournalizedBot:
     """
     journal_wrapper = JournalizedBot(
         bot_name=bot_name,
-        exchange_service=getattr(bot_instance, 'exchange_service', None),
-        config_manager=getattr(bot_instance, 'config_manager', None),
+        exchange_service=getattr(bot_instance, "exchange_service", None),
+        config_manager=getattr(bot_instance, "config_manager", None),
     )
 
     # Attach journal methods to the bot
@@ -290,22 +281,30 @@ async def monitor_grid_decisions(
     Call this from your bot's decision points.
     """
     # Get balances if available
-    fiat = getattr(bot.balance_tracker, 'balance', 0) if hasattr(bot, 'balance_tracker') else 0
-    crypto = getattr(bot.balance_tracker, 'crypto_balance', 0) if hasattr(bot, 'balance_tracker') else 0
+    fiat = (
+        getattr(bot.balance_tracker, "balance", 0)
+        if hasattr(bot, "balance_tracker")
+        else 0
+    )
+    crypto = (
+        getattr(bot.balance_tracker, "crypto_balance", 0)
+        if hasattr(bot, "balance_tracker")
+        else 0
+    )
 
     # Get grid info
-    grid_manager = getattr(bot, 'grid_manager', None)
+    grid_manager = getattr(bot, "grid_manager", None)
     open_buys = 0
     open_sells = 0
 
     if grid_manager:
-        grid_levels = getattr(grid_manager, 'grid_levels', {})
+        grid_levels = getattr(grid_manager, "grid_levels", {})
         for level in grid_levels.values():
-            if hasattr(level, 'active_order'):
+            if hasattr(level, "active_order"):
                 order = level.active_order
                 if order:
-                    if hasattr(order, 'side'):
-                        if str(order.side).upper() == 'BUY':
+                    if hasattr(order, "side"):
+                        if str(order.side).upper() == "BUY":
                             open_buys += 1
                         else:
                             open_sells += 1
@@ -313,7 +312,7 @@ async def monitor_grid_decisions(
     # Determine grid position
     grid_position = "in_range"
     if grid_manager:
-        grids = getattr(grid_manager, 'price_grids', [])
+        grids = getattr(grid_manager, "price_grids", [])
         if grids:
             if price > max(grids):
                 grid_position = "above"

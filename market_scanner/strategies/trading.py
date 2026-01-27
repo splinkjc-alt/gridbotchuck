@@ -4,7 +4,7 @@ def analyze(ticker, data):
     Higher Score = Lower RSI (Better Buy Dip).
     """
     if data is not None and not data.empty and len(data) > 26:
-        delta = data['Close'].diff()
+        delta = data["Close"].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
 

@@ -29,7 +29,9 @@ class TestFeeCalculator:
     def test_calculate_fee_small_value(self, fee_calculator):
         trade_value = 0.01  # 1 cent trade
         expected_fee = 0.00001  # 0.1% of 0.01
-        assert fee_calculator.calculate_fee(trade_value) == pytest.approx(expected_fee, rel=1e-5)
+        assert fee_calculator.calculate_fee(trade_value) == pytest.approx(
+            expected_fee, rel=1e-5
+        )
 
     def test_calculate_fee_large_value(self, fee_calculator):
         trade_value = 1_000_000  # 1 million trade
@@ -42,4 +44,6 @@ class TestFeeCalculator:
     def test_calculate_fee_tiny_trade_value_case(self, fee_calculator):
         trade_value = 0.0000001
         expected_fee = trade_value * 0.001
-        assert fee_calculator.calculate_fee(trade_value) == pytest.approx(expected_fee, rel=1e-9)
+        assert fee_calculator.calculate_fee(trade_value) == pytest.approx(
+            expected_fee, rel=1e-9
+        )

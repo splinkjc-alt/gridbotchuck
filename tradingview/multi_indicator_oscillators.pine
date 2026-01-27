@@ -1,0 +1,87 @@
+//@version=5
+indicator("Multi-Indicator Oscillators (CCI + MACD)", overlay=false)
+
+// ============================================================================
+// COMPANION INDICATOR FOR MULTI-INDICATOR STRATEGY
+// ============================================================================
+// This indicator displays CCI and MACD in a separate pane below the price chart
+// Use alongside multi_indicator_strategy.pine for complete analysis
+// ============================================================================
+
+// ==================== INPUT PARAMETERS ====================
+
+// CCI Settings
+cci_length = input.int(14, "CCI Period", minval=1)
+cci_overbought = input.int(100, "CCI Overbought Level")
+cci_oversold = input.int(-100, "CCI Oversold Level")
+
+// MACD Settings
+macd_fast = input.int(12, "MACD Fast", minval=1)
+macd_slow = input.int(26, "MACD Slow", minval=1)
+macd_signal_length = input.int(9, "MACD Signal", minval=1)
+
+// Display Settings
+show_cci = input.bool(true, "Show CCI")
+show_macd = input.bool(true, "Show MACD")
+
+// ==================== CALCULATIONS ====================
+
+// CCI
+cci = ta.cci(close, cci_length)
+
+// MACD
+[macd_line, signal_line, hist] = ta.macd(close, macd_fast, macd_slow, macd_signal_length)
+
+// Normalize MACD to CCI scale for combined display
+macd_normalized = macd_line * 50  // Scale factor for visibility
+signal_normalized = signal_line * 50
+hist_normalized = hist * 50
+
+// ==================== PLOTTING ====================
+
+// Zero line
+hline(0, "Zero Line", color=color.gray, linestyle=hline.style_solid)
+
+// CCI
+plot(show_cci ? cci : na, "CCI", color=color.purple, linewidth=2)
+hline(cci_overbought, "CCI Overbought", color=color.red, linestyle=hline.style_dashed)
+hline(cci_oversold, "CCI Oversold", color=color.green, linestyle=hline.style_dashed)
+
+// CCI Background
+bgcolor(cci > 0 ? color.new(color.green, 95) : color.new(color.red, 95), title="CCI Zone")
+
+// MACD (scaled for visibility with CCI)
+plot(show_macd ? macd_normalized : na, "MACD Line", color=color.blue, linewidth=1)
+plot(show_macd ? signal_normalized : na, "Signal Line", color=color.orange, linewidth=1)
+
+// MACD Histogram
+hist_color = hist >= 0 ? (hist > hist[1] ? color.green : color.lime) : (hist < hist[1] ? color.red : color.maroon)
+plot(show_macd ? hist_normalized : na, "Histogram", color=hist_color, style=plot.style_columns)
+
+// ==================== CROSSOVER SIGNALS ====================
+
+// CCI crosses above 0
+cci_bullish = ta.crossover(cci, 0)
+cci_bearish = ta.crossunder(cci, 0)
+
+// MACD crossover
+macd_bullish = ta.crossover(macd_line, signal_line)
+macd_bearish = ta.crossunder(macd_line, signal_line)
+
+// Plot crossover markers
+plotshape(cci_bullish, "CCI Bullish", style=shape.circle, location=location.bottom, color=color.green, size=size.tiny)
+plotshape(cci_bearish, "CCI Bearish", style=shape.circle, location=location.top, color=color.red, size=size.tiny)
+
+plotshape(macd_bullish, "MACD Bullish", style=shape.triangleup, location=location.bottom, color=color.blue, size=size.tiny)
+plotshape(macd_bearish, "MACD Bearish", style=shape.triangledown, location=location.top, color=color.orange, size=size.tiny)
+
+// ==================== ALERTS ====================
+
+alertcondition(cci_bullish, "CCI Bullish Cross", "CCI crossed above 0")
+alertcondition(cci_bearish, "CCI Bearish Cross", "CCI crossed below 0")
+alertcondition(macd_bullish, "MACD Bullish Cross", "MACD bullish crossover")
+alertcondition(macd_bearish, "MACD Bearish Cross", "MACD bearish crossover")
+
+// Combined signal
+both_bullish = cci > 0 and macd_line > signal_line
+alertcondition(both_bullish, "Both Bullish", "CCI and MACD both bullish")

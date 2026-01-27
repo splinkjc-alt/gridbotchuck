@@ -37,7 +37,7 @@ class EMACrossoverBot:
         self.ema_slow = 20
         self.max_positions = 3
         self.position_size_pct = 20.0  # 20% per trade
-        self.min_reserve_pct = 10.0    # Keep 10% in reserve
+        self.min_reserve_pct = 10.0  # Keep 10% in reserve
 
         # State
         self.positions = {}  # pair -> {qty, entry_price, entry_time}
@@ -45,10 +45,24 @@ class EMACrossoverBot:
 
         # Pairs to scan
         self.candidate_pairs = [
-            "UNI/USD", "SOL/USD", "XRP/USD", "ADA/USD", "DOGE/USD",
-            "AVAX/USD", "DOT/USD", "LINK/USD", "ATOM/USD",
-            "FIL/USD", "NEAR/USD", "APT/USD", "ARB/USD", "OP/USD",
-            "SUI/USD", "TIA/USD", "INJ/USD", "FET/USD",
+            "UNI/USD",
+            "SOL/USD",
+            "XRP/USD",
+            "ADA/USD",
+            "DOGE/USD",
+            "AVAX/USD",
+            "DOT/USD",
+            "LINK/USD",
+            "ATOM/USD",
+            "FIL/USD",
+            "NEAR/USD",
+            "APT/USD",
+            "ARB/USD",
+            "OP/USD",
+            "SUI/USD",
+            "TIA/USD",
+            "INJ/USD",
+            "FET/USD",
         ]
 
     async def start(self):
@@ -56,17 +70,23 @@ class EMACrossoverBot:
         self.running = True
 
         # Connect to Coinbase exchange
-        self.exchange = ccxt.coinbase({
-            "apiKey": os.getenv("COINBASE_API_KEY"),
-            "secret": os.getenv("COINBASE_PRIVATE_KEY"),
-            "enableRateLimit": True,
-        })
+        self.exchange = ccxt.coinbase(
+            {
+                "apiKey": os.getenv("COINBASE_API_KEY"),
+                "secret": os.getenv("COINBASE_PRIVATE_KEY"),
+                "enableRateLimit": True,
+            }
+        )
 
         self.logger.info("=" * 60)
         self.logger.info("EMA 9/20 CROSSOVER BOT STARTED")
         self.logger.info("=" * 60)
-        self.logger.info(f"Strategy: Buy when EMA {self.ema_fast} > EMA {self.ema_slow} with widening gap")
-        self.logger.info(f"Position Size: {self.position_size_pct}% | Reserve: {self.min_reserve_pct}%")
+        self.logger.info(
+            f"Strategy: Buy when EMA {self.ema_fast} > EMA {self.ema_slow} with widening gap"
+        )
+        self.logger.info(
+            f"Position Size: {self.position_size_pct}% | Reserve: {self.min_reserve_pct}%"
+        )
         self.logger.info(f"Max Positions: {self.max_positions}")
         self.logger.info("=" * 60)
 
@@ -107,7 +127,9 @@ class EMACrossoverBot:
                 for order in orders:
                     try:
                         await self.exchange.cancel_order(order["id"], order["symbol"])
-                        self.logger.info(f"  Cancelled: {order['side']} {order['amount']} {order['symbol']} @ ${order['price']}")
+                        self.logger.info(
+                            f"  Cancelled: {order['side']} {order['amount']} {order['symbol']} @ ${order['price']}"
+                        )
                     except Exception as e:
                         self.logger.warning(f"  Failed to cancel {order['id']}: {e}")
             else:
@@ -136,7 +158,9 @@ class EMACrossoverBot:
                                     "entry_price": price,  # Assume current price as entry
                                     "entry_time": datetime.now(),
                                 }
-                                self.logger.info(f"  {pair}: {amount:.4f} (~${value:.2f})")
+                                self.logger.info(
+                                    f"  {pair}: {amount:.4f} (~${value:.2f})"
+                                )
                         except Exception:
                             pass
 
@@ -155,7 +179,9 @@ class EMACrossoverBot:
         signals = await self.scan_all_pairs()
 
         # Get actionable signals
-        buy_signals = [(p, s) for p, s in signals.items() if s["action"] in ("BUY", "SAFE_BUY")]
+        buy_signals = [
+            (p, s) for p, s in signals.items() if s["action"] in ("BUY", "SAFE_BUY")
+        ]
         sell_signals = [(p, s) for p, s in signals.items() if s["action"] == "SELL"]
 
         # Process sells first (for positions we hold)
@@ -169,7 +195,10 @@ class EMACrossoverBot:
             buy_signals.sort(key=lambda x: x[1]["spread_change"], reverse=True)
 
             for pair, sig in buy_signals:
-                if pair not in self.positions and len(self.positions) < self.max_positions:
+                if (
+                    pair not in self.positions
+                    and len(self.positions) < self.max_positions
+                ):
                     await self.execute_buy(pair, sig)
 
     async def scan_all_pairs(self) -> dict:
@@ -184,7 +213,9 @@ class EMACrossoverBot:
 
                     # Log significant signals
                     if sig["action"] in ("BUY", "SAFE_BUY"):
-                        self.logger.info(f"  [BUY] {pair}: {sig['action']} - spread {sig['spread']:.2f}%, delta {sig['spread_change']:+.3f}%")
+                        self.logger.info(
+                            f"  [BUY] {pair}: {sig['action']} - spread {sig['spread']:.2f}%, delta {sig['spread_change']:+.3f}%"
+                        )
                     elif sig["action"] == "SELL" and pair in self.positions:
                         # Only log SELL for positions we actually hold
                         self.logger.info(f"  [SELL] {pair}: SELL signal")
@@ -198,7 +229,9 @@ class EMACrossoverBot:
         """Analyze a single pair for EMA signals."""
         try:
             ohlcv = await self.exchange.fetch_ohlcv(pair, "15m", limit=50)
-            df = pd.DataFrame(ohlcv, columns=["ts", "open", "high", "low", "close", "volume"])
+            df = pd.DataFrame(
+                ohlcv, columns=["ts", "open", "high", "low", "close", "volume"]
+            )
 
             if len(df) < 25:
                 return None
@@ -261,7 +294,9 @@ class EMACrossoverBot:
             available = usd - reserve
 
             if available < 10:
-                self.logger.warning(f"Insufficient funds: ${usd:.2f} (reserve ${reserve:.2f})")
+                self.logger.warning(
+                    f"Insufficient funds: ${usd:.2f} (reserve ${reserve:.2f})"
+                )
                 return
 
             position_value = available * (self.position_size_pct / 100)
@@ -272,7 +307,9 @@ class EMACrossoverBot:
             try:
                 market = await self.exchange.load_markets()
                 if pair in market:
-                    amount_precision = market[pair].get("precision", {}).get("amount", 8)
+                    amount_precision = (
+                        market[pair].get("precision", {}).get("amount", 8)
+                    )
                     if isinstance(amount_precision, int):
                         qty = round(qty, amount_precision)
                     else:
@@ -280,10 +317,12 @@ class EMACrossoverBot:
             except Exception:
                 qty = round(qty, 4)  # Fallback
 
-            self.logger.info(f">>> BUYING {qty:.4f} {pair} @ ${price:.4f} (${position_value:.2f})")
+            self.logger.info(
+                f">>> BUYING {qty:.4f} {pair} @ ${price:.4f} (${position_value:.2f})"
+            )
 
             # Execute - Coinbase requires price for market buys
-            order = await self.exchange.create_order(pair, 'market', 'buy', qty, price)
+            order = await self.exchange.create_order(pair, "market", "buy", qty, price)
 
             if order:
                 self.positions[pair] = {
@@ -309,7 +348,9 @@ class EMACrossoverBot:
                 currency = pair.split("/")[0]
                 actual_qty = balance["total"].get(currency, 0)
                 if actual_qty > 0 and actual_qty != pos["qty"]:
-                    self.logger.info(f"Syncing qty: tracked {pos['qty']:.4f} -> actual {actual_qty:.4f}")
+                    self.logger.info(
+                        f"Syncing qty: tracked {pos['qty']:.4f} -> actual {actual_qty:.4f}"
+                    )
                     pos["qty"] = actual_qty
             except Exception as e:
                 self.logger.warning(f"Could not sync balance: {e}")
@@ -320,10 +361,12 @@ class EMACrossoverBot:
             pnl = (price - entry) * qty
             pnl_pct = ((price / entry) - 1) * 100
 
-            self.logger.info(f"<<< SELLING {qty:.4f} {pair} @ ${price:.4f} (P&L: ${pnl:.2f} / {pnl_pct:+.2f}%)")
+            self.logger.info(
+                f"<<< SELLING {qty:.4f} {pair} @ ${price:.4f} (P&L: ${pnl:.2f} / {pnl_pct:+.2f}%)"
+            )
 
             # Execute - use create_order for Coinbase compatibility
-            order = await self.exchange.create_order(pair, 'market', 'sell', qty, price)
+            order = await self.exchange.create_order(pair, "market", "sell", qty, price)
 
             if order:
                 del self.positions[pair]
@@ -341,7 +384,7 @@ async def main():
         handlers=[
             logging.StreamHandler(),
             logging.FileHandler("ema_bot.log"),
-        ]
+        ],
     )
 
     bot = EMACrossoverBot()

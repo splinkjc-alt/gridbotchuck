@@ -29,7 +29,9 @@ class TestPlotter:
         grid_manager.price_grids = [90, 100, 110]
         grid_manager.central_price = 100
 
-        plotter._add_grid_lines(fig, grid_manager.price_grids, grid_manager.central_price)
+        plotter._add_grid_lines(
+            fig, grid_manager.price_grids, grid_manager.central_price
+        )
 
         assert len(fig.data) == 4  # 1 dummy trace + 3 grid lines
         assert fig.data[1].line.color == "green"  # Below central price
@@ -51,7 +53,13 @@ class TestPlotter:
 
     def test_add_trade_markers(self, setup_plotter):
         plotter, _, order_book = setup_plotter
-        fig = make_subplots(rows=3, cols=1, shared_xaxes=True, row_heights=[0.70, 0.15, 0.15], vertical_spacing=0.02)
+        fig = make_subplots(
+            rows=3,
+            cols=1,
+            shared_xaxes=True,
+            row_heights=[0.70, 0.15, 0.15],
+            vertical_spacing=0.02,
+        )
 
         orders = [
             Order(
@@ -97,7 +105,13 @@ class TestPlotter:
 
     def test_add_volume_trace(self, setup_plotter):
         plotter, _, _ = setup_plotter
-        fig = make_subplots(rows=3, cols=1, shared_xaxes=True, row_heights=[0.70, 0.15, 0.15], vertical_spacing=0.02)
+        fig = make_subplots(
+            rows=3,
+            cols=1,
+            shared_xaxes=True,
+            row_heights=[0.70, 0.15, 0.15],
+            vertical_spacing=0.02,
+        )
 
         data = pd.DataFrame(
             {"open": [100, 110], "close": [110, 105], "volume": [500, 700]},
@@ -113,8 +127,17 @@ class TestPlotter:
 
     def test_add_account_value_trace(self, setup_plotter):
         plotter, _, _ = setup_plotter
-        fig = make_subplots(rows=3, cols=1, shared_xaxes=True, row_heights=[0.70, 0.15, 0.15], vertical_spacing=0.02)
-        data = pd.DataFrame({"account_value": [10000, 10500]}, index=pd.date_range("2024-01-01", periods=2))
+        fig = make_subplots(
+            rows=3,
+            cols=1,
+            shared_xaxes=True,
+            row_heights=[0.70, 0.15, 0.15],
+            vertical_spacing=0.02,
+        )
+        data = pd.DataFrame(
+            {"account_value": [10000, 10500]},
+            index=pd.date_range("2024-01-01", periods=2),
+        )
 
         plotter._add_account_value_trace(fig, data)
 

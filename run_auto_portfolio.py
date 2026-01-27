@@ -51,23 +51,62 @@ Examples:
         help="Exchange to use (default: kraken)",
     )
 
-    parser.add_argument("--capital", "-c", type=float, default=500.0, help="Total capital to deploy (default: 500)")
+    parser.add_argument(
+        "--capital",
+        "-c",
+        type=float,
+        default=500.0,
+        help="Total capital to deploy (default: 500)",
+    )
 
-    parser.add_argument("--positions", "-p", type=int, default=5, help="Maximum simultaneous positions (default: 5)")
+    parser.add_argument(
+        "--positions",
+        "-p",
+        type=int,
+        default=5,
+        help="Maximum simultaneous positions (default: 5)",
+    )
 
-    parser.add_argument("--pairs", type=int, default=10, help="Number of pairs to monitor (default: 10)")
+    parser.add_argument(
+        "--pairs", type=int, default=10, help="Number of pairs to monitor (default: 10)"
+    )
 
-    parser.add_argument("--min-score", type=float, default=65.0, help="Minimum entry signal score 0-100 (default: 65)")
+    parser.add_argument(
+        "--min-score",
+        type=float,
+        default=65.0,
+        help="Minimum entry signal score 0-100 (default: 65)",
+    )
 
-    parser.add_argument("--scan-interval", type=int, default=300, help="Seconds between scan cycles (default: 300)")
+    parser.add_argument(
+        "--scan-interval",
+        type=int,
+        default=300,
+        help="Seconds between scan cycles (default: 300)",
+    )
 
-    parser.add_argument("--quote", "-q", type=str, default="USD", help="Quote currency (default: USD)")
+    parser.add_argument(
+        "--quote", "-q", type=str, default="USD", help="Quote currency (default: USD)"
+    )
 
-    parser.add_argument("--duration", "-d", type=int, default=None, help="Duration in minutes (default: indefinite)")
+    parser.add_argument(
+        "--duration",
+        "-d",
+        type=int,
+        default=None,
+        help="Duration in minutes (default: indefinite)",
+    )
 
-    parser.add_argument("--save-state", type=str, default=None, help="File to save portfolio state on exit")
+    parser.add_argument(
+        "--save-state",
+        type=str,
+        default=None,
+        help="File to save portfolio state on exit",
+    )
 
-    parser.add_argument("--json", action="store_true", help="Output final state as JSON")
+    parser.add_argument(
+        "--json", action="store_true", help="Output final state as JSON"
+    )
 
     return parser.parse_args()
 

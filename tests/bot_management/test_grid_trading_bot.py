@@ -17,7 +17,10 @@ from core.services.exceptions import (
 
 @pytest.fixture(autouse=True)
 def mock_env_vars():
-    with patch.dict(os.environ, {"EXCHANGE_API_KEY": "test_api_key", "EXCHANGE_SECRET_KEY": "test_secret_key"}):
+    with patch.dict(
+        os.environ,
+        {"EXCHANGE_API_KEY": "test_api_key", "EXCHANGE_SECRET_KEY": "test_secret_key"},
+    ):
         yield
 
 
@@ -37,7 +40,7 @@ class TestGridTradingBot:
             "risk_management": {
                 "position_sizing": {
                     "buy_percent_of_total": 20.0,
-                    "min_reserve_percent": 10.0
+                    "min_reserve_percent": 10.0,
                 }
             }
         }
@@ -76,14 +79,20 @@ class TestGridTradingBot:
         notification_handler,
         mock_event_bus,
     ):
-        with patch("core.bot_management.grid_trading_bot.logging.getLogger") as mock_logger:
+        with patch(
+            "core.bot_management.grid_trading_bot.logging.getLogger"
+        ) as mock_logger:
             logger_instance = Mock()
             mock_logger.return_value = logger_instance
 
             with pytest.raises(UnsupportedExchangeError, match="Unsupported Exchange"):
-                GridTradingBot("config.json", config_manager, notification_handler, mock_event_bus)
+                GridTradingBot(
+                    "config.json", config_manager, notification_handler, mock_event_bus
+                )
 
-            logger_instance.error.assert_called_once_with("UnsupportedExchangeError: Unsupported Exchange")
+            logger_instance.error.assert_called_once_with(
+                "UnsupportedExchangeError: Unsupported Exchange"
+            )
 
     @patch(
         "core.bot_management.grid_trading_bot.ExchangeServiceFactory.create_exchange_service",
@@ -96,14 +105,20 @@ class TestGridTradingBot:
         notification_handler,
         mock_event_bus,
     ):
-        with patch("core.bot_management.grid_trading_bot.logging.getLogger") as mock_logger:
+        with patch(
+            "core.bot_management.grid_trading_bot.logging.getLogger"
+        ) as mock_logger:
             logger_instance = Mock()
             mock_logger.return_value = logger_instance
 
             with pytest.raises(DataFetchError, match="Data Fetch Error"):
-                GridTradingBot("config.json", config_manager, notification_handler, mock_event_bus)
+                GridTradingBot(
+                    "config.json", config_manager, notification_handler, mock_event_bus
+                )
 
-            logger_instance.error.assert_called_once_with("DataFetchError: Data Fetch Error")
+            logger_instance.error.assert_called_once_with(
+                "DataFetchError: Data Fetch Error"
+            )
 
     @patch(
         "core.bot_management.grid_trading_bot.ExchangeServiceFactory.create_exchange_service",
@@ -116,14 +131,22 @@ class TestGridTradingBot:
         notification_handler,
         mock_event_bus,
     ):
-        with patch("core.bot_management.grid_trading_bot.logging.getLogger") as mock_logger:
+        with patch(
+            "core.bot_management.grid_trading_bot.logging.getLogger"
+        ) as mock_logger:
             logger_instance = Mock()
             mock_logger.return_value = logger_instance
 
-            with pytest.raises(UnsupportedTimeframeError, match="Unsupported Timeframe"):
-                GridTradingBot("config.json", config_manager, notification_handler, mock_event_bus)
+            with pytest.raises(
+                UnsupportedTimeframeError, match="Unsupported Timeframe"
+            ):
+                GridTradingBot(
+                    "config.json", config_manager, notification_handler, mock_event_bus
+                )
 
-            logger_instance.error.assert_called_once_with("UnsupportedTimeframeError: Unsupported Timeframe")
+            logger_instance.error.assert_called_once_with(
+                "UnsupportedTimeframeError: Unsupported Timeframe"
+            )
 
     @patch(
         "core.bot_management.grid_trading_bot.ExchangeServiceFactory.create_exchange_service",
@@ -136,26 +159,38 @@ class TestGridTradingBot:
         notification_handler,
         mock_event_bus,
     ):
-        with patch("core.bot_management.grid_trading_bot.logging.getLogger") as mock_logger:
+        with patch(
+            "core.bot_management.grid_trading_bot.logging.getLogger"
+        ) as mock_logger:
             logger_instance = Mock()
             mock_logger.return_value = logger_instance
 
             with pytest.raises(Exception, match="Unexpected Error"):
-                GridTradingBot("config.json", config_manager, notification_handler, mock_event_bus)
+                GridTradingBot(
+                    "config.json", config_manager, notification_handler, mock_event_bus
+                )
 
             logger_instance.error.assert_any_call("An unexpected error occurred.")
             logger_instance.error.assert_any_call(ANY)
 
-    def test_initialization_with_missing_config(self, notification_handler, mock_event_bus):
+    def test_initialization_with_missing_config(
+        self, notification_handler, mock_event_bus
+    ):
         config_manager = Mock(spec=ConfigManager)
-        config_manager.get_trading_mode.side_effect = AttributeError("Missing configuration")
+        config_manager.get_trading_mode.side_effect = AttributeError(
+            "Missing configuration"
+        )
 
-        with patch("core.bot_management.grid_trading_bot.logging.getLogger") as mock_logger:
+        with patch(
+            "core.bot_management.grid_trading_bot.logging.getLogger"
+        ) as mock_logger:
             logger_instance = Mock()
             mock_logger.return_value = logger_instance
 
             with pytest.raises(AttributeError, match="Missing configuration"):
-                GridTradingBot("config.json", config_manager, notification_handler, mock_event_bus)
+                GridTradingBot(
+                    "config.json", config_manager, notification_handler, mock_event_bus
+                )
 
             logger_instance.error.assert_any_call("An unexpected error occurred.")
             logger_instance.error.assert_any_call(ANY)
@@ -175,7 +210,9 @@ class TestGridTradingBot:
     async def test_is_healthy_strategy_stopped(self, bot):
         bot.strategy = Mock()
         bot.strategy._running = False
-        bot.exchange_service.get_exchange_status = AsyncMock(return_value={"status": "ok"})
+        bot.exchange_service.get_exchange_status = AsyncMock(
+            return_value={"status": "ok"}
+        )
 
         health_status = await bot.get_bot_health_status()
 
@@ -183,7 +220,9 @@ class TestGridTradingBot:
         assert health_status["exchange_status"] == "ok"
         assert health_status["overall"] is False
 
-    @patch("core.bot_management.grid_trading_bot.GridTradingBot._generate_and_log_performance")
+    @patch(
+        "core.bot_management.grid_trading_bot.GridTradingBot._generate_and_log_performance"
+    )
     @pytest.mark.asyncio
     async def test_generate_and_log_performance_direct(self, mock_performance, bot):
         mock_performance.return_value = {
@@ -203,7 +242,9 @@ class TestGridTradingBot:
     @pytest.mark.asyncio
     async def test_get_exchange_status(self, bot):
         bot.exchange_service = MagicMock()
-        bot.exchange_service.get_exchange_status = AsyncMock(return_value={"status": "ok"})
+        bot.exchange_service.get_exchange_status = AsyncMock(
+            return_value={"status": "ok"}
+        )
 
         result = await bot._get_exchange_status()
         assert result == "ok"
@@ -242,7 +283,9 @@ class TestGridTradingBot:
                 await bot.run()
 
             # Ensure the error is logged correctly
-            mock_logger_error.assert_any_call("An unexpected error occurred Test Exception")
+            mock_logger_error.assert_any_call(
+                "An unexpected error occurred Test Exception"
+            )
             assert bot.is_running is False
 
     @patch("core.bot_management.grid_trading_bot.OrderStatusTracker")

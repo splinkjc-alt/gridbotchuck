@@ -31,11 +31,15 @@ class BacktestExchangeService(ExchangeInterface):
         try:
             return getattr(ccxt, self.exchange_name)()
         except AttributeError:
-            raise UnsupportedExchangeError(f"The exchange '{self.exchange_name}' is not supported.") from None
+            raise UnsupportedExchangeError(
+                f"The exchange '{self.exchange_name}' is not supported."
+            ) from None
 
     def _is_timeframe_supported(self, timeframe: str) -> bool:
         if timeframe not in self.exchange.timeframes:
-            self.logger.error(f"Timeframe '{timeframe}' is not supported by {self.exchange_name}.")
+            self.logger.error(
+                f"Timeframe '{timeframe}' is not supported by {self.exchange_name}."
+            )
             return False
         return True
 
@@ -56,28 +60,44 @@ class BacktestExchangeService(ExchangeInterface):
                     f"Failed to load OHLCV data from file: {self.historical_data_file}",
                 )
 
-            self.logger.info(f"Loading OHLCV data from file: {self.historical_data_file}")
-            return self._load_ohlcv_from_file(self.historical_data_file, start_date, end_date)
+            self.logger.info(
+                f"Loading OHLCV data from file: {self.historical_data_file}"
+            )
+            return self._load_ohlcv_from_file(
+                self.historical_data_file, start_date, end_date
+            )
 
         if not self._is_pair_supported(pair):
-            raise UnsupportedPairError(f"Pair: {pair} is not supported by {self.exchange_name}")
+            raise UnsupportedPairError(
+                f"Pair: {pair} is not supported by {self.exchange_name}"
+            )
 
         if not self._is_timeframe_supported(timeframe):
-            raise UnsupportedTimeframeError(f"Timeframe '{timeframe}' is not supported by {self.exchange_name}.")
+            raise UnsupportedTimeframeError(
+                f"Timeframe '{timeframe}' is not supported by {self.exchange_name}."
+            )
 
-        self.logger.info(f"Fetching OHLCV data for {pair} from {start_date} to {end_date}")
+        self.logger.info(
+            f"Fetching OHLCV data for {pair} from {start_date} to {end_date}"
+        )
         try:
             since = self.exchange.parse8601(start_date)
             until = self.exchange.parse8601(end_date)
             candles_per_request = self._get_candle_limit()
-            total_candles_needed = (until - since) // self._get_timeframe_in_ms(timeframe)
+            total_candles_needed = (until - since) // self._get_timeframe_in_ms(
+                timeframe
+            )
 
             if total_candles_needed > candles_per_request:
-                return self._fetch_ohlcv_in_chunks(pair, timeframe, since, until, candles_per_request)
+                return self._fetch_ohlcv_in_chunks(
+                    pair, timeframe, since, until, candles_per_request
+                )
             else:
                 return self._fetch_ohlcv_single_batch(pair, timeframe, since, until)
         except ccxt.NetworkError as e:
-            raise DataFetchError(f"Network issue occurred while fetching OHLCV data: {e!s}") from e
+            raise DataFetchError(
+                f"Network issue occurred while fetching OHLCV data: {e!s}"
+            ) from e
         except ccxt.BaseError as e:
             raise DataFetchError(f"Exchange-specific error occurred: {e!s}") from e
         except Exception as e:
@@ -96,7 +116,9 @@ class BacktestExchangeService(ExchangeInterface):
             start_timestamp = pd.to_datetime(start_date).tz_localize(None)
             end_timestamp = pd.to_datetime(end_date).tz_localize(None)
             filtered_df = df.loc[start_timestamp:end_timestamp]
-            self.logger.debug(f"Loaded {len(filtered_df)} rows of OHLCV data from file.")
+            self.logger.debug(
+                f"Loaded {len(filtered_df)} rows of OHLCV data from file."
+            )
             return filtered_df
 
         except Exception as e:
@@ -109,7 +131,9 @@ class BacktestExchangeService(ExchangeInterface):
         since: int,
         until: int,
     ) -> pd.DataFrame:
-        ohlcv = self._fetch_with_retry(self.exchange.fetch_ohlcv, pair, timeframe, since)
+        ohlcv = self._fetch_with_retry(
+            self.exchange.fetch_ohlcv, pair, timeframe, since
+        )
         return self._format_ohlcv(ohlcv, until)
 
     def _fetch_ohlcv_in_chunks(
@@ -122,7 +146,13 @@ class BacktestExchangeService(ExchangeInterface):
     ) -> pd.DataFrame:
         all_ohlcv = []
         while since < until:
-            ohlcv = self._fetch_with_retry(self.exchange.fetch_ohlcv, pair, timeframe, since, limit=candles_per_request)
+            ohlcv = self._fetch_with_retry(
+                self.exchange.fetch_ohlcv,
+                pair,
+                timeframe,
+                since,
+                limit=candles_per_request,
+            )
             if not ohlcv:
                 break
             all_ohlcv.extend(ohlcv)
@@ -135,7 +165,9 @@ class BacktestExchangeService(ExchangeInterface):
         ohlcv,
         until: int,
     ) -> pd.DataFrame:
-        df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        df = pd.DataFrame(
+            ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+        )
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
         df.set_index("timestamp", inplace=True)
         until_timestamp = pd.to_datetime(until, unit="ms")
@@ -145,7 +177,9 @@ class BacktestExchangeService(ExchangeInterface):
         return CANDLE_LIMITS.get(self.exchange_name, 500)  # Default to 500 if not found
 
     def _get_timeframe_in_ms(self, timeframe: str) -> int:
-        return TIMEFRAME_MAPPINGS.get(timeframe, 60 * 1000)  # Default to 1m if not found
+        return TIMEFRAME_MAPPINGS.get(
+            timeframe, 60 * 1000
+        )  # Default to 1m if not found
 
     def _fetch_with_retry(
         self,
@@ -160,11 +194,15 @@ class BacktestExchangeService(ExchangeInterface):
                 return method(*args, **kwargs)
             except Exception as e:
                 if attempt < retries - 1:
-                    self.logger.warning(f"Attempt {attempt + 1} failed. Retrying in {delay} seconds...")
+                    self.logger.warning(
+                        f"Attempt {attempt + 1} failed. Retrying in {delay} seconds..."
+                    )
                     time.sleep(delay)
                 else:
                     self.logger.error(f"Failed after {retries} attempts: {e}")
-                    raise DataFetchError(f"Failed to fetch data after {retries} attempts: {e!s}") from e
+                    raise DataFetchError(
+                        f"Failed to fetch data after {retries} attempts: {e!s}"
+                    ) from e
 
     async def place_order(
         self,

@@ -24,10 +24,14 @@ def save_or_append_performance_results(
                 try:
                     all_results = json.load(json_file)
                     if not isinstance(all_results, list):
-                        logging.error(f"Existing file {file_path} is not a valid JSON list. Overwriting the file.")
+                        logging.error(
+                            f"Existing file {file_path} is not a valid JSON list. Overwriting the file."
+                        )
                         all_results = []
                 except json.JSONDecodeError:
-                    logging.warning(f"Could not decode JSON from {file_path}. Overwriting the file.")
+                    logging.warning(
+                        f"Could not decode JSON from {file_path}. Overwriting the file."
+                    )
                     all_results = []
         else:
             all_results = []
@@ -43,10 +47,23 @@ def save_or_append_performance_results(
             for key, value in new_results.get("performance_summary").items()
         }
 
-        order_keys = ["Order Side", "Type", "Status", "Price", "Quantity", "Timestamp", "Grid Level", "Slippage"]
+        order_keys = [
+            "Order Side",
+            "Type",
+            "Status",
+            "Price",
+            "Quantity",
+            "Timestamp",
+            "Grid Level",
+            "Slippage",
+        ]
         cleaned_orders = [
             {
-                key: (value.isoformat() if isinstance(value, datetime | pd.Timestamp) else value)
+                key: (
+                    value.isoformat()
+                    if isinstance(value, datetime | pd.Timestamp)
+                    else value
+                )
                 for key, value in zip(order_keys, order, strict=False)
             }
             for order in new_results.get("orders")
@@ -68,4 +85,6 @@ def save_or_append_performance_results(
         logging.error(f"Failed to save performance metrics to {file_path}: {e}")
 
     except Exception as e:
-        logging.error(f"An unexpected error occurred while saving performance metrics: {e}")
+        logging.error(
+            f"An unexpected error occurred while saving performance metrics: {e}"
+        )

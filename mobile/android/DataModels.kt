@@ -222,7 +222,7 @@ data class RiskConfig(
 
 enum class BotStatus {
     RUNNING, STOPPED, PAUSED, ERROR;
-    
+
     companion object {
         fun fromString(value: String): BotStatus {
             return when (value.lowercase()) {
@@ -237,7 +237,7 @@ enum class BotStatus {
 
 enum class TradingMode {
     LIVE, PAPER;
-    
+
     companion object {
         fun fromString(value: String): TradingMode {
             return if (value.lowercase() == "paper") PAPER else LIVE
@@ -247,7 +247,7 @@ enum class TradingMode {
 
 enum class GridSignal {
     IDEAL, CAUTION, AVOID;
-    
+
     companion object {
         fun fromString(value: String): GridSignal {
             return when (value.lowercase()) {
@@ -261,7 +261,7 @@ enum class GridSignal {
 
 enum class MarketSignal {
     BULLISH, BEARISH, NEUTRAL;
-    
+
     companion object {
         fun fromString(value: String): MarketSignal {
             return when (value.lowercase()) {

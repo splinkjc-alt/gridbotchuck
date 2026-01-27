@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BacktestResult:
     """Results from backtesting a pair."""
+
     pair: str
     timeframe: str
     total_return_pct: float
@@ -46,38 +47,67 @@ class PairBacktester:
     # Popular trading pairs to test
     PAIRS_TO_TEST = [
         # Major coins
-        "BTC/USD", "ETH/USD", "SOL/USD", "XRP/USD", "ADA/USD",
-        "DOGE/USD", "AVAX/USD", "DOT/USD", "LINK/USD", "MATIC/USD",
+        "BTC/USD",
+        "ETH/USD",
+        "SOL/USD",
+        "XRP/USD",
+        "ADA/USD",
+        "DOGE/USD",
+        "AVAX/USD",
+        "DOT/USD",
+        "LINK/USD",
+        "MATIC/USD",
         # High volatility
-        "SHIB/USD", "PEPE/USD", "BONK/USD", "WIF/USD",
+        "SHIB/USD",
+        "PEPE/USD",
+        "BONK/USD",
+        "WIF/USD",
         # DeFi
-        "UNI/USD", "AAVE/USD", "MKR/USD", "CRV/USD",
+        "UNI/USD",
+        "AAVE/USD",
+        "MKR/USD",
+        "CRV/USD",
         # Layer 2
-        "ARB/USD", "OP/USD", "IMX/USD",
+        "ARB/USD",
+        "OP/USD",
+        "IMX/USD",
         # Other popular
-        "LTC/USD", "BCH/USD", "ATOM/USD", "NEAR/USD", "FTM/USD",
-        "ALGO/USD", "XLM/USD", "VET/USD", "HBAR/USD", "ICP/USD",
+        "LTC/USD",
+        "BCH/USD",
+        "ATOM/USD",
+        "NEAR/USD",
+        "FTM/USD",
+        "ALGO/USD",
+        "XLM/USD",
+        "VET/USD",
+        "HBAR/USD",
+        "ICP/USD",
     ]
 
     TIMEFRAMES = ["15m", "1h", "4h", "1d"]
 
     def __init__(self, exchange_id: str = "kraken"):
-        self.exchange = getattr(ccxt, exchange_id)({
-            'enableRateLimit': True,
-        })
+        self.exchange = getattr(ccxt, exchange_id)(
+            {
+                "enableRateLimit": True,
+            }
+        )
         self.results = []
 
-    async def fetch_ohlcv(self, pair: str, timeframe: str,
-                          limit: int = 500) -> Optional[pd.DataFrame]:
+    async def fetch_ohlcv(
+        self, pair: str, timeframe: str, limit: int = 500
+    ) -> Optional[pd.DataFrame]:
         """Fetch OHLCV data for a pair."""
         try:
             ohlcv = self.exchange.fetch_ohlcv(pair, timeframe, limit=limit)
             if not ohlcv:
                 return None
 
-            df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-            df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-            df.set_index('timestamp', inplace=True)
+            df = pd.DataFrame(
+                ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+            )
+            df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+            df.set_index("timestamp", inplace=True)
             return df
 
         except Exception as e:
@@ -89,33 +119,37 @@ class PairBacktester:
         indicators = {}
 
         # RSI
-        delta = df['close'].diff()
+        delta = df["close"].diff()
         gain = delta.where(delta > 0, 0).rolling(14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
         rs = gain / loss
-        indicators['rsi'] = (100 - (100 / (1 + rs))).iloc[-1]
-        indicators['rsi_avg'] = (100 - (100 / (1 + rs))).mean()
+        indicators["rsi"] = (100 - (100 / (1 + rs))).iloc[-1]
+        indicators["rsi_avg"] = (100 - (100 / (1 + rs))).mean()
 
         # Bollinger Bands
-        sma20 = df['close'].rolling(20).mean()
-        std20 = df['close'].rolling(20).std()
-        indicators['bb_width'] = ((std20 * 4) / sma20 * 100).mean()  # Avg BB width as %
+        sma20 = df["close"].rolling(20).mean()
+        std20 = df["close"].rolling(20).std()
+        indicators["bb_width"] = ((std20 * 4) / sma20 * 100).mean()  # Avg BB width as %
 
         # Volatility (ATR-based)
-        high_low = df['high'] - df['low']
-        high_close = abs(df['high'] - df['close'].shift())
-        low_close = abs(df['low'] - df['close'].shift())
+        high_low = df["high"] - df["low"]
+        high_close = abs(df["high"] - df["close"].shift())
+        low_close = abs(df["low"] - df["close"].shift())
         tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
         atr = tr.rolling(14).mean()
-        indicators['atr_pct'] = (atr / df['close'] * 100).mean()
+        indicators["atr_pct"] = (atr / df["close"] * 100).mean()
 
         # Price range analysis
-        indicators['range_pct'] = ((df['high'].max() - df['low'].min()) / df['close'].mean() * 100)
-        indicators['daily_range_pct'] = ((df['high'] - df['low']) / df['close'] * 100).mean()
+        indicators["range_pct"] = (
+            (df["high"].max() - df["low"].min()) / df["close"].mean() * 100
+        )
+        indicators["daily_range_pct"] = (
+            (df["high"] - df["low"]) / df["close"] * 100
+        ).mean()
 
         # Trend strength (ADX approximation)
-        plus_dm = df['high'].diff()
-        minus_dm = -df['low'].diff()
+        plus_dm = df["high"].diff()
+        minus_dm = -df["low"].diff()
         plus_dm = plus_dm.where((plus_dm > minus_dm) & (plus_dm > 0), 0)
         minus_dm = minus_dm.where((minus_dm > plus_dm) & (minus_dm > 0), 0)
 
@@ -123,20 +157,24 @@ class PairBacktester:
         plus_di = 100 * (plus_dm.rolling(14).mean() / atr14)
         minus_di = 100 * (minus_dm.rolling(14).mean() / atr14)
         dx = 100 * abs(plus_di - minus_di) / (plus_di + minus_di)
-        indicators['adx'] = dx.rolling(14).mean().iloc[-1]
+        indicators["adx"] = dx.rolling(14).mean().iloc[-1]
 
         # Volume analysis
-        indicators['volume_ratio'] = df['volume'].iloc[-20:].mean() / df['volume'].mean()
+        indicators["volume_ratio"] = (
+            df["volume"].iloc[-20:].mean() / df["volume"].mean()
+        )
 
         # Mean reversion tendency
-        returns = df['close'].pct_change()
-        indicators['mean_reversion'] = -returns.autocorr(lag=1)  # Negative autocorr = mean reverting
+        returns = df["close"].pct_change()
+        indicators["mean_reversion"] = -returns.autocorr(
+            lag=1
+        )  # Negative autocorr = mean reverting
 
         return indicators
 
-    def simulate_grid_trading(self, df: pd.DataFrame,
-                              grid_count: int = 6,
-                              range_pct: float = 5.0) -> dict:
+    def simulate_grid_trading(
+        self, df: pd.DataFrame, grid_count: int = 6, range_pct: float = 5.0
+    ) -> dict:
         """
         Simulate grid trading on historical data.
 
@@ -145,7 +183,7 @@ class PairBacktester:
             grid_count: Number of grid levels
             range_pct: Grid range as percentage of mid price
         """
-        prices = df['close'].values
+        prices = df["close"].values
         mid_price = prices.mean()
 
         # Set up grid
@@ -181,12 +219,9 @@ class PairBacktester:
                     if cost <= cash:
                         cash -= cost
                         position += qty
-                        trades.append({
-                            'type': 'buy',
-                            'price': price,
-                            'qty': qty,
-                            'idx': i
-                        })
+                        trades.append(
+                            {"type": "buy", "price": price, "qty": qty, "idx": i}
+                        )
 
             # Check sell levels
             for j, sell_price in enumerate(sell_levels):
@@ -196,25 +231,22 @@ class PairBacktester:
                     revenue = qty * price
                     cash += revenue
                     position -= qty
-                    trades.append({
-                        'type': 'sell',
-                        'price': price,
-                        'qty': qty,
-                        'idx': i
-                    })
+                    trades.append(
+                        {"type": "sell", "price": price, "qty": qty, "idx": i}
+                    )
 
         # Final portfolio value
         final_value = cash + position * prices[-1]
         total_return = (final_value - initial_cash) / initial_cash * 100
 
         # Calculate metrics
-        buy_trades = [t for t in trades if t['type'] == 'buy']
-        sell_trades = [t for t in trades if t['type'] == 'sell']
+        buy_trades = [t for t in trades if t["type"] == "buy"]
+        sell_trades = [t for t in trades if t["type"] == "sell"]
 
         # Win rate (simplified - sells above avg buy price)
         if buy_trades and sell_trades:
-            avg_buy = sum(t['price'] for t in buy_trades) / len(buy_trades)
-            wins = sum(1 for t in sell_trades if t['price'] > avg_buy)
+            avg_buy = sum(t["price"] for t in buy_trades) / len(buy_trades)
+            wins = sum(1 for t in sell_trades if t["price"] > avg_buy)
             win_rate = wins / len(sell_trades) * 100 if sell_trades else 0
         else:
             win_rate = 0
@@ -246,12 +278,12 @@ class PairBacktester:
             sharpe = 0
 
         return {
-            'total_return_pct': total_return,
-            'num_trades': len(trades),
-            'win_rate': win_rate,
-            'max_drawdown': max_dd,
-            'sharpe_ratio': sharpe,
-            'avg_trade_pct': total_return / len(trades) if trades else 0
+            "total_return_pct": total_return,
+            "num_trades": len(trades),
+            "win_rate": win_rate,
+            "max_drawdown": max_dd,
+            "sharpe_ratio": sharpe,
+            "avg_trade_pct": total_return / len(trades) if trades else 0,
         }
 
     def calculate_grid_score(self, indicators: dict, sim_results: dict) -> float:
@@ -267,7 +299,7 @@ class PairBacktester:
         score = 0
 
         # Volatility score (0-25) - higher is better for grids
-        vol = indicators.get('atr_pct', 0)
+        vol = indicators.get("atr_pct", 0)
         if vol > 5:
             score += 25
         elif vol > 3:
@@ -280,7 +312,7 @@ class PairBacktester:
             score += 5
 
         # Mean reversion score (0-25) - higher is better
-        mr = indicators.get('mean_reversion', 0)
+        mr = indicators.get("mean_reversion", 0)
         if mr > 0.2:
             score += 25
         elif mr > 0.1:
@@ -293,7 +325,7 @@ class PairBacktester:
             score += 5
 
         # ADX score (0-20) - moderate is best (not too trendy)
-        adx = indicators.get('adx', 25)
+        adx = indicators.get("adx", 25)
         if 15 <= adx <= 30:
             score += 20  # Ideal range
         elif 10 <= adx <= 40:
@@ -301,10 +333,10 @@ class PairBacktester:
         elif adx < 10:
             score += 10  # Too flat
         else:
-            score += 5   # Too trendy
+            score += 5  # Too trendy
 
         # Backtest performance score (0-30)
-        ret = sim_results.get('total_return_pct', 0)
+        ret = sim_results.get("total_return_pct", 0)
         if ret > 10:
             score += 30
         elif ret > 5:
@@ -320,7 +352,9 @@ class PairBacktester:
 
         return min(100, score)
 
-    async def backtest_pair(self, pair: str, timeframe: str = "1h") -> Optional[BacktestResult]:
+    async def backtest_pair(
+        self, pair: str, timeframe: str = "1h"
+    ) -> Optional[BacktestResult]:
         """Run full backtest on a single pair."""
         logger.info(f"Testing {pair} on {timeframe}...")
 
@@ -332,10 +366,12 @@ class PairBacktester:
         indicators = self.calculate_indicators(df)
 
         # Determine optimal range based on volatility
-        optimal_range = min(20, max(3, indicators['atr_pct'] * 3))
+        optimal_range = min(20, max(3, indicators["atr_pct"] * 3))
 
         # Simulate grid trading
-        sim_results = self.simulate_grid_trading(df, grid_count=6, range_pct=optimal_range)
+        sim_results = self.simulate_grid_trading(
+            df, grid_count=6, range_pct=optimal_range
+        )
 
         # Calculate grid score
         grid_score = self.calculate_grid_score(indicators, sim_results)
@@ -351,21 +387,22 @@ class PairBacktester:
         return BacktestResult(
             pair=pair,
             timeframe=timeframe,
-            total_return_pct=sim_results['total_return_pct'],
-            num_trades=sim_results['num_trades'],
-            win_rate=sim_results['win_rate'],
-            max_drawdown=sim_results['max_drawdown'],
-            sharpe_ratio=sim_results['sharpe_ratio'],
-            volatility=indicators['atr_pct'],
-            avg_trade_pct=sim_results['avg_trade_pct'],
+            total_return_pct=sim_results["total_return_pct"],
+            num_trades=sim_results["num_trades"],
+            win_rate=sim_results["win_rate"],
+            max_drawdown=sim_results["max_drawdown"],
+            sharpe_ratio=sim_results["sharpe_ratio"],
+            volatility=indicators["atr_pct"],
+            avg_trade_pct=sim_results["avg_trade_pct"],
             grid_score=grid_score,
             best_range_pct=optimal_range,
             recommended_grids=rec_grids,
-            indicators=indicators
+            indicators=indicators,
         )
 
-    async def run_full_scan(self, pairs: list = None,
-                           timeframes: list = None) -> list[BacktestResult]:
+    async def run_full_scan(
+        self, pairs: list = None, timeframes: list = None
+    ) -> list[BacktestResult]:
         """
         Run backtest on all pairs and timeframes.
 
@@ -419,7 +456,9 @@ class PairBacktester:
         # Top 10 pairs
         report.append("TOP 10 PAIRS FOR GRID TRADING:")
         report.append("-" * 80)
-        report.append(f"{'Rank':<5} {'Pair':<12} {'Score':<7} {'Return%':<9} {'Vol%':<7} {'Trades':<7} {'Range%':<8} {'Grids':<6}")
+        report.append(
+            f"{'Rank':<5} {'Pair':<12} {'Score':<7} {'Return%':<9} {'Vol%':<7} {'Trades':<7} {'Range%':<8} {'Grids':<6}"
+        )
         report.append("-" * 80)
 
         for i, r in enumerate(self.results[:10], 1):
@@ -443,7 +482,9 @@ class PairBacktester:
             report.append(f"  Max Drawdown:      {best.max_drawdown:.1f}%")
             report.append(f"  Optimal Range:     {best.best_range_pct:.1f}%")
             report.append(f"  Recommended Grids: {best.recommended_grids}")
-            report.append(f"  Mean Reversion:    {best.indicators.get('mean_reversion', 0):.2f}")
+            report.append(
+                f"  Mean Reversion:    {best.indicators.get('mean_reversion', 0):.2f}"
+            )
             report.append(f"  ADX (trend):       {best.indicators.get('adx', 0):.1f}")
 
         report.append("")
@@ -458,22 +499,24 @@ class PairBacktester:
 
         data = []
         for r in self.results:
-            data.append({
-                'pair': r.pair,
-                'timeframe': r.timeframe,
-                'grid_score': r.grid_score,
-                'total_return_pct': r.total_return_pct,
-                'volatility': r.volatility,
-                'num_trades': r.num_trades,
-                'win_rate': r.win_rate,
-                'max_drawdown': r.max_drawdown,
-                'best_range_pct': r.best_range_pct,
-                'recommended_grids': r.recommended_grids,
-                'indicators': r.indicators,
-                'timestamp': datetime.now().isoformat()
-            })
+            data.append(
+                {
+                    "pair": r.pair,
+                    "timeframe": r.timeframe,
+                    "grid_score": r.grid_score,
+                    "total_return_pct": r.total_return_pct,
+                    "volatility": r.volatility,
+                    "num_trades": r.num_trades,
+                    "win_rate": r.win_rate,
+                    "max_drawdown": r.max_drawdown,
+                    "best_range_pct": r.best_range_pct,
+                    "recommended_grids": r.recommended_grids,
+                    "indicators": r.indicators,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(data, f, indent=2)
 
         logger.info(f"Results saved to {filepath}")

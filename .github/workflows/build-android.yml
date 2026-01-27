@@ -12,24 +12,24 @@ jobs:
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      
+
       - name: Create Android Project Structure
         run: |
           mkdir -p android-app
           cd android-app
-          
+
           # Create settings.gradle.kts
           cat > settings.gradle.kts << 'EOF'
           pluginManagement {
@@ -49,7 +49,7 @@ jobs:
           rootProject.name = "GridBotChuck"
           include(":app")
           EOF
-          
+
           # Create root build.gradle.kts
           cat > build.gradle.kts << 'EOF'
           plugins {
@@ -58,12 +58,12 @@ jobs:
               id("com.google.dagger.hilt.android") version "2.48" apply false
           }
           EOF
-          
+
           # Create app directory
           mkdir -p app/src/main/java/com/gridbot
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/drawable
-          
+
           # Create app build.gradle.kts
           cat > app/build.gradle.kts << 'EOF'
           plugins {
@@ -72,11 +72,11 @@ jobs:
               id("com.google.dagger.hilt.android")
               kotlin("kapt")
           }
-          
+
           android {
               namespace = "com.gridbot"
               compileSdk = 34
-              
+
               defaultConfig {
                   applicationId = "com.gridbot.chuck"
                   minSdk = 26
@@ -84,62 +84,62 @@ jobs:
                   versionCode = 1
                   versionName = "${{ github.event.inputs.version }}"
               }
-              
+
               buildTypes {
                   release {
                       isMinifyEnabled = true
                       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
                   }
               }
-              
+
               compileOptions {
                   sourceCompatibility = JavaVersion.VERSION_17
                   targetCompatibility = JavaVersion.VERSION_17
               }
-              
+
               kotlinOptions {
                   jvmTarget = "17"
               }
-              
+
               buildFeatures {
                   compose = true
               }
-              
+
               composeOptions {
                   kotlinCompilerExtensionVersion = "1.5.6"
               }
           }
-          
+
           dependencies {
               implementation(platform("androidx.compose:compose-bom:2024.02.00"))
               implementation("androidx.compose.ui:ui")
               implementation("androidx.compose.material3:material3")
               implementation("androidx.compose.ui:ui-tooling-preview")
               implementation("androidx.activity:activity-compose:1.8.2")
-              
+
               implementation("com.squareup.retrofit2:retrofit:2.9.0")
               implementation("com.squareup.retrofit2:converter-gson:2.9.0")
               implementation("com.squareup.okhttp3:okhttp:4.12.0")
               implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-              
+
               implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-              
+
               implementation("com.google.dagger:hilt-android:2.48")
               kapt("com.google.dagger:hilt-compiler:2.48")
               implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
-              
+
               implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
               implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
           }
           EOF
-          
+
           # Create AndroidManifest.xml
           cat > app/src/main/AndroidManifest.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-              
+
               <application
                   android:name=".GridBotApp"
                   android:allowBackup="true"
@@ -160,7 +160,7 @@ jobs:
               </application>
           </manifest>
           EOF
-          
+
           # Create themes.xml
           cat > app/src/main/res/values/themes.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
@@ -168,34 +168,34 @@ jobs:
               <style name="Theme.GridBot" parent="android:Theme.Material.Light.NoActionBar" />
           </resources>
           EOF
-          
+
           # Create strings.xml
           cat > app/src/main/res/values/strings.xml << 'EOF'
           <resources>
               <string name="app_name">GridBot Chuck</string>
           </resources>
           EOF
-      
+
       - name: Copy Kotlin source files
         run: |
           # Copy mobile source files to Android project
           cp mobile/android/*.kt android-app/app/src/main/java/com/gridbot/
-          
+
           # Create Application class
           cat > android-app/app/src/main/java/com/gridbot/GridBotApp.kt << 'EOF'
           package com.gridbot
-          
+
           import android.app.Application
           import dagger.hilt.android.HiltAndroidApp
-          
+
           @HiltAndroidApp
           class GridBotApp : Application()
           EOF
-          
+
           # Create MainActivity
           cat > android-app/app/src/main/java/com/gridbot/MainActivity.kt << 'EOF'
           package com.gridbot
-          
+
           import android.os.Bundle
           import androidx.activity.ComponentActivity
           import androidx.activity.compose.setContent
@@ -205,7 +205,7 @@ jobs:
           import androidx.compose.ui.Modifier
           import com.gridbot.ui.dashboard.DashboardScreen
           import dagger.hilt.android.AndroidEntryPoint
-          
+
           @AndroidEntryPoint
           class MainActivity : ComponentActivity() {
               override fun onCreate(savedInstanceState: Bundle?) {
@@ -223,18 +223,18 @@ jobs:
               }
           }
           EOF
-      
+
       - name: Grant execute permission for gradlew
         run: |
           cd android-app
           gradle wrapper
           chmod +x gradlew
-      
+
       - name: Build Debug APK
         run: |
           cd android-app
           ./gradlew assembleDebug
-      
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

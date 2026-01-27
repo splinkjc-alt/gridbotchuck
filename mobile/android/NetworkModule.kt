@@ -23,11 +23,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    
+
     private const val PREFS_NAME = "grid_bot_prefs"
     private const val KEY_BOT_URL = "bot_url"
     private const val DEFAULT_URL = "http://192.168.1.100:8080/api/"
-    
+
     @Provides
     @Singleton
     fun provideSharedPreferences(
@@ -35,7 +35,7 @@ object NetworkModule {
     ): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
-    
+
     @Provides
     @Singleton
     fun provideGson(): Gson {
@@ -43,14 +43,14 @@ object NetworkModule {
             .setLenient()
             .create()
     }
-    
+
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
-        
+
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
@@ -58,7 +58,7 @@ object NetworkModule {
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
     }
-    
+
     @Provides
     @Singleton
     fun provideRetrofit(
@@ -67,14 +67,14 @@ object NetworkModule {
         sharedPreferences: SharedPreferences
     ): Retrofit {
         val baseUrl = sharedPreferences.getString(KEY_BOT_URL, DEFAULT_URL) ?: DEFAULT_URL
-        
+
         return Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
-    
+
     @Provides
     @Singleton
     fun provideGridBotApiService(retrofit: Retrofit): GridBotApiService {
@@ -93,7 +93,7 @@ class BotConnectionManager(
         private const val KEY_BOT_HOST = "bot_host"
         private const val KEY_BOT_PORT = "bot_port"
     }
-    
+
     fun saveConnection(host: String, port: Int = 8080) {
         val url = "http://$host:$port/api/"
         sharedPreferences.edit()
@@ -102,15 +102,15 @@ class BotConnectionManager(
             .putInt(KEY_BOT_PORT, port)
             .apply()
     }
-    
+
     fun getHost(): String {
         return sharedPreferences.getString(KEY_BOT_HOST, "192.168.1.100") ?: "192.168.1.100"
     }
-    
+
     fun getPort(): Int {
         return sharedPreferences.getInt(KEY_BOT_PORT, 8080)
     }
-    
+
     fun getBaseUrl(): String {
         return sharedPreferences.getString(KEY_BOT_URL, "http://192.168.1.100:8080/api/")
             ?: "http://192.168.1.100:8080/api/"

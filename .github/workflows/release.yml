@@ -34,7 +34,7 @@ jobs:
         run: |
           # Create temp directory for release
           mkdir -p release/gridbotchuck
-          
+
           # Copy source files (exclude sensitive/dev files)
           cp -r config/ release/gridbotchuck/
           cp -r core/ release/gridbotchuck/
@@ -48,14 +48,14 @@ jobs:
           cp requirements.txt release/gridbotchuck/ 2>/dev/null || echo "ccxt>=4.0.0\naiohttp>=3.9.0\naiohttp-cors>=0.7.0\npandas>=2.0.0\nplotly>=5.0.0\ntabulate>=0.9.0\npsutil>=5.9.0\napprise>=1.0.0\npystray>=0.19.0\nPillow>=10.0.0" > release/gridbotchuck/requirements.txt
           cp README.md release/gridbotchuck/
           cp LICENSE.txt release/gridbotchuck/
-          
+
           # Use example config (no API keys)
           cp config/config.example.json release/gridbotchuck/config/config.json
-          
+
           # Remove pycache
           find release/ -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
           find release/ -type f -name "*.pyc" -delete 2>/dev/null || true
-          
+
           # Create zip
           cd release
           zip -r ../gridbotchuck-${{ steps.version.outputs.VERSION }}.zip gridbotchuck/
@@ -72,7 +72,7 @@ jobs:
             gridbotchuck-${{ steps.version.outputs.VERSION }}.zip
           body: |
             ## GridBot Pro ${{ steps.version.outputs.VERSION }}
-            
+
             ### 🚀 Quick Start
             1. Download the zip file below
             2. Extract to your preferred location
@@ -80,11 +80,11 @@ jobs:
             4. Add your exchange API keys to `config/config.json`
             5. Run: `pip install -r requirements.txt`
             6. Run: `python dashboard_launcher.py`
-            
+
             ### 📋 Requirements
             - Python 3.11 or higher
             - Kraken API keys (or other supported exchange)
-            
+
             ### 📖 Documentation
             See README.md in the download for full setup instructions.
 

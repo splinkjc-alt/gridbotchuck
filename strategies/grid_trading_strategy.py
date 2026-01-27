@@ -67,9 +67,13 @@ class GridTradingStrategy(TradingStrategyInterface):
 
         try:
             timeframe, start_date, end_date = self._extract_config()
-            return self.exchange_service.fetch_ohlcv(self.trading_pair, timeframe, start_date, end_date)
+            return self.exchange_service.fetch_ohlcv(
+                self.trading_pair, timeframe, start_date, end_date
+            )
         except Exception as e:
-            self.logger.error(f"Failed to initialize data for backtest trading mode: {e}")
+            self.logger.error(
+                f"Failed to initialize data for backtest trading mode: {e}"
+            )
             return None
 
     def _initialize_mtf_analyzer(self) -> MultiTimeframeAnalyzer | None:
@@ -159,7 +163,10 @@ class GridTradingStrategy(TradingStrategyInterface):
                     return False
                 elif self._trading_paused_by_trend:
                     # Check if conditions have improved
-                    if result.grid_signal in [GridTradingSignal.IDEAL, GridTradingSignal.FAVORABLE]:
+                    if result.grid_signal in [
+                        GridTradingSignal.IDEAL,
+                        GridTradingSignal.FAVORABLE,
+                    ]:
                         self.logger.info(
                             f"[MTF] RESUMING grid trading - conditions improved to {result.grid_signal.value}"
                         )
@@ -263,7 +270,9 @@ class GridTradingStrategy(TradingStrategyInterface):
         """
         mode_name = "live" if self.trading_mode == TradingMode.LIVE else "paper"
         self.logger.info(f"Starting {mode_name} trading")
-        self.logger.info(f"[STATUS] ACTIVE PAIR: {self.trading_pair} | Mode: {mode_name.upper()}")
+        self.logger.info(
+            f"[STATUS] ACTIVE PAIR: {self.trading_pair} | Mode: {mode_name.upper()}"
+        )
         last_price: float | None = None
         grid_orders_initialized = False
         last_status_log = 0  # Track when we last logged status
@@ -295,8 +304,12 @@ class GridTradingStrategy(TradingStrategyInterface):
                         last_price = current_price
                         return
 
-                account_value = self.balance_tracker.get_total_balance_value(current_price)
-                self.live_trading_metrics.append((pd.Timestamp.now(), account_value, current_price))
+                account_value = self.balance_tracker.get_total_balance_value(
+                    current_price
+                )
+                self.live_trading_metrics.append(
+                    (pd.Timestamp.now(), account_value, current_price)
+                )
 
                 # Periodic status log
                 current_time = time.time()
@@ -305,7 +318,9 @@ class GridTradingStrategy(TradingStrategyInterface):
                     crypto_balance = self.balance_tracker.crypto_balance
                     mtf_status = ""
                     if self._mtf_analysis_result:
-                        mtf_status = f" | MTF: {self._mtf_analysis_result.grid_signal.value}"
+                        mtf_status = (
+                            f" | MTF: {self._mtf_analysis_result.grid_signal.value}"
+                        )
                     self.logger.info(
                         f"[STATUS] {self.trading_pair} @ ${current_price:.4f} | "
                         f"Balance: ${fiat_balance:.2f} + {crypto_balance:.4f} crypto | "
@@ -365,8 +380,10 @@ class GridTradingStrategy(TradingStrategyInterface):
         high_prices = self.data["high"].values
         low_prices = self.data["low"].values
         timestamps = self.data.index
-        self.data.loc[timestamps[0], "account_value"] = self.balance_tracker.get_total_balance_value(
-            price=self.close_prices[0],
+        self.data.loc[timestamps[0], "account_value"] = (
+            self.balance_tracker.get_total_balance_value(
+                price=self.close_prices[0],
+            )
         )
         grid_orders_initialized = False
         last_price = None
@@ -382,18 +399,24 @@ class GridTradingStrategy(TradingStrategyInterface):
             )
 
             if not grid_orders_initialized:
-                self.data.loc[timestamps[i], "account_value"] = self.balance_tracker.get_total_balance_value(
-                    price=current_price,
+                self.data.loc[timestamps[i], "account_value"] = (
+                    self.balance_tracker.get_total_balance_value(
+                        price=current_price,
+                    )
                 )
                 last_price = current_price
                 continue
 
-            await self.order_manager.simulate_order_fills(high_price, low_price, timestamp)
+            await self.order_manager.simulate_order_fills(
+                high_price, low_price, timestamp
+            )
 
             if await self._handle_take_profit_stop_loss(current_price):
                 break
 
-            self.data.loc[timestamp, "account_value"] = self.balance_tracker.get_total_balance_value(current_price)
+            self.data.loc[timestamp, "account_value"] = (
+                self.balance_tracker.get_total_balance_value(current_price)
+            )
             last_price = current_price
 
     async def _initialize_grid_orders_once(
@@ -413,7 +436,9 @@ class GridTradingStrategy(TradingStrategyInterface):
             return True
 
         if last_price is None:
-            self.logger.info(f"[INIT] First price update received: {current_price}. Waiting for next update.")
+            self.logger.info(
+                f"[INIT] First price update received: {current_price}. Waiting for next update."
+            )
             return False
 
         # Get grid boundaries from price_grids list
@@ -426,10 +451,14 @@ class GridTradingStrategy(TradingStrategyInterface):
         )
 
         # Check if price crossed trigger OR if price is already within the grid range
-        price_crossed_trigger = last_price <= trigger_price <= current_price or last_price == trigger_price
+        price_crossed_trigger = (
+            last_price <= trigger_price <= current_price or last_price == trigger_price
+        )
         price_within_grid = grid_bottom <= current_price <= grid_top
 
-        self.logger.info(f"[INIT] price_crossed_trigger={price_crossed_trigger}, price_within_grid={price_within_grid}")
+        self.logger.info(
+            f"[INIT] price_crossed_trigger={price_crossed_trigger}, price_within_grid={price_within_grid}"
+        )
 
         if price_crossed_trigger or price_within_grid:
             if price_within_grid and not price_crossed_trigger:
@@ -440,7 +469,9 @@ class GridTradingStrategy(TradingStrategyInterface):
                 self.logger.info(
                     f"Current price {current_price} reached trigger price {trigger_price}. Will perform initial purchase",
                 )
-            initial_purchase_success = await self.order_manager.perform_initial_purchase(current_price)
+            initial_purchase_success = (
+                await self.order_manager.perform_initial_purchase(current_price)
+            )
             if not initial_purchase_success:
                 self.logger.error(
                     "Initial purchase failed. Cannot initialize grid orders without crypto balance. "
@@ -455,7 +486,9 @@ class GridTradingStrategy(TradingStrategyInterface):
             # Sync balances from exchange after initial purchase to ensure accurate state
             # This catches cases where orders were placed but parsing failed
             self.logger.info("Syncing balances from exchange after initial purchase...")
-            sync_success = await self.balance_tracker.sync_balances_from_exchange(self.exchange_service)
+            sync_success = await self.balance_tracker.sync_balances_from_exchange(
+                self.exchange_service
+            )
 
             # If exchange returns 0 but we had tracked balance from purchase, use tracked
             if self.balance_tracker.crypto_balance <= 0 and tracked_crypto > 0:
@@ -466,7 +499,9 @@ class GridTradingStrategy(TradingStrategyInterface):
                 self.balance_tracker.crypto_balance = tracked_crypto
 
             if not sync_success:
-                self.logger.warning("Balance sync failed, proceeding with tracked balances.")
+                self.logger.warning(
+                    "Balance sync failed, proceeding with tracked balances."
+                )
 
             # Verify we have crypto before placing grid orders
             if self.balance_tracker.crypto_balance <= 0:
@@ -476,14 +511,21 @@ class GridTradingStrategy(TradingStrategyInterface):
                 )
                 return False
 
-            self.logger.info(f"Final crypto balance for grid orders: {self.balance_tracker.crypto_balance}")
+            self.logger.info(
+                f"Final crypto balance for grid orders: {self.balance_tracker.crypto_balance}"
+            )
 
             # Apply volatility-based spacing adjustment if enabled
-            if self._mtf_analysis_result and self.config_manager.is_volatility_spacing_enabled():
+            if (
+                self._mtf_analysis_result
+                and self.config_manager.is_volatility_spacing_enabled()
+            ):
                 multiplier = self._mtf_analysis_result.recommended_spacing_multiplier
                 if multiplier != 1.0:
                     self.grid_manager.set_spacing_multiplier(multiplier)
-                    self.logger.info(f"[MTF] Applied volatility-based spacing: {multiplier:.2f}x multiplier")
+                    self.logger.info(
+                        f"[MTF] Applied volatility-based spacing: {multiplier:.2f}x multiplier"
+                    )
 
             self.logger.info("Initial purchase done, will initialize grid orders")
             await self.order_manager.initialize_grid_orders(current_price)
@@ -517,10 +559,15 @@ class GridTradingStrategy(TradingStrategyInterface):
             )
         else:
             if not self.live_trading_metrics:
-                self.logger.warning("No account value data available for live/paper trading mode.")
+                self.logger.warning(
+                    "No account value data available for live/paper trading mode."
+                )
                 return {}, []
 
-            live_data = pd.DataFrame(self.live_trading_metrics, columns=["timestamp", "account_value", "price"])
+            live_data = pd.DataFrame(
+                self.live_trading_metrics,
+                columns=["timestamp", "account_value", "price"],
+            )
             live_data.set_index("timestamp", inplace=True)
             initial_price = live_data.iloc[0]["price"]
             final_price = live_data.iloc[-1]["price"]
@@ -554,7 +601,9 @@ class GridTradingStrategy(TradingStrategyInterface):
         """
         tp_or_sl_triggered = await self._evaluate_tp_or_sl(current_price)
         if tp_or_sl_triggered:
-            self.logger.info("Take-profit or stop-loss triggered, ending trading session.")
+            self.logger.info(
+                "Take-profit or stop-loss triggered, ending trading session."
+            )
             await self.event_bus.publish(Events.STOP_BOT, "TP or SL hit.")
             return True
         return False
@@ -568,7 +617,9 @@ class GridTradingStrategy(TradingStrategyInterface):
             self.logger.debug("No crypto balance available; skipping TP/SL checks.")
             return False
 
-        return await self._handle_take_profit(current_price) or await self._handle_stop_loss(current_price)
+        return await self._handle_take_profit(
+            current_price
+        ) or await self._handle_stop_loss(current_price)
 
     async def _handle_take_profit(self, current_price: float) -> bool:
         """
@@ -579,7 +630,9 @@ class GridTradingStrategy(TradingStrategyInterface):
             self.config_manager.is_take_profit_enabled()
             and current_price >= self.config_manager.get_take_profit_threshold()
         ):
-            self.logger.info(f"Take-profit triggered at {current_price}. Executing TP order...")
+            self.logger.info(
+                f"Take-profit triggered at {current_price}. Executing TP order..."
+            )
             await self.order_manager.execute_take_profit_or_stop_loss_order(
                 current_price=current_price,
                 take_profit_order=True,
@@ -596,7 +649,9 @@ class GridTradingStrategy(TradingStrategyInterface):
             self.config_manager.is_stop_loss_enabled()
             and current_price <= self.config_manager.get_stop_loss_threshold()
         ):
-            self.logger.info(f"Stop-loss triggered at {current_price}. Executing SL order...")
+            self.logger.info(
+                f"Stop-loss triggered at {current_price}. Executing SL order..."
+            )
             await self.order_manager.execute_take_profit_or_stop_loss_order(
                 current_price=current_price,
                 stop_loss_order=True,

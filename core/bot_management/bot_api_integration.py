@@ -43,4 +43,8 @@ class BotAPIIntegration:
 
     def is_running(self) -> bool:
         """Check if API server is running."""
-        return self.api_server is not None and hasattr(self.api_server, "runner") and self.api_server.runner is not None
+        return (
+            self.api_server is not None
+            and hasattr(self.api_server, "runner")
+            and self.api_server.runner is not None
+        )

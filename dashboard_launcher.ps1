@@ -15,7 +15,7 @@ $Red = @{ ForegroundColor = 'Red' }
 
 function Write-Status {
   param([string]$Message, [string]$Type = "Info")
-    
+
   switch ($Type) {
     "Success" { Write-Host "✓ $Message" @Green }
     "Warning" { Write-Host "⚠ $Message" @Yellow }
@@ -26,7 +26,7 @@ function Write-Status {
 
 function Test-ApiRunning {
   param([string]$Url)
-    
+
   try {
     $response = Invoke-WebRequest -Uri "$Url/api/bot/status" -TimeoutSec 2 -ErrorAction Stop
     return $response.StatusCode -eq 200
@@ -41,10 +41,10 @@ function Wait-ForApi {
     [string]$Url,
     [int]$Timeout
   )
-    
+
   $startTime = Get-Date
   Write-Status "Waiting for bot API server at $Url (timeout: ${Timeout}s)..."
-    
+
   while (((Get-Date) - $startTime).TotalSeconds -lt $Timeout) {
     if (Test-ApiRunning -Url $Url) {
       Write-Status "Bot API server is running!" "Success"
@@ -53,16 +53,16 @@ function Wait-ForApi {
     Start-Sleep -Seconds 1
     Write-Host "." -NoNewline
   }
-    
+
   Write-Host ""
   return $false
 }
 
 function Open-Dashboard {
   param([string]$Url)
-    
+
   Write-Status "Opening dashboard at $Url" "Success"
-    
+
   try {
     Start-Process $Url
   }

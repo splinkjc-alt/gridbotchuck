@@ -27,7 +27,7 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -72,7 +72,7 @@ fun DashboardScreen(
                     }
                 }
             }
-            
+
             // Status Card
             item {
                 StatusCard(
@@ -85,7 +85,7 @@ fun DashboardScreen(
                     gridSignal = uiState.gridSignal
                 )
             }
-            
+
             // P&L Card
             item {
                 PnLCard(
@@ -98,7 +98,7 @@ fun DashboardScreen(
                     pair = uiState.tradingPair
                 )
             }
-            
+
             // Control Buttons
             item {
                 ControlButtons(
@@ -110,7 +110,7 @@ fun DashboardScreen(
                     onResume = { viewModel.resumeBot() }
                 )
             }
-            
+
             // Active Orders
             item {
                 Text(
@@ -119,7 +119,7 @@ fun DashboardScreen(
                     fontWeight = FontWeight.Bold
                 )
             }
-            
+
             items(uiState.activeOrders) { order ->
                 OrderItem(order = order)
             }
@@ -155,12 +155,12 @@ fun StatusCard(
                         fontSize = 12.sp
                     )
                 }
-                
+
                 StatusBadge(status = status)
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Current Price
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -169,9 +169,9 @@ fun StatusCard(
                 Text("Current Price", color = Color.Gray)
                 Text("$${String.format("%.4f", price)}", fontWeight = FontWeight.Bold)
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // Grid Range
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -180,9 +180,9 @@ fun StatusCard(
                 Text("Grid Range", color = Color.Gray)
                 Text("$${String.format("%.2f", gridLow)} - $${String.format("%.2f", gridHigh)}")
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // MTF Signal
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -204,7 +204,7 @@ fun StatusBadge(status: String) {
         "stopped" -> Pair(Color(0xFFF44336), Icons.Default.Stop)
         else -> Pair(Color.Gray, Icons.Default.HelpOutline)
     }
-    
+
     Surface(
         color = color.copy(alpha = 0.2f),
         shape = RoundedCornerShape(16.dp)
@@ -228,7 +228,7 @@ fun SignalBadge(signal: String) {
         "avoid" -> Color(0xFFF44336)
         else -> Color.Gray
     }
-    
+
     Surface(
         color = color.copy(alpha = 0.2f),
         shape = RoundedCornerShape(8.dp)
@@ -256,16 +256,16 @@ fun PnLCard(
     val isProfit = totalPnl >= 0
     val pnlColor = if (isProfit) Color(0xFF4CAF50) else Color(0xFFF44336)
     val baseCurrency = pair.split("/").firstOrNull() ?: "CRYPTO"
-    
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Profit & Loss", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // Total P&L
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -284,11 +284,11 @@ fun PnLCard(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
             Divider()
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Realized / Unrealized
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -300,9 +300,9 @@ fun PnLCard(
                     Text("$${String.format("%.2f", unrealizedPnl)}", fontWeight = FontWeight.Medium)
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // Balances
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -359,7 +359,7 @@ fun ControlButtons(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("PAUSE")
                     }
-                    
+
                     Button(
                         onClick = onStop,
                         enabled = !isLoading,
@@ -380,7 +380,7 @@ fun ControlButtons(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("RESUME")
                     }
-                    
+
                     Button(
                         onClick = onStop,
                         enabled = !isLoading,
@@ -392,7 +392,7 @@ fun ControlButtons(
                     }
                 }
             }
-            
+
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
             }
@@ -405,9 +405,9 @@ fun OrderItem(order: Order) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (order.side == "buy") 
-                Color(0xFF4CAF50).copy(alpha = 0.1f) 
-            else 
+            containerColor = if (order.side == "buy")
+                Color(0xFF4CAF50).copy(alpha = 0.1f)
+            else
                 Color(0xFFF44336).copy(alpha = 0.1f)
         )
     ) {
@@ -426,7 +426,7 @@ fun OrderItem(order: Order) {
                 )
                 Text("${order.amount} @ $${order.price}", fontSize = 14.sp)
             }
-            
+
             Text(order.status.uppercase(), color = Color.Gray, fontSize = 12.sp)
         }
     }

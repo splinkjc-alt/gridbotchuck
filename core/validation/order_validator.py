@@ -17,7 +17,9 @@ class OrderValidator:
         self.tolerance = tolerance
         self.threshold_ratio = threshold_ratio
 
-    def adjust_and_validate_buy_quantity(self, balance: float, order_quantity: float, price: float) -> float:
+    def adjust_and_validate_buy_quantity(
+        self, balance: float, order_quantity: float, price: float
+    ) -> float:
         """
         Adjusts and validates the buy order quantity based on the available balance.
 
@@ -54,7 +56,9 @@ class OrderValidator:
         self._validate_quantity(adjusted_quantity, is_buy=True)
         return adjusted_quantity
 
-    def adjust_and_validate_sell_quantity(self, crypto_balance: float, order_quantity: float) -> float:
+    def adjust_and_validate_sell_quantity(
+        self, crypto_balance: float, order_quantity: float
+    ) -> float:
         """
         Adjusts and validates the sell order quantity based on the available crypto balance.
 
@@ -92,4 +96,6 @@ class OrderValidator:
         """
         if quantity <= 0:
             order_type = "buy" if is_buy else "sell"
-            raise InvalidOrderQuantityError(f"Invalid {order_type} quantity: {quantity:.6f}")
+            raise InvalidOrderQuantityError(
+                f"Invalid {order_type} quantity: {quantity:.6f}"
+            )

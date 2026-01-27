@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BacktestResult:
     """Results from backtesting a news source."""
+
     source: str
     total_predictions: int
     correct_1h: int
@@ -50,9 +51,9 @@ class NewsBacktester:
         self.sentiment = SentimentAnalyzer()
         self._price_cache = {}
 
-    def get_historical_prices(self, symbol: str,
-                              start_date: datetime,
-                              end_date: datetime = None) -> Optional[pd.DataFrame]:
+    def get_historical_prices(
+        self, symbol: str, start_date: datetime, end_date: datetime = None
+    ) -> Optional[pd.DataFrame]:
         """
         Get historical price data for a symbol.
 
@@ -91,11 +92,11 @@ class NewsBacktester:
         time_diffs = abs(prices.index - target_time)
         closest_idx = time_diffs.argmin()
 
-        return prices['Close'].iloc[closest_idx]
+        return prices["Close"].iloc[closest_idx]
 
-    def backtest_prediction(self, symbol: str,
-                           prediction_time: datetime,
-                           sentiment_score: float) -> dict:
+    def backtest_prediction(
+        self, symbol: str, prediction_time: datetime, sentiment_score: float
+    ) -> dict:
         """
         Backtest a single prediction.
 
@@ -106,9 +107,11 @@ class NewsBacktester:
             return None
 
         results = {
-            'price_at_prediction': price_at_prediction,
-            'sentiment_score': sentiment_score,
-            'predicted_direction': 'up' if sentiment_score > 0.15 else ('down' if sentiment_score < -0.15 else 'neutral')
+            "price_at_prediction": price_at_prediction,
+            "sentiment_score": sentiment_score,
+            "predicted_direction": "up"
+            if sentiment_score > 0.15
+            else ("down" if sentiment_score < -0.15 else "neutral"),
         }
 
         # Check prices at different intervals
@@ -117,22 +120,25 @@ class NewsBacktester:
             future_price = self.get_price_at_time(symbol, future_time)
 
             if future_price:
-                pct_change = ((future_price - price_at_prediction) / price_at_prediction) * 100
+                pct_change = (
+                    (future_price - price_at_prediction) / price_at_prediction
+                ) * 100
 
                 if pct_change > 0.5:
-                    actual_direction = 'up'
+                    actual_direction = "up"
                 elif pct_change < -0.5:
-                    actual_direction = 'down'
+                    actual_direction = "down"
                 else:
-                    actual_direction = 'neutral'
+                    actual_direction = "neutral"
 
-                correct = (results['predicted_direction'] == actual_direction) or \
-                         (results['predicted_direction'] == 'neutral' and abs(pct_change) < 1)
+                correct = (results["predicted_direction"] == actual_direction) or (
+                    results["predicted_direction"] == "neutral" and abs(pct_change) < 1
+                )
 
-                results[f'price_{hours}h'] = future_price
-                results[f'pct_change_{hours}h'] = pct_change
-                results[f'actual_direction_{hours}h'] = actual_direction
-                results[f'correct_{hours}h'] = correct
+                results[f"price_{hours}h"] = future_price
+                results[f"pct_change_{hours}h"] = pct_change
+                results[f"actual_direction_{hours}h"] = actual_direction
+                results[f"correct_{hours}h"] = correct
 
         return results
 
@@ -146,20 +152,22 @@ class NewsBacktester:
 
         results = []
         for s in stats:
-            results.append(BacktestResult(
-                source=s.source,
-                total_predictions=s.total_predictions,
-                correct_1h=s.correct_1h,
-                correct_4h=s.correct_4h,
-                correct_24h=s.correct_24h,
-                accuracy_1h=s.accuracy_1h,
-                accuracy_4h=s.accuracy_4h,
-                accuracy_24h=s.accuracy_24h,
-                avg_return_bullish=0,  # Would need more data
-                avg_return_bearish=0,
-                best_symbols=[],
-                worst_symbols=[]
-            ))
+            results.append(
+                BacktestResult(
+                    source=s.source,
+                    total_predictions=s.total_predictions,
+                    correct_1h=s.correct_1h,
+                    correct_4h=s.correct_4h,
+                    correct_24h=s.correct_24h,
+                    accuracy_1h=s.accuracy_1h,
+                    accuracy_4h=s.accuracy_4h,
+                    accuracy_24h=s.accuracy_24h,
+                    avg_return_bullish=0,  # Would need more data
+                    avg_return_bearish=0,
+                    best_symbols=[],
+                    worst_symbols=[],
+                )
+            )
 
         return results
 
@@ -189,10 +197,14 @@ class NewsBacktester:
                     if price:
                         self.tracker.update_outcome(pred_id, price, hours)
                         updated_count += 1
-                        logger.debug(f"Updated {hours}h outcome for prediction {pred_id}")
+                        logger.debug(
+                            f"Updated {hours}h outcome for prediction {pred_id}"
+                        )
 
                 except Exception as e:
-                    logger.error(f"Error updating outcome for prediction {pred_id}: {e}")
+                    logger.error(
+                        f"Error updating outcome for prediction {pred_id}: {e}"
+                    )
 
         return updated_count
 
@@ -201,7 +213,9 @@ class NewsBacktester:
         results = self.run_backtest_on_stored(min_predictions=5)
 
         if not results:
-            return "No backtest data available yet. Need more predictions with outcomes."
+            return (
+                "No backtest data available yet. Need more predictions with outcomes."
+            )
 
         report = []
         report.append("=" * 70)
@@ -210,7 +224,9 @@ class NewsBacktester:
         report.append("")
 
         # Summary table
-        report.append(f"{'Source':<25} {'Total':>6} {'1h Acc':>8} {'4h Acc':>8} {'24h Acc':>8}")
+        report.append(
+            f"{'Source':<25} {'Total':>6} {'1h Acc':>8} {'4h Acc':>8} {'24h Acc':>8}"
+        )
         report.append("-" * 70)
 
         for r in sorted(results, key=lambda x: x.accuracy_24h, reverse=True):
@@ -227,8 +243,12 @@ class NewsBacktester:
             worst = min(results, key=lambda x: x.accuracy_24h)
 
             report.append("RECOMMENDATIONS:")
-            report.append(f"  Best source (24h):  {best.source} ({best.accuracy_24h:.1f}%)")
-            report.append(f"  Worst source (24h): {worst.source} ({worst.accuracy_24h:.1f}%)")
+            report.append(
+                f"  Best source (24h):  {best.source} ({best.accuracy_24h:.1f}%)"
+            )
+            report.append(
+                f"  Worst source (24h): {worst.source} ({worst.accuracy_24h:.1f}%)"
+            )
 
             # Calculate trust threshold
             avg_accuracy = sum(r.accuracy_24h for r in results) / len(results)

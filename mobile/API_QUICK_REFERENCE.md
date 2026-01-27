@@ -124,31 +124,31 @@ GET /api/multi-pair/status → Multi-pair trading status
 interface GridBotApi {
     @GET("health")
     suspend fun health(): Response<HealthResponse>
-    
+
     @GET("bot/status")
     suspend fun getStatus(): Response<StatusResponse>
-    
+
     @GET("bot/pnl")
     suspend fun getPnL(): Response<PnLResponse>
-    
+
     @GET("bot/orders")
     suspend fun getOrders(): Response<OrdersResponse>
-    
+
     @POST("bot/start")
     suspend fun start(): Response<ActionResponse>
-    
+
     @POST("bot/stop")
     suspend fun stop(): Response<ActionResponse>
-    
+
     @POST("bot/pause")
     suspend fun pause(): Response<ActionResponse>
-    
+
     @POST("bot/resume")
     suspend fun resume(): Response<ActionResponse>
-    
+
     @GET("mtf/status")
     suspend fun getMtfStatus(): Response<MtfResponse>
-    
+
     @POST("market/scan")
     suspend fun scanMarkets(@Body req: ScanRequest): Response<ScanResponse>
 }

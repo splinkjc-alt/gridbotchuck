@@ -39,7 +39,9 @@ class TestLiveOrderExecutionStrategy:
 
         exchange_service.place_order = AsyncMock(return_value=raw_order)
 
-        order = await strategy.execute_market_order(OrderSide.BUY, pair, quantity, price)
+        order = await strategy.execute_market_order(
+            OrderSide.BUY, pair, quantity, price
+        )
 
         assert order is not None
         assert order.identifier == "test-order-id"
@@ -80,7 +82,9 @@ class TestLiveOrderExecutionStrategy:
 
         exchange_service.place_order = AsyncMock(return_value=raw_order)
 
-        order = await strategy.execute_limit_order(OrderSide.SELL, pair, quantity, price)
+        order = await strategy.execute_limit_order(
+            OrderSide.SELL, pair, quantity, price
+        )
 
         assert order is not None
         assert order.identifier == "test-limit-order-id"
@@ -95,7 +99,9 @@ class TestLiveOrderExecutionStrategy:
         quantity = 1
         price = 2000
 
-        exchange_service.place_order = AsyncMock(side_effect=DataFetchError("Exchange API error"))
+        exchange_service.place_order = AsyncMock(
+            side_effect=DataFetchError("Exchange API error")
+        )
 
         with pytest.raises(OrderExecutionFailedError):
             await strategy.execute_limit_order(OrderSide.SELL, pair, quantity, price)
@@ -131,7 +137,9 @@ class TestLiveOrderExecutionStrategy:
         order_id = "test-order-id"
         pair = "BTC/usd"
 
-        exchange_service.fetch_order = AsyncMock(side_effect=DataFetchError("Order not found"))
+        exchange_service.fetch_order = AsyncMock(
+            side_effect=DataFetchError("Order not found")
+        )
 
         with pytest.raises(DataFetchError):
             await strategy.get_order(order_id, pair)
@@ -142,7 +150,9 @@ class TestLiveOrderExecutionStrategy:
         exchange_service.cancel_order = AsyncMock(return_value={"status": "canceled"})
 
         await strategy._handle_partial_fill(partial_order, "BTC/usd")
-        exchange_service.cancel_order.assert_called_once_with("partial-order", "BTC/usd")
+        exchange_service.cancel_order.assert_called_once_with(
+            "partial-order", "BTC/usd"
+        )
 
     async def test_retry_cancel_order(self, setup_strategy):
         strategy, exchange_service = setup_strategy

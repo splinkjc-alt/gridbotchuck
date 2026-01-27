@@ -191,7 +191,9 @@ def validate_signals(exchange: ccxt.Exchange | None = None, hours: int = 24):
                     (current_price, outcome, sig["id"]),
                 )
             validated += 1
-            print(f"  {symbol} {signal_type} @ ${entry_price:.4f} -> ${current_price:.4f} ({price_change_pct:+.2f}%) = {outcome}")
+            print(
+                f"  {symbol} {signal_type} @ ${entry_price:.4f} -> ${current_price:.4f} ({price_change_pct:+.2f}%) = {outcome}"
+            )
 
         except Exception as e:
             print(f"  {symbol}: Error - {e}")
@@ -235,16 +237,24 @@ def get_accuracy_stats() -> dict:
     }
 
     # Overall stats
-    row = conn.execute("SELECT COUNT(*) as cnt FROM signals WHERE signal IN ('BUY', 'SELL')").fetchone()
+    row = conn.execute(
+        "SELECT COUNT(*) as cnt FROM signals WHERE signal IN ('BUY', 'SELL')"
+    ).fetchone()
     stats["total_signals"] = row["cnt"]
 
-    row = conn.execute("SELECT COUNT(*) as cnt FROM signals WHERE outcome_checked = 1").fetchone()
+    row = conn.execute(
+        "SELECT COUNT(*) as cnt FROM signals WHERE outcome_checked = 1"
+    ).fetchone()
     stats["validated"] = row["cnt"]
 
-    row = conn.execute("SELECT COUNT(*) as cnt FROM signals WHERE outcome = 'CORRECT'").fetchone()
+    row = conn.execute(
+        "SELECT COUNT(*) as cnt FROM signals WHERE outcome = 'CORRECT'"
+    ).fetchone()
     stats["correct"] = row["cnt"]
 
-    row = conn.execute("SELECT COUNT(*) as cnt FROM signals WHERE outcome = 'WRONG'").fetchone()
+    row = conn.execute(
+        "SELECT COUNT(*) as cnt FROM signals WHERE outcome = 'WRONG'"
+    ).fetchone()
     stats["wrong"] = row["cnt"]
 
     if stats["validated"] > 0:
@@ -334,13 +344,17 @@ def print_summary():
         print("\nBy Signal Type:")
         print("-" * 40)
         for sig_type, data in stats["by_signal"].items():
-            print(f"  {sig_type:6} | {data['correct']:3}/{data['total']:3} = {data['accuracy_pct']:5.1f}%")
+            print(
+                f"  {sig_type:6} | {data['correct']:3}/{data['total']:3} = {data['accuracy_pct']:5.1f}%"
+            )
 
         if stats["by_symbol"]:
             print("\nBy Symbol (Top 10):")
             print("-" * 40)
             for symbol, data in stats["by_symbol"].items():
-                print(f"  {symbol:12} | {data['correct']:3}/{data['total']:3} = {data['accuracy_pct']:5.1f}%")
+                print(
+                    f"  {symbol:12} | {data['correct']:3}/{data['total']:3} = {data['accuracy_pct']:5.1f}%"
+                )
     else:
         print("\nNo validated signals yet. Run --validate after 24h.")
 
@@ -354,14 +368,18 @@ def print_recent(limit: int = 20):
     print("\n" + "=" * 70)
     print(f"RECENT SIGNALS (Last {limit})")
     print("=" * 70)
-    print(f"{'Time':20} | {'Symbol':12} | {'Signal':6} | {'Price':>10} | {'RSI':>5} | {'Outcome':8}")
+    print(
+        f"{'Time':20} | {'Symbol':12} | {'Signal':6} | {'Price':>10} | {'RSI':>5} | {'Outcome':8}"
+    )
     print("-" * 70)
 
     for sig in signals:
         ts = sig["timestamp"][:19].replace("T", " ")
         outcome = sig["outcome"] or "pending"
         rsi = f"{sig['rsi']:.1f}" if sig["rsi"] else "-"
-        print(f"{ts:20} | {sig['symbol']:12} | {sig['signal']:6} | ${sig['price']:>9.4f} | {rsi:>5} | {outcome:8}")
+        print(
+            f"{ts:20} | {sig['symbol']:12} | {sig['signal']:6} | ${sig['price']:>9.4f} | {rsi:>5} | {outcome:8}"
+        )
 
     print("=" * 70)
 
@@ -369,10 +387,20 @@ def print_recent(limit: int = 20):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Signal Logger")
     parser.add_argument("--summary", action="store_true", help="Show accuracy stats")
-    parser.add_argument("--validate", action="store_true", help="Validate signals (24h)")
-    parser.add_argument("--validate-all", action="store_true", help="Validate all timeframes (1h, 4h, 24h)")
-    parser.add_argument("--validate-1h", action="store_true", help="Validate 1h outcomes")
-    parser.add_argument("--validate-4h", action="store_true", help="Validate 4h outcomes")
+    parser.add_argument(
+        "--validate", action="store_true", help="Validate signals (24h)"
+    )
+    parser.add_argument(
+        "--validate-all",
+        action="store_true",
+        help="Validate all timeframes (1h, 4h, 24h)",
+    )
+    parser.add_argument(
+        "--validate-1h", action="store_true", help="Validate 1h outcomes"
+    )
+    parser.add_argument(
+        "--validate-4h", action="store_true", help="Validate 4h outcomes"
+    )
     parser.add_argument("--recent", type=int, metavar="N", help="Show recent N signals")
 
     args = parser.parse_args()

@@ -1,12 +1,11 @@
 """
-CrossKiller Day Trader - 5m Optimized
-=====================================
+CrossKiller Day Trader - Dynamic Scanner
+========================================
 
-Based on backtest results:
-- SOL: EMA 9/20 + mean_reversion = +13.91%
-- XRP: Full Suite + momentum = +13.52%
-- ADA: Full Suite + momentum = +11.41%
-- LINK: RSI+EMA + mean_reversion = +11.37%
+Scans market to find the best RSI opportunities.
+- Scans all available coins for lowest RSI (oversold)
+- Picks top 3-5 coins to trade
+- Rescans every hour to find new opportunities
 
 Day trading targets: +2% take profit, -1.5% stop loss
 """
@@ -27,21 +26,37 @@ import os
 
 load_dotenv()
 
-# RSI-based configs - buy oversold, sell overbought
-COIN_CONFIGS = {
-    "SOL/USD": {
-        "name": "SOL",
-        "use_rsi": True,  # RSI for entries/exits
-    },
-    "ADA/USD": {
-        "name": "ADA",
-        "use_rsi": True,
-    },
-    "LINK/USD": {
-        "name": "LINK",
-        "use_rsi": True,
-    },
-}
+# Coins to scan on Coinbase (high volume, good for day trading)
+SCANNABLE_COINS = [
+    "SOL/USD",
+    "ADA/USD",
+    "LINK/USD",
+    "XRP/USD",
+    "DOGE/USD",
+    "AVAX/USD",
+    "DOT/USD",
+    "MATIC/USD",
+    "UNI/USD",
+    "ATOM/USD",
+    "NEAR/USD",
+    "FIL/USD",
+    "ICP/USD",
+    "HBAR/USD",
+    "VET/USD",
+    "ALGO/USD",
+    "XLM/USD",
+    "CRV/USD",
+    "LTC/USD",
+    "BCH/USD",
+    "SHIB/USD",
+    "PEPE/USD",
+    "ARB/USD",
+    "OP/USD",
+    "INJ/USD",
+]
+
+# Dynamic coin configs - will be populated by scanner
+COIN_CONFIGS = {}
 
 # Day trading settings
 TIMEFRAME = "15m"
@@ -62,6 +77,9 @@ class DayTraderBot:
         self.exchange = None
         self.positions = {}  # symbol -> {amount, entry_price, entry_time}
         self.cooldowns = {}  # symbol -> datetime when cooldown expires
+        self.active_coins = {}  # symbol -> {rsi, score, price} - best coins to trade
+        self.last_scan = None
+        self.scan_interval_minutes = 30  # Rescan every 30 minutes
         self.logger = logging.getLogger("CrossKiller-DayTrader")
 
     async def start(self):
@@ -74,6 +92,90 @@ class DayTraderBot:
             }
         )
         self.logger.info("Connected to Coinbase")
+
+    async def scan_market(self) -> dict:
+        """
+        Scan all coins for RSI opportunities.
+        Returns top coins with lowest RSI (best buy opportunities).
+        """
+        self.logger.info("=" * 50)
+        self.logger.info("SCANNING MARKET FOR BEST OPPORTUNITIES...")
+        self.logger.info("=" * 50)
+
+        coin_scores = []
+
+        for symbol in SCANNABLE_COINS:
+            try:
+                df = await self.fetch_ohlcv(symbol, limit=50)
+                if df is None or df.empty:
+                    continue
+
+                # Calculate RSI
+                delta = df["close"].diff()
+                gain = delta.where(delta > 0, 0).rolling(window=14).mean()
+                loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+                rs = gain / loss
+                rsi = 100 - (100 / (1 + rs))
+                current_rsi = float(rsi.iloc[-1])
+
+                # Score: Lower RSI = better buy opportunity
+                # RSI 20 = score 80, RSI 50 = score 50, RSI 80 = score 20
+                score = 100 - current_rsi
+
+                price = float(df["close"].iloc[-1])
+
+                coin_scores.append(
+                    {
+                        "symbol": symbol,
+                        "rsi": current_rsi,
+                        "score": score,
+                        "price": price,
+                    }
+                )
+
+                await asyncio.sleep(0.3)  # Rate limit
+
+            except Exception as e:
+                self.logger.debug(f"Error scanning {symbol}: {e}")
+                continue
+
+        # Sort by score (highest = lowest RSI = best opportunity)
+        coin_scores.sort(key=lambda x: x["score"], reverse=True)
+
+        # Log top 10 results
+        self.logger.info("\nTOP 10 RSI OPPORTUNITIES:")
+        self.logger.info("-" * 50)
+        self.logger.info(
+            f"{'Rank':<5} {'Coin':<12} {'RSI':<8} {'Score':<8} {'Price':<12}"
+        )
+        self.logger.info("-" * 50)
+
+        for i, coin in enumerate(coin_scores[:10], 1):
+            self.logger.info(
+                f"{i:<5} {coin['symbol']:<12} {coin['rsi']:<8.1f} "
+                f"{coin['score']:<8.1f} ${coin['price']:<12.4f}"
+            )
+
+        # Select top 5 coins to actively trade (RSI < 45 = some opportunity)
+        self.active_coins = {}
+        for coin in coin_scores[:5]:
+            if coin["rsi"] < 45:  # Only trade coins with some oversold signal
+                self.active_coins[coin["symbol"]] = {
+                    "use_rsi": True,
+                    "rsi": coin["rsi"],
+                    "score": coin["score"],
+                    "price": coin["price"],
+                }
+
+        if self.active_coins:
+            self.logger.info(
+                f"\nACTIVE TRADING COINS: {list(self.active_coins.keys())}"
+            )
+        else:
+            self.logger.info("\nNo coins with RSI < 45 - market is neutral")
+
+        self.last_scan = datetime.now()
+        return self.active_coins
 
     async def close(self):
         """Close exchange connection."""
@@ -127,7 +229,7 @@ class DayTraderBot:
     def check_buy_signal(
         self, symbol: str, df: pd.DataFrame, config: dict
     ) -> tuple[bool, str]:
-        """Check buy signal - RSI crosses below 30."""
+        """Check buy signal - RSI oversold."""
         # === ANTI-CHURN: Check cooldown ===
         if symbol in self.cooldowns:
             if datetime.now() < self.cooldowns[symbol]:
@@ -135,14 +237,14 @@ class DayTraderBot:
             else:
                 del self.cooldowns[symbol]  # Cooldown expired
 
-        row = df.iloc[-1]  # Current candle
-        prev = df.iloc[-2]  # Previous candle
+        if len(df) < 2:
+            return False, ""
 
-        # RSI cross entry: Buy when RSI CROSSES below 30
-        # Previous >= 30, Current < 30
-        if "rsi" in row and "rsi" in prev:
-            if prev["rsi"] >= 30 and row["rsi"] < 30:
-                return True, f"RSI_cross_DOWN={row['rsi']:.1f}"
+        row = df.iloc[-1]  # Current candle
+
+        # Buy when RSI is oversold (< 35)
+        if "rsi" in row and row["rsi"] < 35:
+            return True, f"RSI_oversold={row['rsi']:.1f}"
 
         return False, ""
 
@@ -283,7 +385,7 @@ class DayTraderBot:
         """Check for existing positions on startup."""
         try:
             balance = await self.exchange.fetch_balance()
-            for symbol, config in COIN_CONFIGS.items():
+            for symbol in SCANNABLE_COINS:
                 coin = symbol.split("/")[0]
                 held = balance.get(coin, {}).get("free", 0)
                 if held > 0:
@@ -302,17 +404,18 @@ class DayTraderBot:
             self.logger.warning(f"Error checking positions: {e}")
 
     async def run(self, paper_mode: bool = False):
-        """Main trading loop."""
+        """Main trading loop with dynamic coin scanning."""
         mode_str = "PAPER MODE" if paper_mode else "LIVE"
         self.logger.info("=" * 60)
-        self.logger.info(f"CROSSKILLER DAY TRADER - {mode_str}")
+        self.logger.info(f"CROSSKILLER DAY TRADER - DYNAMIC SCANNER - {mode_str}")
         self.logger.info("=" * 60)
-        self.logger.info(f"Coins: {list(COIN_CONFIGS.keys())}")
+        self.logger.info(f"Scannable Coins: {len(SCANNABLE_COINS)}")
         self.logger.info(f"Timeframe: {TIMEFRAME}")
         self.logger.info(f"Position Size: ${POSITION_SIZE_USD}")
         self.logger.info(f"Take Profit: +{TAKE_PROFIT_PCT}%")
         self.logger.info(f"Stop Loss: -{STOP_LOSS_PCT}%")
         self.logger.info(f"Max Hold: {MAX_HOLD_HOURS}h")
+        self.logger.info(f"Rescan Interval: {self.scan_interval_minutes}m")
         self.logger.info(
             f"Min Hold: {MIN_HOLD_MINUTES}m | Min Profit: {MIN_PROFIT_TO_SELL}% | Cooldown: {COOLDOWN_MINUTES}m"
         )
@@ -321,6 +424,9 @@ class DayTraderBot:
         await self.start()
         if not paper_mode:
             await self.check_existing_positions()
+
+        # Do initial market scan
+        await self.scan_market()
 
         error_count = 0
         max_errors = 5
@@ -331,8 +437,28 @@ class DayTraderBot:
                 cycle_count += 1
                 coins_checked = 0
 
-                # Check each coin
-                for symbol, config in COIN_CONFIGS.items():
+                # Check if it's time to rescan the market
+                if self.last_scan is None or (
+                    datetime.now() - self.last_scan
+                    > timedelta(minutes=self.scan_interval_minutes)
+                ):
+                    await self.scan_market()
+
+                # Use active_coins from scanner (dynamic) instead of fixed COIN_CONFIGS
+                trading_coins = self.active_coins if self.active_coins else {}
+
+                # Also check positions we're already in (even if no longer in active list)
+                for symbol in list(self.positions.keys()):
+                    if symbol not in trading_coins:
+                        trading_coins[symbol] = {"use_rsi": True}
+
+                if not trading_coins:
+                    self.logger.info("[WAITING] No active coins - market is neutral")
+                    await asyncio.sleep(60)
+                    continue
+
+                # Check each active coin
+                for symbol, config in trading_coins.items():
                     df = await self.fetch_ohlcv(symbol)
                     if df is None or df.empty:
                         error_count += 1
@@ -379,16 +505,23 @@ class DayTraderBot:
 
                 # Status update every 5 cycles
                 if cycle_count % 5 == 0:
+                    active_str = (
+                        ", ".join(
+                            [s.split("/")[0] for s in self.active_coins.keys()][:5]
+                        )
+                        if self.active_coins
+                        else "None"
+                    )
                     if self.positions:
                         pos_str = ", ".join(
                             [f"{s.split('/')[0]}" for s in self.positions]
                         )
                         self.logger.info(
-                            f"[HOLDING] {len(self.positions)}/{MAX_POSITIONS}: {pos_str}"
+                            f"[HOLDING] {len(self.positions)}/{MAX_POSITIONS}: {pos_str} | Active: {active_str}"
                         )
                     else:
                         self.logger.info(
-                            f"[SCANNING] Cycle {cycle_count} - watching for entries"
+                            f"[SCANNING] Cycle {cycle_count} | Active coins: {active_str}"
                         )
 
                 # Wait for next 5m candle (check every minute)

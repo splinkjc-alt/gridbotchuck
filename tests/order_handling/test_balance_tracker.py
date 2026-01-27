@@ -115,17 +115,23 @@ class TestBalanceTracker:
         fee_calculator.calculate_fee.return_value = 5  # Mock fee calculation
 
         buy_order = Mock(side=OrderSide.BUY, filled=1, price=100)
-        balance_tracker.reserved_fiat = 105  # Reserved fiat for the buy order (price + fee)
+        balance_tracker.reserved_fiat = (
+            105  # Reserved fiat for the buy order (price + fee)
+        )
         await balance_tracker._update_balance_on_order_completion(buy_order)
         assert balance_tracker.crypto_balance == 6  # Crypto balance increases by 1
         assert balance_tracker.total_fees == 5  # Total fees reflect the buy order fee
-        assert balance_tracker.reserved_fiat == 0  # Reserved fiat should be fully consumed
+        assert (
+            balance_tracker.reserved_fiat == 0
+        )  # Reserved fiat should be fully consumed
 
         sell_order = Mock(side=OrderSide.SELL, filled=1, price=200)
         balance_tracker.reserved_crypto = 1  # Reserved crypto for the sell order
         await balance_tracker._update_balance_on_order_completion(sell_order)
         assert balance_tracker.total_fees == 10  # Total fees include the sell order fee
-        assert balance_tracker.reserved_crypto == 0  # Reserved crypto should be fully consumed
+        assert (
+            balance_tracker.reserved_crypto == 0
+        )  # Reserved crypto should be fully consumed
         assert balance_tracker.balance == 1195  # Remaining balance after the sell order
 
     def test_get_total_balance_value(self, setup_balance_tracker):
@@ -146,7 +152,9 @@ class TestBalanceTracker:
         balance_tracker, _, _ = setup_balance_tracker
         balance_tracker.trading_mode = TradingMode.BACKTEST
 
-        await balance_tracker.setup_balances(initial_balance=2000, initial_crypto_balance=10)
+        await balance_tracker.setup_balances(
+            initial_balance=2000, initial_crypto_balance=10
+        )
 
         assert balance_tracker.balance == 2000
         assert balance_tracker.crypto_balance == 10
@@ -164,7 +172,9 @@ class TestBalanceTracker:
             exchange_service=mock_exchange_service,
         )
 
-        balance_tracker._fetch_live_balances.assert_awaited_once_with(mock_exchange_service)
+        balance_tracker._fetch_live_balances.assert_awaited_once_with(
+            mock_exchange_service
+        )
         assert balance_tracker.balance == 1500
         assert balance_tracker.crypto_balance == 5
 
@@ -181,7 +191,9 @@ class TestBalanceTracker:
             exchange_service=mock_exchange_service,
         )
 
-        balance_tracker._fetch_live_balances.assert_awaited_once_with(mock_exchange_service)
+        balance_tracker._fetch_live_balances.assert_awaited_once_with(
+            mock_exchange_service
+        )
         assert balance_tracker.balance == 1000
         assert balance_tracker.crypto_balance == 3
 
@@ -196,16 +208,22 @@ class TestBalanceTracker:
             },
         }
 
-        balances = await balance_tracker._fetch_live_balances(exchange_service=mock_exchange_service)
+        balances = await balance_tracker._fetch_live_balances(
+            exchange_service=mock_exchange_service
+        )
 
         mock_exchange_service.get_balance.assert_awaited_once()
         assert balances == (1000, 5)
 
     @pytest.mark.asyncio
-    async def test_fetch_live_balances_unexpected_structure(self, setup_balance_tracker):
+    async def test_fetch_live_balances_unexpected_structure(
+        self, setup_balance_tracker
+    ):
         balance_tracker, _, _ = setup_balance_tracker
         mock_exchange_service = AsyncMock()
         mock_exchange_service.get_balance.return_value = None
 
         with pytest.raises(ValueError, match="Unexpected balance structure: None"):
-            await balance_tracker._fetch_live_balances(exchange_service=mock_exchange_service)
+            await balance_tracker._fetch_live_balances(
+                exchange_service=mock_exchange_service
+            )

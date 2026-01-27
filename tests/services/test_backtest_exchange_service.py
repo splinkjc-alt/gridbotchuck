@@ -29,7 +29,9 @@ class TestBacktestExchangeService:
     def test_initialization_supported_exchange(self, mock_ccxt, config_manager):
         service = BacktestExchangeService(config_manager)
         mock_ccxt.assert_called_once()
-        assert service.exchange_name == "binance", "Expected exchange name to be 'binance'"
+        assert (
+            service.exchange_name == "binance"
+        ), "Expected exchange name to be 'binance'"
 
     def test_initialization_unsupported_exchange(self, config_manager):
         config_manager.get_exchange_name.return_value = "unsupported_exchange"
@@ -38,7 +40,9 @@ class TestBacktestExchangeService:
 
     @patch("pandas.read_csv")
     @patch("os.path.exists", return_value=True)
-    def test_load_ohlcv_from_file_success(self, mock_exists, mock_read_csv, config_manager):
+    def test_load_ohlcv_from_file_success(
+        self, mock_exists, mock_read_csv, config_manager
+    ):
         mock_data = pd.DataFrame(
             {
                 "timestamp": pd.date_range(start="2023-01-01", periods=5, freq="D"),
@@ -63,12 +67,17 @@ class TestBacktestExchangeService:
         mock_read_csv.side_effect = FileNotFoundError("File not found")
         service = BacktestExchangeService(config_manager)
 
-        with pytest.raises(HistoricalMarketDataFileNotFoundError, match="Failed to load OHLCV data from file"):
+        with pytest.raises(
+            HistoricalMarketDataFileNotFoundError,
+            match="Failed to load OHLCV data from file",
+        ):
             service.fetch_ohlcv("BTC/USD", "1d", "2023-01-01", "2023-01-05")
 
     @patch("core.services.backtest_exchange_service.ccxt.binance")
     @patch.object(BacktestExchangeService, "_is_pair_supported", return_value=True)
-    def test_fetch_ohlcv_single_batch(self, mock_is_pair_supported, mock_ccxt, config_manager):
+    def test_fetch_ohlcv_single_batch(
+        self, mock_is_pair_supported, mock_ccxt, config_manager
+    ):
         # Mock the exchange instance and returned data
         mock_exchange = mock_ccxt.return_value
         mock_exchange.timeframes = {"1d": "1d"}
@@ -89,14 +98,19 @@ class TestBacktestExchangeService:
 
     @patch("core.services.backtest_exchange_service.ccxt.binance")
     @patch.object(BacktestExchangeService, "_is_pair_supported", return_value=True)
-    def test_fetch_ohlcv_in_chunks(self, mock_is_pair_supported, mock_ccxt, config_manager):
+    def test_fetch_ohlcv_in_chunks(
+        self, mock_is_pair_supported, mock_ccxt, config_manager
+    ):
         mock_exchange = mock_ccxt.return_value
         mock_exchange.timeframes = {"1h": "1h"}
         mock_exchange.fetch_ohlcv.side_effect = [
             [[1622505600000, 34000, 35000, 33000, 34500, 1000]],  # June 1, 2021
             [[1622592000000, 34500, 35500, 34000, 35000, 1200]],  # June 2, 2021
         ]
-        mock_exchange.parse8601.side_effect = [1622505600000, 1622592000000]  # Start and end dates in ms
+        mock_exchange.parse8601.side_effect = [
+            1622505600000,
+            1622592000000,
+        ]  # Start and end dates in ms
 
         service = BacktestExchangeService(config_manager)
         service.historical_data_file = None
@@ -124,7 +138,9 @@ class TestBacktestExchangeService:
 
         service = BacktestExchangeService(config_manager)
 
-        df = service._fetch_ohlcv_single_batch("BTC/USD", "1d", 1622505600000, 1622592000000)
+        df = service._fetch_ohlcv_single_batch(
+            "BTC/USD", "1d", 1622505600000, 1622592000000
+        )
 
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 1, "Expected 1 row of data in DataFrame"
@@ -132,9 +148,13 @@ class TestBacktestExchangeService:
 
     @patch("core.services.backtest_exchange_service.ccxt.binance")
     @patch.object(BacktestExchangeService, "_is_pair_supported", return_value=False)
-    def test_unsupported_pair_error(self, mock_is_pair_supported, mock_ccxt, config_manager):
+    def test_unsupported_pair_error(
+        self, mock_is_pair_supported, mock_ccxt, config_manager
+    ):
         mock_exchange = mock_ccxt.return_value
-        mock_exchange.timeframes = {"1d": "1d"}  # Ensure timeframe is supported for this test
+        mock_exchange.timeframes = {
+            "1d": "1d"
+        }  # Ensure timeframe is supported for this test
 
         service = BacktestExchangeService(config_manager)
         service.historical_data_file = None
@@ -144,7 +164,9 @@ class TestBacktestExchangeService:
 
     @patch("core.services.backtest_exchange_service.ccxt.binance")
     @patch.object(BacktestExchangeService, "_is_pair_supported", return_value=True)
-    def test_unsupported_timeframe_error(self, mock_is_pair_supported, mock_ccxt, config_manager):
+    def test_unsupported_timeframe_error(
+        self, mock_is_pair_supported, mock_ccxt, config_manager
+    ):
         mock_exchange = mock_ccxt.return_value
         mock_exchange.timeframes = {"1m": "1m"}
 
@@ -158,35 +180,45 @@ class TestBacktestExchangeService:
     async def test_place_order_not_implemented(self, config_manager):
         service = BacktestExchangeService(config_manager)
 
-        with pytest.raises(NotImplementedError, match="place_order is not used in backtesting"):
+        with pytest.raises(
+            NotImplementedError, match="place_order is not used in backtesting"
+        ):
             await service.place_order("BTC/USD", "buy", "market", 1, 1000)
 
     @pytest.mark.asyncio
     async def test_get_balance_not_implemented(self, config_manager):
         service = BacktestExchangeService(config_manager)
 
-        with pytest.raises(NotImplementedError, match="get_balance is not used in backtesting"):
+        with pytest.raises(
+            NotImplementedError, match="get_balance is not used in backtesting"
+        ):
             await service.get_balance()
 
     @pytest.mark.asyncio
     async def test_get_current_price_not_implemented(self, config_manager):
         service = BacktestExchangeService(config_manager)
 
-        with pytest.raises(NotImplementedError, match="get_current_price is not used in backtesting"):
+        with pytest.raises(
+            NotImplementedError, match="get_current_price is not used in backtesting"
+        ):
             await service.get_current_price("BTC/USD")
 
     @pytest.mark.asyncio
     async def test_cancel_order_not_implemented(self, config_manager):
         service = BacktestExchangeService(config_manager)
 
-        with pytest.raises(NotImplementedError, match="cancel_order is not used in backtesting"):
+        with pytest.raises(
+            NotImplementedError, match="cancel_order is not used in backtesting"
+        ):
             await service.cancel_order("order_id", "BTC/USD")
 
     @pytest.mark.asyncio
     async def test_get_exchange_status_not_implemented(self, config_manager):
         service = BacktestExchangeService(config_manager)
 
-        with pytest.raises(NotImplementedError, match="get_exchange_status is not used in backtesting"):
+        with pytest.raises(
+            NotImplementedError, match="get_exchange_status is not used in backtesting"
+        ):
             await service.get_exchange_status()
 
     @pytest.mark.asyncio
@@ -195,4 +227,6 @@ class TestBacktestExchangeService:
 
         with patch.object(service, "logger") as mock_logger:
             await service.close_connection()
-            mock_logger.info.assert_called_once_with("[BACKTEST] Closing WebSocket connection...")
+            mock_logger.info.assert_called_once_with(
+                "[BACKTEST] Closing WebSocket connection..."
+            )

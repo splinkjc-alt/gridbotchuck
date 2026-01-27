@@ -15,7 +15,9 @@ class TestOrderManager:
     @pytest.fixture
     def setup_order_manager(self):
         config_manager = Mock()
-        config_manager.config = {"risk_management": {"position_sizing": {"min_reserve_percent": 10}}}
+        config_manager.config = {
+            "risk_management": {"position_sizing": {"min_reserve_percent": 10}}
+        }
         grid_manager = Mock()
         order_validator = Mock()
         balance_tracker = Mock()
@@ -51,11 +53,22 @@ class TestOrderManager:
 
     @pytest.mark.asyncio
     async def test_initialize_grid_orders_buy_orders(self, setup_order_manager):
-        manager, grid_manager, order_validator, balance_tracker, _, _, order_execution_strategy, _ = setup_order_manager
+        (
+            manager,
+            grid_manager,
+            order_validator,
+            balance_tracker,
+            _,
+            _,
+            order_execution_strategy,
+            _,
+        ) = setup_order_manager
         grid_manager.sorted_buy_grids = [50000, 49000, 48000]
         grid_manager.sorted_sell_grids = []
         grid_manager.grid_levels = {50000: Mock(), 49000: Mock(), 48000: Mock()}
-        grid_manager.can_place_order.side_effect = lambda level, side: side == OrderSide.BUY
+        grid_manager.can_place_order.side_effect = (
+            lambda level, side: side == OrderSide.BUY
+        )
         order_validator.adjust_and_validate_buy_quantity.return_value = 0.01
         balance_tracker.balance = 1000
         order_execution_strategy.execute_limit_order = AsyncMock(return_value=Mock())
@@ -67,11 +80,22 @@ class TestOrderManager:
 
     @pytest.mark.asyncio
     async def test_initialize_grid_orders_sell_orders(self, setup_order_manager):
-        manager, grid_manager, order_validator, balance_tracker, _, _, order_execution_strategy, _ = setup_order_manager
+        (
+            manager,
+            grid_manager,
+            order_validator,
+            balance_tracker,
+            _,
+            _,
+            order_execution_strategy,
+            _,
+        ) = setup_order_manager
         grid_manager.sorted_sell_grids = [52000, 53000, 54000]
         grid_manager.sorted_buy_grids = []
         grid_manager.grid_levels = {52000: Mock(), 53000: Mock(), 54000: Mock()}
-        grid_manager.can_place_order.side_effect = lambda level, side: side == OrderSide.SELL
+        grid_manager.can_place_order.side_effect = (
+            lambda level, side: side == OrderSide.SELL
+        )
         order_validator.adjust_and_validate_sell_quantity.return_value = 0.01
         balance_tracker.crypto_balance = 1
         order_execution_strategy.execute_limit_order = AsyncMock(return_value=Mock())
@@ -92,7 +116,9 @@ class TestOrderManager:
         await manager._on_order_filled(mock_order)
 
         order_book.get_grid_level_for_order.assert_called_once_with(mock_order)
-        manager._handle_order_completion.assert_awaited_once_with(mock_order, mock_grid_level)
+        manager._handle_order_completion.assert_awaited_once_with(
+            mock_order, mock_grid_level
+        )
 
     @pytest.mark.asyncio
     async def test_on_order_filled_no_grid_level(self, setup_order_manager):
@@ -132,7 +158,9 @@ class TestOrderManager:
 
     @pytest.mark.asyncio
     async def test_perform_initial_purchase(self, setup_order_manager):
-        manager, grid_manager, _, _, _, _, order_execution_strategy, _ = setup_order_manager
+        manager, grid_manager, _, _, _, _, order_execution_strategy, _ = (
+            setup_order_manager
+        )
         grid_manager.get_initial_order_quantity.return_value = 0.01
         order_execution_strategy.execute_market_order = AsyncMock(return_value=Mock())
 
@@ -143,12 +171,23 @@ class TestOrderManager:
 
     @pytest.mark.asyncio
     async def test_execute_take_profit_or_stop_loss_order(self, setup_order_manager):
-        manager, _, _, balance_tracker, _, _, order_execution_strategy, notification_handler = setup_order_manager
+        (
+            manager,
+            _,
+            _,
+            balance_tracker,
+            _,
+            _,
+            order_execution_strategy,
+            notification_handler,
+        ) = setup_order_manager
         balance_tracker.crypto_balance = 0.5
         order_execution_strategy.execute_market_order = AsyncMock(return_value=Mock())
         notification_handler.async_send_notification = AsyncMock()
 
-        await manager.execute_take_profit_or_stop_loss_order(55000, take_profit_order=True)
+        await manager.execute_take_profit_or_stop_loss_order(
+            55000, take_profit_order=True
+        )
 
         order_execution_strategy.execute_market_order.assert_awaited_once_with(
             OrderSide.SELL,
@@ -179,13 +218,15 @@ class TestOrderManager:
         grid_manager.get_order_size_for_grid_level.return_value = 0.1
         order_validator.adjust_and_validate_buy_quantity.return_value = 0.1
         balance_tracker.get_total_balance_value.return_value = 50000
-        order_execution_strategy.execute_limit_order.side_effect = OrderExecutionFailedError(
-            "Test error",
-            OrderSide.BUY,
-            OrderType.LIMIT,
-            "BTC/usd",
-            1,
-            1000,
+        order_execution_strategy.execute_limit_order.side_effect = (
+            OrderExecutionFailedError(
+                "Test error",
+                OrderSide.BUY,
+                OrderType.LIMIT,
+                "BTC/usd",
+                1,
+                1000,
+            )
         )
         notification_handler.async_send_notification = AsyncMock()
 
@@ -199,20 +240,35 @@ class TestOrderManager:
         )
 
     @pytest.mark.asyncio
-    async def test_initialize_grid_orders_insufficient_balance(self, setup_order_manager):
-        manager, grid_manager, order_validator, balance_tracker, _, _, order_execution_strategy, _ = setup_order_manager
+    async def test_initialize_grid_orders_insufficient_balance(
+        self, setup_order_manager
+    ):
+        (
+            manager,
+            grid_manager,
+            order_validator,
+            balance_tracker,
+            _,
+            _,
+            order_execution_strategy,
+            _,
+        ) = setup_order_manager
         grid_manager.sorted_buy_grids = [49000]
         grid_manager.sorted_sell_grids = []
         grid_manager.grid_levels = {49000: Mock()}
         grid_manager.can_place_order.return_value = True
-        order_validator.adjust_and_validate_buy_quantity.side_effect = ValueError("Insufficient balance")
+        order_validator.adjust_and_validate_buy_quantity.side_effect = ValueError(
+            "Insufficient balance"
+        )
         balance_tracker.balance = 0  # Simulate insufficient balance
         order_execution_strategy.execute_limit_order = AsyncMock()
 
         await manager.initialize_grid_orders(49500)
 
         order_execution_strategy.execute_limit_order.assert_not_awaited()
-        grid_manager.can_place_order.assert_called_once_with(grid_manager.grid_levels[49000], OrderSide.BUY)
+        grid_manager.can_place_order.assert_called_once_with(
+            grid_manager.grid_levels[49000], OrderSide.BUY
+        )
         order_validator.adjust_and_validate_buy_quantity.assert_called_once_with(
             balance=balance_tracker.balance,
             order_quantity=grid_manager.get_order_size_for_grid_level.return_value,
@@ -224,7 +280,9 @@ class TestOrderManager:
         manager, _, _, _, order_book, _, _, _ = setup_order_manager
         mock_order = Mock()
         order_book.get_grid_level_for_order.return_value = Mock()
-        manager._handle_order_completion = AsyncMock(side_effect=Exception("Unexpected error"))
+        manager._handle_order_completion = AsyncMock(
+            side_effect=Exception("Unexpected error")
+        )
 
         await manager._on_order_filled(mock_order)
 
@@ -263,15 +321,24 @@ class TestOrderManager:
 
     @pytest.mark.asyncio
     async def test_place_sell_order_failure(self, setup_order_manager):
-        manager, grid_manager, order_validator, balance_tracker, order_book, _, order_execution_strategy, _ = (
-            setup_order_manager
-        )
+        (
+            manager,
+            grid_manager,
+            order_validator,
+            balance_tracker,
+            order_book,
+            _,
+            order_execution_strategy,
+            _,
+        ) = setup_order_manager
         buy_grid_level = Mock(price=48000)
         sell_grid_level = Mock(price=52000)
         quantity = 0.01
 
         order_validator.adjust_and_validate_sell_quantity.return_value = quantity
-        order_execution_strategy.execute_limit_order = AsyncMock(return_value=None)  # Make it an AsyncMock
+        order_execution_strategy.execute_limit_order = AsyncMock(
+            return_value=None
+        )  # Make it an AsyncMock
 
         await manager._place_sell_order(buy_grid_level, sell_grid_level, quantity)
 
@@ -282,15 +349,24 @@ class TestOrderManager:
 
     @pytest.mark.asyncio
     async def test_place_buy_order_failure(self, setup_order_manager):
-        manager, grid_manager, order_validator, balance_tracker, order_book, _, order_execution_strategy, _ = (
-            setup_order_manager
-        )
+        (
+            manager,
+            grid_manager,
+            order_validator,
+            balance_tracker,
+            order_book,
+            _,
+            order_execution_strategy,
+            _,
+        ) = setup_order_manager
         sell_grid_level = Mock(price=52000)
         buy_grid_level = Mock(price=48000)
         quantity = 0.01
 
         order_validator.adjust_and_validate_buy_quantity.return_value = quantity
-        order_execution_strategy.execute_limit_order = AsyncMock(return_value=None)  # Make it an AsyncMock
+        order_execution_strategy.execute_limit_order = AsyncMock(
+            return_value=None
+        )  # Make it an AsyncMock
 
         await manager._place_buy_order(sell_grid_level, buy_grid_level, quantity)
 
@@ -301,7 +377,9 @@ class TestOrderManager:
 
     @pytest.mark.asyncio
     async def test_perform_initial_purchase_zero_quantity(self, setup_order_manager):
-        manager, grid_manager, _, balance_tracker, _, _, order_execution_strategy, _ = setup_order_manager
+        manager, grid_manager, _, balance_tracker, _, _, order_execution_strategy, _ = (
+            setup_order_manager
+        )
         grid_manager.get_initial_order_quantity.return_value = 0
         balance_tracker.balance = 1000
         balance_tracker.crypto_balance = 0
@@ -313,9 +391,13 @@ class TestOrderManager:
         order_execution_strategy.execute_market_order.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_perform_initial_purchase_zero_quantity_with_existing_crypto(self, setup_order_manager):
+    async def test_perform_initial_purchase_zero_quantity_with_existing_crypto(
+        self, setup_order_manager
+    ):
         """Test that when quantity is 0 but crypto is already held, returns True."""
-        manager, grid_manager, _, balance_tracker, _, _, order_execution_strategy, _ = setup_order_manager
+        manager, grid_manager, _, balance_tracker, _, _, order_execution_strategy, _ = (
+            setup_order_manager
+        )
         grid_manager.get_initial_order_quantity.return_value = 0
         balance_tracker.balance = 1000
         balance_tracker.crypto_balance = 0.5  # Already holding crypto
@@ -327,7 +409,9 @@ class TestOrderManager:
         order_execution_strategy.execute_market_order.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_execute_take_profit_or_stop_loss_order_no_action(self, setup_order_manager):
+    async def test_execute_take_profit_or_stop_loss_order_no_action(
+        self, setup_order_manager
+    ):
         manager, _, _, _, _, _, order_execution_strategy, _ = setup_order_manager
 
         await manager.execute_take_profit_or_stop_loss_order(50000)
@@ -335,8 +419,19 @@ class TestOrderManager:
         order_execution_strategy.execute_market_order.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_execute_take_profit_or_stop_loss_order_failure(self, setup_order_manager):
-        manager, _, _, balance_tracker, _, _, order_execution_strategy, notification_handler = setup_order_manager
+    async def test_execute_take_profit_or_stop_loss_order_failure(
+        self, setup_order_manager
+    ):
+        (
+            manager,
+            _,
+            _,
+            balance_tracker,
+            _,
+            _,
+            order_execution_strategy,
+            notification_handler,
+        ) = setup_order_manager
         balance_tracker.crypto_balance = 0.5
 
         # Mock the order execution to raise an error
@@ -352,7 +447,9 @@ class TestOrderManager:
         )
         notification_handler.async_send_notification = AsyncMock()
 
-        await manager.execute_take_profit_or_stop_loss_order(55000, take_profit_order=True)
+        await manager.execute_take_profit_or_stop_loss_order(
+            55000, take_profit_order=True
+        )
 
         notification_handler.async_send_notification.assert_awaited_with(
             NotificationType.ORDER_FAILED,
@@ -360,7 +457,9 @@ class TestOrderManager:
         )
 
     @pytest.mark.asyncio
-    async def test_handle_sell_order_completion_no_paired_level(self, setup_order_manager):
+    async def test_handle_sell_order_completion_no_paired_level(
+        self, setup_order_manager
+    ):
         manager, grid_manager, _, _, _, _, _, _ = setup_order_manager
         mock_order = Mock(side=OrderSide.SELL, filled=0.1)
         mock_grid_level = Mock(price=50000)
@@ -368,9 +467,13 @@ class TestOrderManager:
 
         await manager._handle_sell_order_completion(mock_order, mock_grid_level)
 
-        grid_manager.complete_order.assert_called_once_with(mock_grid_level, OrderSide.SELL)
+        grid_manager.complete_order.assert_called_once_with(
+            mock_grid_level, OrderSide.SELL
+        )
 
-    def test_get_or_create_paired_buy_level_with_valid_paired_level(self, setup_order_manager):
+    def test_get_or_create_paired_buy_level_with_valid_paired_level(
+        self, setup_order_manager
+    ):
         manager, grid_manager, _, _, _, _, _, _ = setup_order_manager
         mock_sell_grid_level = Mock()
         mock_paired_buy_level = Mock()

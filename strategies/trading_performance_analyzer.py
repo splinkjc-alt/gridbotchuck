@@ -22,7 +22,9 @@ class TradingPerformanceAnalyzer:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.config_manager: ConfigManager = config_manager
         self.order_book: OrderBook = order_book
-        self.base_currency, self.quote_currency, self.trading_fee = self._extract_config()
+        self.base_currency, self.quote_currency, self.trading_fee = (
+            self._extract_config()
+        )
 
     def _extract_config(self) -> tuple[str, str, float]:
         """
@@ -66,8 +68,14 @@ class TradingPerformanceAnalyzer:
         """
         total_buy_cost = 0.0
         total_sell_revenue = 0.0
-        closed_buy_orders = [order for order in self.order_book.get_all_buy_orders() if order.is_filled()]
-        closed_sell_orders = [order for order in self.order_book.get_all_sell_orders() if order.is_filled()]
+        closed_buy_orders = [
+            order for order in self.order_book.get_all_buy_orders() if order.is_filled()
+        ]
+        closed_sell_orders = [
+            order
+            for order in self.order_book.get_all_sell_orders()
+            if order.is_filled()
+        ]
 
         for buy_order in closed_buy_orders:
             trade_value = buy_order.amount * buy_order.price
@@ -79,7 +87,11 @@ class TradingPerformanceAnalyzer:
             sell_fee = sell_order.fee.get("cost", 0.0) if sell_order.fee else 0.0
             total_sell_revenue += trade_value - sell_fee
 
-        return "N/A" if total_sell_revenue == 0 else f"{total_sell_revenue - total_buy_cost:.2f}"
+        return (
+            "N/A"
+            if total_sell_revenue == 0
+            else f"{total_sell_revenue - total_buy_cost:.2f}"
+        )
 
     def _calculate_drawdown(self, data: pd.DataFrame) -> float:
         peak = data["account_value"].expanding(min_periods=1).max()
@@ -135,7 +147,9 @@ class TradingPerformanceAnalyzer:
         downside_returns = excess_returns[excess_returns < 0]
 
         if len(downside_returns) == 0 or downside_returns.std() == 0:
-            return round(excess_returns.mean() * np.sqrt(252), 2)  # Positive ratio if no downside
+            return round(
+                excess_returns.mean() * np.sqrt(252), 2
+            )  # Positive ratio if no downside
 
         sortino_ratio = excess_returns.mean() / downside_returns.std() * np.sqrt(252)
         return round(sortino_ratio, 2)
@@ -160,10 +174,14 @@ class TradingPerformanceAnalyzer:
             if sell_order.is_filled():
                 orders.append(self._format_order(sell_order, grid_level))
 
-        orders.sort(key=lambda x: (x[5] is None, x[5]))  # x[5] is the timestamp, sort None to the end
+        orders.sort(
+            key=lambda x: (x[5] is None, x[5])
+        )  # x[5] is the timestamp, sort None to the end
         return orders
 
-    def _format_order(self, order: Order, grid_level: GridLevel | None) -> list[str | float]:
+    def _format_order(
+        self, order: Order, grid_level: GridLevel | None
+    ) -> list[str | float]:
         grid_level_price = grid_level.price if grid_level else "N/A"
         if grid_level and order.average is not None:
             # Assuming order.price is the execution price and grid level price the expected price
@@ -190,8 +208,20 @@ class TradingPerformanceAnalyzer:
         Returns:
             Tuple[int, int]: Number of buy trades and number of sell trades.
         """
-        num_buy_trades = len([order for order in self.order_book.get_all_buy_orders() if order.is_filled()])
-        num_sell_trades = len([order for order in self.order_book.get_all_sell_orders() if order.is_filled()])
+        num_buy_trades = len(
+            [
+                order
+                for order in self.order_book.get_all_buy_orders()
+                if order.is_filled()
+            ]
+        )
+        num_sell_trades = len(
+            [
+                order
+                for order in self.order_book.get_all_sell_orders()
+                if order.is_filled()
+            ]
+        )
         return num_buy_trades, num_sell_trades
 
     def _calculate_buy_and_hold_return(
@@ -247,10 +277,14 @@ class TradingPerformanceAnalyzer:
         grid_trading_gains = self._calculate_trading_gains()
         max_drawdown = self._calculate_drawdown(data)
         max_runup = self._calculate_runup(data)
-        time_in_profit, time_in_loss = self._calculate_time_in_profit_loss(initial_balance, data)
+        time_in_profit, time_in_loss = self._calculate_time_in_profit_loss(
+            initial_balance, data
+        )
         sharpe_ratio = self._calculate_sharpe_ratio(data)
         sortino_ratio = self._calculate_sortino_ratio(data)
-        buy_and_hold_return = self._calculate_buy_and_hold_return(data, initial_price, final_crypto_price)
+        buy_and_hold_return = self._calculate_buy_and_hold_return(
+            data, initial_price, final_crypto_price
+        )
         num_buy_trades, num_sell_trades = self._calculate_trade_counts()
 
         performance_summary = {
@@ -280,12 +314,23 @@ class TradingPerformanceAnalyzer:
 
         orders_table = tabulate(
             formatted_orders,
-            headers=["Order Side", "Type", "Status", "Price", "Quantity", "Timestamp", "Grid Level", "Slippage"],
+            headers=[
+                "Order Side",
+                "Type",
+                "Status",
+                "Price",
+                "Quantity",
+                "Timestamp",
+                "Grid Level",
+                "Slippage",
+            ],
             tablefmt="pipe",
         )
         self.logger.info("\nFormatted Orders:\n" + orders_table)
 
-        summary_table = tabulate(performance_summary.items(), headers=["Metric", "Value"], tablefmt="grid")
+        summary_table = tabulate(
+            performance_summary.items(), headers=["Metric", "Value"], tablefmt="grid"
+        )
         self.logger.info("\nPerformance Summary:\n" + summary_table)
 
         return performance_summary, formatted_orders

@@ -65,7 +65,7 @@ printPerf = (perfObj) ->
     longestDescription = 0
     for item in sortedItem
       descriptionLength = item.description.length
-      if descriptionLength > longestDescription 
+      if descriptionLength > longestDescription
         longestDescription = descriptionLength
 
     for item in sortedItem

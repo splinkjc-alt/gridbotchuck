@@ -4,11 +4,17 @@ from ..order_handling.order import Order
 
 
 class GridCycleState(Enum):
-    READY_TO_BUY_OR_SELL = "ready_to_buy_or_sell"  # Level is ready for both a buy or a sell order
+    READY_TO_BUY_OR_SELL = (
+        "ready_to_buy_or_sell"  # Level is ready for both a buy or a sell order
+    )
     READY_TO_BUY = "ready_to_buy"  # Level is ready for a buy order
-    WAITING_FOR_BUY_FILL = "waiting_for_buy_fill"  # Buy order placed, waiting for execution
+    WAITING_FOR_BUY_FILL = (
+        "waiting_for_buy_fill"  # Buy order placed, waiting for execution
+    )
     READY_TO_SELL = "ready_to_sell"  # Level is ready for a sell order
-    WAITING_FOR_SELL_FILL = "waiting_for_sell_fill"  # Sell order placed, waiting for execution
+    WAITING_FOR_SELL_FILL = (
+        "waiting_for_sell_fill"  # Sell order placed, waiting for execution
+    )
 
 
 class GridLevel:

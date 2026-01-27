@@ -17,7 +17,7 @@ data class DashboardUiState(
     val isConnected: Boolean = false,
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
-    
+
     // Bot Status
     val botStatus: String = "unknown",
     val tradingPair: String = "-",
@@ -25,7 +25,7 @@ data class DashboardUiState(
     val currentPrice: Double = 0.0,
     val gridLow: Double = 0.0,
     val gridHigh: Double = 0.0,
-    
+
     // P&L
     val totalPnl: Double = 0.0,
     val totalPnlPercent: Double = 0.0,
@@ -33,12 +33,12 @@ data class DashboardUiState(
     val unrealizedPnl: Double = 0.0,
     val baseBalance: Double = 0.0,
     val quoteBalance: Double = 0.0,
-    
+
     // MTF Analysis
     val gridSignal: String = "unknown",
     val marketCondition: String = "unknown",
     val primaryTrend: String = "unknown",
-    
+
     // Orders
     val activeOrders: List<Order> = emptyList(),
     val orderCount: Int = 0
@@ -48,20 +48,20 @@ data class DashboardUiState(
 class DashboardViewModel @Inject constructor(
     private val repository: BotRepository
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
-    
+
     private var isPolling = false
-    
+
     init {
         startPolling()
     }
-    
+
     fun startPolling() {
         if (isPolling) return
         isPolling = true
-        
+
         // Poll bot status every 2 seconds
         viewModelScope.launch {
             repository.pollBotStatus(2000).collect { result ->
@@ -96,7 +96,7 @@ class DashboardViewModel @Inject constructor(
                 }
             }
         }
-        
+
         // Poll P&L every 5 seconds
         viewModelScope.launch {
             repository.pollPnL(5000).collect { result ->
@@ -117,7 +117,7 @@ class DashboardViewModel @Inject constructor(
                 }
             }
         }
-        
+
         // Poll MTF status every 30 seconds
         viewModelScope.launch {
             repository.pollMtfStatus(30000).collect { result ->
@@ -136,13 +136,13 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun stopPolling() {
         isPolling = false
     }
-    
+
     // ============== Bot Control Actions ==============
-    
+
     fun startBot() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -161,7 +161,7 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun stopBot() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -179,7 +179,7 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun pauseBot() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -197,7 +197,7 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun resumeBot() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -215,7 +215,7 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun refreshOrders() {
         viewModelScope.launch {
             when (val result = repository.getOrders()) {
@@ -231,7 +231,7 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }

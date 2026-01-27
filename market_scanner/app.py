@@ -12,11 +12,12 @@ st.markdown("Scanning **AI Stocks** and **Crypto Assets** using 4 distinct strat
 # Sidebar Configuration
 st.sidebar.header("Configuration")
 currency = st.sidebar.selectbox("Currency", ["USD", "EUR", "GBP"], index=0)
-scan_limit = st.sidebar.number_input("Limit Assets (0 = No Limit)", min_value=0, value=20, step=5)
+scan_limit = st.sidebar.number_input(
+    "Limit Assets (0 = No Limit)", min_value=0, value=20, step=5
+)
 
 # Run Button
 if st.sidebar.button("Run Scanner", type="primary"):
-
     # Initialize Scanner with UI overrides
     scanner = MarketScanner()
     scanner.currency = currency
@@ -28,12 +29,7 @@ if st.sidebar.button("Run Scanner", type="primary"):
         crypto = scanner.get_ai_crypto_pairs()
 
     # 2. Initialize Results
-    results = {
-        'Long-Term': [],
-        'Strategic': [],
-        'Risk': [],
-        'Trading': []
-    }
+    results = {"Long-Term": [], "Strategic": [], "Risk": [], "Trading": []}
 
     # 3. Scan Logic
     progress_bar = st.progress(0)
@@ -74,7 +70,9 @@ if st.sidebar.button("Run Scanner", type="primary"):
     # 4. Display Results
     st.divider()
 
-    tab1, tab2, tab3, tab4 = st.tabs(["📈 Long-Term", "🚀 Strategic", "🛡️ Risk", "💰 Trading"])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["📈 Long-Term", "🚀 Strategic", "🛡️ Risk", "💰 Trading"]
+    )
 
     def display_table(category, description):
         st.subheader(f"{category} Investor")
@@ -93,21 +91,23 @@ if st.sidebar.button("Run Scanner", type="primary"):
 
         # Formatting
         st.dataframe(
-            df.style.format({"Score": "{:.2f}"}).background_gradient(cmap="Greens", subset=["Score"]),
-            use_container_width=True
+            df.style.format({"Score": "{:.2f}"}).background_gradient(
+                cmap="Greens", subset=["Score"]
+            ),
+            use_container_width=True,
         )
 
     with tab1:
-        display_table('Long-Term', "Strongest Trend (Price vs 200 SMA)")
+        display_table("Long-Term", "Strongest Trend (Price vs 200 SMA)")
 
     with tab2:
-        display_table('Strategic', "Best Momentum (1-Month Return)")
+        display_table("Strategic", "Best Momentum (1-Month Return)")
 
     with tab3:
-        display_table('Risk', "Safest Assets (Lowest Volatility)")
+        display_table("Risk", "Safest Assets (Lowest Volatility)")
 
     with tab4:
-        display_table('Trading', "Best Dip Buy Opportunities (Lowest RSI)")
+        display_table("Trading", "Best Dip Buy Opportunities (Lowest RSI)")
 
 else:
     st.info("Click 'Run Scanner' in the sidebar to start.")

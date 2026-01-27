@@ -52,7 +52,9 @@ async def analyze_pair(exchange, pair: str) -> dict:
     """Analyze a single pair."""
     try:
         ohlcv = await exchange.fetch_ohlcv(pair, "15m", limit=50)
-        df = pd.DataFrame(ohlcv, columns=["ts", "open", "high", "low", "close", "volume"])
+        df = pd.DataFrame(
+            ohlcv, columns=["ts", "open", "high", "low", "close", "volume"]
+        )
 
         if len(df) < 25:
             return None
@@ -107,7 +109,6 @@ async def analyze_pair(exchange, pair: str) -> dict:
 
 
 async def main():
-
     # Verify API keys
     api_key = os.getenv("EXCHANGE_API_KEY")
     api_secret = os.getenv("EXCHANGE_SECRET_KEY")
@@ -132,9 +133,17 @@ async def main():
                 results.append(result)
 
         # Sort by action priority
-        action_order = {"BUY": 0, "SAFE_BUY": 1, "HOLD": 2, "WARN": 3, "SELL": 4, "AVOID": 5}
-        results.sort(key=lambda x: (action_order.get(x["action"], 99), -x["spread_change"]))
-
+        action_order = {
+            "BUY": 0,
+            "SAFE_BUY": 1,
+            "HOLD": 2,
+            "WARN": 3,
+            "SELL": 4,
+            "AVOID": 5,
+        }
+        results.sort(
+            key=lambda x: (action_order.get(x["action"], 99), -x["spread_change"])
+        )
 
         for r in results:
             action = r["action"]
@@ -145,12 +154,9 @@ async def main():
             else:
                 pass
 
-
-
         # Summary
         buys = [r for r in results if r["action"] in ("BUY", "SAFE_BUY")]
         [r for r in results if r["action"] == "SELL"]
-
 
         if buys:
             for r in buys[:3]:

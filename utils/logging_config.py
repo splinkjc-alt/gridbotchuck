@@ -23,7 +23,9 @@ def setup_logging(
     handlers = []
 
     console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+    console_handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    )
     handlers.append(console_handler)
     log_file_path = ""
 
@@ -36,8 +38,12 @@ def setup_logging(
         else:
             log_file_path = os.path.join(log_dir, "grid_trading_bot.log")
 
-        file_handler = RotatingFileHandler(log_file_path, maxBytes=max_file_size, backupCount=backup_count)
-        file_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+        file_handler = RotatingFileHandler(
+            log_file_path, maxBytes=max_file_size, backupCount=backup_count
+        )
+        file_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
         handlers.append(file_handler)
 
     logging.basicConfig(level=log_level, handlers=handlers)

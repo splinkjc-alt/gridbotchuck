@@ -48,7 +48,12 @@ class BotTaskbarControl:
 
         # Draw background circle
         margin = 8
-        draw.ellipse([margin, margin, size - margin, size - margin], fill=color, outline="black", width=2)
+        draw.ellipse(
+            [margin, margin, size - margin, size - margin],
+            fill=color,
+            outline="black",
+            width=2,
+        )
 
         # Draw text
         try:
@@ -172,14 +177,12 @@ class BotTaskbarControl:
 
         # Check if API is running
         if not self.check_api_running():
-
             for _i in range(30):
                 if self.check_api_running():
                     break
                 time.sleep(1)
             else:
                 return
-
 
         # Create the menu
         menu = pystray.Menu(
@@ -198,13 +201,15 @@ class BotTaskbarControl:
 
         # Create the tray icon
         self.icon = pystray.Icon(
-            "Grid Trading Bot", initial_icon, title="Grid Trading Bot - Click to control", menu=menu
+            "Grid Trading Bot",
+            initial_icon,
+            title="Grid Trading Bot - Click to control",
+            menu=menu,
         )
 
         # Start the status update thread
         update_thread = Thread(target=self.update_status_thread, daemon=True)
         update_thread.start()
-
 
         # Run the icon
         self.icon.run()
@@ -213,8 +218,12 @@ class BotTaskbarControl:
 def main():
     """Main entry point"""
     import importlib.util
+
     # Check if pystray and pillow are installed
-    if importlib.util.find_spec("PIL") is None or importlib.util.find_spec("pystray") is None:
+    if (
+        importlib.util.find_spec("PIL") is None
+        or importlib.util.find_spec("pystray") is None
+    ):
         return 1
 
     # Create and run the control app
