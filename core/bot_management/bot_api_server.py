@@ -14,6 +14,10 @@ from aiohttp import web
 from aiohttp_cors import setup as setup_cors
 
 from core.bot_management.event_bus import Events
+from core.security.api_auth import APIAuth, create_api_auth_middleware
+from core.security.cors_config import setup_cors_secure
+from core.security.rate_limiter import RateLimiter, create_rate_limit_middleware
+from core.security.security_headers import security_headers_middleware
 
 
 class BotAPIServer:
@@ -33,7 +37,23 @@ class BotAPIServer:
         self.config_manager = config_manager
         self.port = port
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.app = web.Application()
+        
+        # Initialize security components
+        self.api_auth = APIAuth()
+        self.rate_limiter = RateLimiter(
+            requests_per_minute=60,  # 60 requests per minute per IP
+            burst_size=10  # Allow bursts of 10 requests
+        )
+        
+        # Create app with middlewares
+        self.app = web.Application(
+            middlewares=[
+                create_api_auth_middleware(self.api_auth),
+                create_rate_limit_middleware(self.rate_limiter),
+                security_headers_middleware,
+            ]
+        )
+        
         self.runner = None
         self.site = None
 
@@ -150,8 +170,8 @@ class BotAPIServer:
         else:
             self.logger.warning(f"Dashboard folder not found at {dashboard_path}")
 
-        # Setup CORS for mobile/cross-origin requests
-        setup_cors(self.app)
+        # Setup CORS with secure defaults
+        setup_cors_secure(self.app)
 
     async def handle_health(self, request):
         """Health check endpoint."""
@@ -1441,11 +1461,15 @@ class BotAPIServer:
     async def start(self):
         """Start the API server."""
         try:
+            # Start rate limiter cleanup task
+            self.rate_limiter.start_cleanup()
+            
             self.runner = web.AppRunner(self.app)
             await self.runner.setup()
             self.site = web.TCPSite(self.runner, "127.0.0.1", self.port)
             await self.site.start()
             self.logger.info(f"Bot API Server started on http://127.0.0.1:{self.port}")
+            self.logger.info(f"API Key required for endpoints (except /api/health)")
         except Exception as e:
             self.logger.error(f"Failed to start API server: {e}")
             raise
