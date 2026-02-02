@@ -42,7 +42,9 @@ class BuySellPointCalculator:
         # Calculate technical indicators
         rsi = self._calculate_rsi(data["close"], period=14)
         macd_line, signal_line = self._calculate_macd(data["close"])
-        bb_upper, _bb_middle, bb_lower = self._calculate_bollinger_bands(data["close"], period=20)
+        bb_upper, _bb_middle, bb_lower = self._calculate_bollinger_bands(
+            data["close"], period=20
+        )
 
         current_price = current_price or data["close"].iloc[-1]
         price_high = data["high"].max()
@@ -50,7 +52,9 @@ class BuySellPointCalculator:
         price_high - price_low
 
         # Determine trend
-        trend = self._determine_trend(rsi.iloc[-1], macd_line.iloc[-1], signal_line.iloc[-1])
+        trend = self._determine_trend(
+            rsi.iloc[-1], macd_line.iloc[-1], signal_line.iloc[-1]
+        )
 
         # Calculate grid levels with adjustments based on technical indicators
         buy_points = self._calculate_buy_levels(
@@ -77,7 +81,9 @@ class BuySellPointCalculator:
             "signals": trend,
             "rsi": rsi.iloc[-1],
             "macd_strength": abs(macd_line.iloc[-1] - signal_line.iloc[-1]),
-            "bollinger_position": self._get_bollinger_position(current_price, bb_lower, bb_upper),
+            "bollinger_position": self._get_bollinger_position(
+                current_price, bb_lower, bb_upper
+            ),
         }
 
     def _calculate_buy_levels(
@@ -190,7 +196,9 @@ class BuySellPointCalculator:
         else:
             return "HOLD"
 
-    def _get_bollinger_position(self, price: float, bb_lower: float, bb_upper: float) -> str:
+    def _get_bollinger_position(
+        self, price: float, bb_lower: float, bb_upper: float
+    ) -> str:
         """
         Determines where price is within Bollinger Bands.
         """

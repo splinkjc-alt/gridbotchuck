@@ -41,9 +41,9 @@ foreach ($package in @("pystray", "PIL", "requests")) {
 if ($missingPackages.Count -gt 0) {
   Write-Host "⚠️  Installing missing packages: $($missingPackages -join ', ')" @Yellow
   Write-Host ""
-    
+
   pip install pystray pillow requests
-    
+
   if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Failed to install packages" @Red
     Read-Host "Press Enter to exit"

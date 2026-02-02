@@ -125,7 +125,9 @@ class MarketAnalyzer:
     WEIGHT_BOLLINGER = 0.10
     WEIGHT_CANDLESTICK = 0.05
 
-    def __init__(self, exchange_service: ExchangeInterface, config_manager: ConfigManager):
+    def __init__(
+        self, exchange_service: ExchangeInterface, config_manager: ConfigManager
+    ):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.exchange_service = exchange_service
         self.config_manager = config_manager
@@ -197,7 +199,9 @@ class MarketAnalyzer:
                 # Get 24h change % if available
                 change_24h = pair_info_lookup.get(pair, {}).get("change_pct", 0.0)
 
-                analysis = await self._analyze_pair(pair, timeframe, min_price, max_price, max_volume, change_24h)
+                analysis = await self._analyze_pair(
+                    pair, timeframe, min_price, max_price, max_volume, change_24h
+                )
                 if analysis is not None:
                     analyses.append(analysis)
                     self.logger.info(
@@ -212,12 +216,16 @@ class MarketAnalyzer:
         analyses.sort(key=lambda x: x.score, reverse=True)
         return analyses
 
-    async def _fetch_ohlcv_async(self, pair: str, timeframe: str, limit: int = 100) -> pd.DataFrame | None:
+    async def _fetch_ohlcv_async(
+        self, pair: str, timeframe: str, limit: int = 100
+    ) -> pd.DataFrame | None:
         """Fetch OHLCV data using the exchange service."""
         try:
             # Try the simple limit-based fetch first
             if hasattr(self.exchange_service, "fetch_ohlcv_simple"):
-                return await self.exchange_service.fetch_ohlcv_simple(pair, timeframe, limit)
+                return await self.exchange_service.fetch_ohlcv_simple(
+                    pair, timeframe, limit
+                )
 
             # Fallback to sync method if available
             if hasattr(self.exchange_service, "fetch_ohlcv"):
@@ -254,7 +262,9 @@ class MarketAnalyzer:
 
             # Filter by price range
             if current_price < min_price or current_price > max_price:
-                self.logger.debug(f"Skipping {pair}: price ${current_price:.2f} outside range")
+                self.logger.debug(
+                    f"Skipping {pair}: price ${current_price:.2f} outside range"
+                )
                 return None
 
             # Get EMA periods (use stored values or defaults)
@@ -266,8 +276,12 @@ class MarketAnalyzer:
             ema_slow_series = self._calculate_ema(data["close"], period=ema_slow)
             cci = self._calculate_cci(data, period=20)
             macd_line, signal_line = self._calculate_macd(data["close"])
-            rsi = self._calculate_rsi(data["close"], period=7)  # Changed to RSI(7) - more responsive
-            bb_upper, bb_middle, bb_lower = self._calculate_bollinger_bands(data["close"])
+            rsi = self._calculate_rsi(
+                data["close"], period=7
+            )  # Changed to RSI(7) - more responsive
+            bb_upper, bb_middle, bb_lower = self._calculate_bollinger_bands(
+                data["close"]
+            )
 
             # Import candlestick patterns
             from strategies.candlestick_patterns import detect_patterns
@@ -275,12 +289,18 @@ class MarketAnalyzer:
             candle_patterns = detect_patterns(data)
 
             # Calculate individual scores
-            ema_crossover_score = self._score_ema_crossover(ema_fast_series, ema_slow_series)
-            ema_position_score = self._score_ema_position(current_price, ema_fast_series, ema_slow_series)
+            ema_crossover_score = self._score_ema_crossover(
+                ema_fast_series, ema_slow_series
+            )
+            ema_position_score = self._score_ema_position(
+                current_price, ema_fast_series, ema_slow_series
+            )
             cci_score = self._score_cci(cci)
             macd_score = self._score_macd(macd_line, signal_line)
             volume_score = self._calculate_volume_score(data, max_volume)
-            bollinger_score = self._score_bollinger(current_price, bb_upper, bb_middle, bb_lower)
+            bollinger_score = self._score_bollinger(
+                current_price, bb_upper, bb_middle, bb_lower
+            )
             candlestick_score = self._score_candlestick_patterns(candle_patterns)
 
             # Calculate composite score
@@ -295,15 +315,22 @@ class MarketAnalyzer:
             )
 
             # Determine overall signal
-            signal = self._determine_signal(ema_crossover_score, cci_score, macd_score, ema_position_score)
+            signal = self._determine_signal(
+                ema_crossover_score, cci_score, macd_score, ema_position_score
+            )
 
             # Determine flags
             ema_bullish_cross = (
                 ema_fast_series.iloc[-1] > ema_slow_series.iloc[-1]
                 and ema_fast_series.iloc[-2] <= ema_slow_series.iloc[-2]
             )
-            price_above_emas = current_price > ema_fast_series.iloc[-1] and current_price > ema_slow_series.iloc[-1]
-            cci_bullish = cci.iloc[-1] > 0 or (cci.iloc[-1] > -100 and cci.iloc[-2] <= -100)
+            price_above_emas = (
+                current_price > ema_fast_series.iloc[-1]
+                and current_price > ema_slow_series.iloc[-1]
+            )
+            cci_bullish = cci.iloc[-1] > 0 or (
+                cci.iloc[-1] > -100 and cci.iloc[-2] <= -100
+            )
             macd_bullish = macd_line.iloc[-1] > signal_line.iloc[-1]
 
             return CoinAnalysis(
@@ -370,7 +397,9 @@ class MarketAnalyzer:
         """
         typical_price = (data["high"] + data["low"] + data["close"]) / 3
         sma_tp = typical_price.rolling(window=period).mean()
-        mean_deviation = typical_price.rolling(window=period).apply(lambda x: abs(x - x.mean()).mean(), raw=True)
+        mean_deviation = typical_price.rolling(window=period).apply(
+            lambda x: abs(x - x.mean()).mean(), raw=True
+        )
         cci = (typical_price - sma_tp) / (0.015 * mean_deviation)
         return cci
 
@@ -426,7 +455,9 @@ class MarketAnalyzer:
             spread_pct = ((current_slow - current_fast) / current_slow) * 100
             return max(15, 40 - spread_pct * 10)
 
-    def _score_ema_position(self, price: float, ema_fast: pd.Series, ema_slow: pd.Series) -> float:
+    def _score_ema_position(
+        self, price: float, ema_fast: pd.Series, ema_slow: pd.Series
+    ) -> float:
         """
         Score price position relative to EMAs (0-100).
         - Price above both EMAs: 100
@@ -486,7 +517,9 @@ class MarketAnalyzer:
             # Oversold - potential reversal zone
             return max(30, 50 + (current + 100) / 5)
 
-    def _score_macd(self, macd_line: pd.Series | None, signal_line: pd.Series | None) -> float:
+    def _score_macd(
+        self, macd_line: pd.Series | None, signal_line: pd.Series | None
+    ) -> float:
         """
         Score MACD trend (0-100).
         - MACD crossing above signal: 100
@@ -570,8 +603,19 @@ class MarketAnalyzer:
         """
         score = 50  # Neutral baseline
 
-        bullish_patterns = ["hammer", "bullish_engulfing", "morning_star", "dragonfly_doji", "three_white_soldiers"]
-        bearish_patterns = ["shooting_star", "bearish_engulfing", "evening_star", "hanging_man"]
+        bullish_patterns = [
+            "hammer",
+            "bullish_engulfing",
+            "morning_star",
+            "dragonfly_doji",
+            "three_white_soldiers",
+        ]
+        bearish_patterns = [
+            "shooting_star",
+            "bearish_engulfing",
+            "evening_star",
+            "hanging_man",
+        ]
 
         for pattern in bullish_patterns:
             if patterns.get(pattern, False):
@@ -599,7 +643,11 @@ class MarketAnalyzer:
         # Apply logarithmic scaling for better distribution
         import math
 
-        score = min(100, 50 + (math.log10(volume_ratio + 0.1) + 1) * 25) if volume_ratio > 0 else 0
+        score = (
+            min(100, 50 + (math.log10(volume_ratio + 0.1) + 1) * 25)
+            if volume_ratio > 0
+            else 0
+        )
 
         return max(0, score)
 
@@ -649,7 +697,9 @@ class MarketAnalyzer:
             Tuple of (bottom_price, top_price, central_price)
         """
         try:
-            data = self.exchange_service.fetch_ohlcv(pair, timeframe, limit=lookback_periods)
+            data = self.exchange_service.fetch_ohlcv(
+                pair, timeframe, limit=lookback_periods
+            )
 
             if data is None or len(data) == 0:
                 self.logger.error(f"No data available for {pair}")

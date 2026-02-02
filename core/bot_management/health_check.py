@@ -121,8 +121,12 @@ class HealthCheck:
             self.logger.warning("Trading strategy is not functioning properly.")
 
         if health_status["exchange_status"] != "ok":
-            alerts.append(f"Exchange status is not ok: {health_status['exchange_status']}")
-            self.logger.warning(f"Exchange status issue detected: {health_status['exchange_status']}")
+            alerts.append(
+                f"Exchange status is not ok: {health_status['exchange_status']}"
+            )
+            self.logger.warning(
+                f"Exchange status issue detected: {health_status['exchange_status']}"
+            )
 
         if alerts:
             self.logger.info(f"Bot health alerts generated: {alerts}")
@@ -141,7 +145,9 @@ class HealthCheck:
             Dictionary containing various resource metrics.
         """
         # Get system-wide metrics
-        cpu_percent = psutil.cpu_percent(interval=1)  # 1 second interval for accurate measurement
+        cpu_percent = psutil.cpu_percent(
+            interval=1
+        )  # 1 second interval for accurate measurement
         virtual_memory = psutil.virtual_memory()
         disk = psutil.disk_usage("/")
 
@@ -174,7 +180,8 @@ class HealthCheck:
                 "disk": disk.percent,
                 "bot_cpu": bot_cpu_percent,
                 "bot_memory_mb": bot_memory_info.rss / (1024 * 1024),
-                "bot_memory_percent": (bot_memory_info.rss / virtual_memory.total) * 100,
+                "bot_memory_percent": (bot_memory_info.rss / virtual_memory.total)
+                * 100,
                 "open_files": open_files,
                 "thread_count": thread_count,
                 "memory_available_mb": virtual_memory.available / (1024 * 1024),
@@ -225,7 +232,13 @@ class HealthCheck:
             current_value = usage.get(resource, 0)
             if current_value > threshold:
                 trend = trends.get(f"{resource}_trend", 0)
-                trend_direction = "increasing" if trend > 1 else "decreasing" if trend < -1 else "stable"
+                trend_direction = (
+                    "increasing"
+                    if trend > 1
+                    else "decreasing"
+                    if trend < -1
+                    else "stable"
+                )
                 message = (
                     f"{resource.upper()} usage is high: {current_value:.1f}% "
                     f"(Threshold: {threshold}%, Trend: {trend_direction})"
@@ -234,7 +247,9 @@ class HealthCheck:
 
         # Check for CPU spikes
         if trends.get("bot_cpu_trend", 0) > 10:  # %/hour
-            alerts.append(f"High CPU usage trend: Bot CPU usage increasing by {trends['bot_cpu_trend']:.1f}%/hour")
+            alerts.append(
+                f"High CPU usage trend: Bot CPU usage increasing by {trends['bot_cpu_trend']:.1f}%/hour"
+            )
 
         if alerts:
             self.logger.warning(f"Resource alerts: {alerts}")

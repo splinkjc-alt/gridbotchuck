@@ -71,7 +71,9 @@ class EnhancedOrderManager(OrderManager):
 
         # Retry placing the order
         try:
-            await self._retry_order_placement(grid_level, order.side, order.quantity, order.price)
+            await self._retry_order_placement(
+                grid_level, order.side, order.quantity, order.price
+            )
 
             self.logger.info(
                 f"Successfully retried order at grid level {order.price} "
@@ -125,15 +127,19 @@ class EnhancedOrderManager(OrderManager):
         try:
             # Validate balance before retry
             if side == OrderSide.BUY:
-                adjusted_quantity = self.order_validator.adjust_and_validate_buy_quantity(
-                    balance=self.balance_tracker.balance,
-                    order_quantity=quantity,
-                    price=price,
+                adjusted_quantity = (
+                    self.order_validator.adjust_and_validate_buy_quantity(
+                        balance=self.balance_tracker.balance,
+                        order_quantity=quantity,
+                        price=price,
+                    )
                 )
             else:
-                adjusted_quantity = self.order_validator.adjust_and_validate_sell_quantity(
-                    crypto_balance=self.balance_tracker.crypto_balance,
-                    order_quantity=quantity,
+                adjusted_quantity = (
+                    self.order_validator.adjust_and_validate_sell_quantity(
+                        crypto_balance=self.balance_tracker.crypto_balance,
+                        order_quantity=quantity,
+                    )
                 )
 
             # Place the order
@@ -173,7 +179,9 @@ class EnhancedOrderManager(OrderManager):
             raise
 
         except Exception as e:
-            self.logger.error(f"Unexpected error during order retry: {e}", exc_info=True)
+            self.logger.error(
+                f"Unexpected error during order retry: {e}", exc_info=True
+            )
             raise
 
     def get_retry_stats(self) -> dict:

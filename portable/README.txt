@@ -4,7 +4,7 @@
 
 WHAT IS THIS?
 -------------
-This is an automated cryptocurrency trading bot that uses EMA (Exponential 
+This is an automated cryptocurrency trading bot that uses EMA (Exponential
 Moving Average) crossover signals to buy and sell on Kraken exchange.
 
 Strategy: Buy when Fast EMA crosses above Slow EMA with widening gap (momentum)
@@ -20,7 +20,7 @@ FIRST TIME SETUP (5 minutes)
    - Go to: https://www.kraken.com/u/security/api
    - Create new API key with permissions:
      * Query Funds
-     * Query Open Orders & Trades  
+     * Query Open Orders & Trades
      * Query Closed Orders & Trades
      * Create & Modify Orders
      * Cancel/Close Orders
@@ -64,7 +64,7 @@ To change EMA periods, edit config/ema_settings.json:
 
 COINS MONITORED
 ---------------
-UNI, SOL, XRP, ADA, DOGE, AVAX, DOT, LINK, ATOM, FIL, 
+UNI, SOL, XRP, ADA, DOGE, AVAX, DOT, LINK, ATOM, FIL,
 NEAR, APT, ARB, OP, SUI, TIA, INJ, FET
 
 

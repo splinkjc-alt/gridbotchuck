@@ -18,17 +18,17 @@ $StartMenuShortcut = Join-Path $StartMenuPath "Programs\$ShortcutName.lnk"
 # Uninstall mode
 if ($Uninstall) {
   Write-Host "Removing Grid Trading Bot shortcuts..." -ForegroundColor Yellow
-    
+
   if (Test-Path $ShortcutPath) {
     Remove-Item $ShortcutPath -Force
     Write-Host "  Removed desktop shortcut" -ForegroundColor Green
   }
-    
+
   if (Test-Path $StartMenuShortcut) {
     Remove-Item $StartMenuShortcut -Force
     Write-Host "  Removed Start Menu shortcut" -ForegroundColor Green
   }
-    
+
   Write-Host "`nShortcuts removed successfully!" -ForegroundColor Green
   exit 0
 }

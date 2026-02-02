@@ -26,7 +26,6 @@ else:
 
 
 async def main():
-
     # Verify API keys
     api_key = os.getenv("EXCHANGE_API_KEY")
     api_secret = os.getenv("EXCHANGE_SECRET_KEY")
@@ -45,7 +44,6 @@ async def main():
     try:
         # Get balances
         balance = await exchange.fetch_balance()
-
 
         total_value = 0
         balance["total"].get("USD", 0)
@@ -67,17 +65,14 @@ async def main():
                         if amount > 0.01:
                             pass
 
-
         # Get open orders
         orders = await exchange.fetch_open_orders()
-
 
         if orders:
             for _order in orders:
                 pass
         else:
             pass
-
 
     except Exception:
         pass

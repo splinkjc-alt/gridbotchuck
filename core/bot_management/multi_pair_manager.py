@@ -55,9 +55,13 @@ class MultiPairManager:
         multi_config = config_manager.config.get("multi_pair", {})
         self.enabled = multi_config.get("enabled", False)
         self.max_pairs = multi_config.get("max_pairs", 2)
-        self.balance_split = multi_config.get("balance_split", "equal")  # equal, weighted
+        self.balance_split = multi_config.get(
+            "balance_split", "equal"
+        )  # equal, weighted
         self.min_balance_per_pair = multi_config.get("min_balance_per_pair", 15.0)
-        self.auto_select = multi_config.get("auto_select", True)  # Use scanner to pick pairs
+        self.auto_select = multi_config.get(
+            "auto_select", True
+        )  # Use scanner to pick pairs
 
         # State
         self.active_pairs: dict[str, PairStatus] = {}
@@ -121,7 +125,9 @@ class MultiPairManager:
             )
             self.logger.info(f"  📊 {pair}: ${allocation:.2f} allocated")
 
-        self.logger.info(f"Multi-Pair Manager initialized with {len(self.active_pairs)} pairs")
+        self.logger.info(
+            f"Multi-Pair Manager initialized with {len(self.active_pairs)} pairs"
+        )
 
     async def _auto_select_pairs(self) -> list[str]:
         """Use market scanner to select best pairs."""
@@ -191,7 +197,9 @@ class MultiPairManager:
         if not self.active_pairs:
             raise ValueError("No pairs initialized. Call initialize() first.")
 
-        self.logger.info(f"Starting multi-pair trading on {len(self.active_pairs)} pairs...")
+        self.logger.info(
+            f"Starting multi-pair trading on {len(self.active_pairs)} pairs..."
+        )
         self.running = True
 
         # Start each pair's strategy
@@ -325,7 +333,11 @@ class MultiPairManager:
                     status.crypto_balance = bt.crypto_balance + bt.reserved_crypto
 
             status.pnl = status.current_balance - status.allocated_balance
-            status.pnl_percent = (status.pnl / status.allocated_balance * 100) if status.allocated_balance > 0 else 0
+            status.pnl_percent = (
+                (status.pnl / status.allocated_balance * 100)
+                if status.allocated_balance > 0
+                else 0
+            )
 
             total_pnl += status.pnl
             total_current += status.current_balance
@@ -353,7 +365,9 @@ class MultiPairManager:
                 "total_allocated": total_allocated,
                 "total_current": total_current,
                 "total_pnl": total_pnl,
-                "total_pnl_percent": ((total_pnl / total_allocated * 100) if total_allocated > 0 else 0),
+                "total_pnl_percent": (
+                    (total_pnl / total_allocated * 100) if total_allocated > 0 else 0
+                ),
             },
         }
 

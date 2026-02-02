@@ -240,5 +240,5 @@ Use this checklist to verify all dashboard functionality before release.
 - [ ] No blocking issues found
 - [ ] Ready for customer release
 
-**Approved by:** ____________________  
+**Approved by:** ____________________
 **Date:** ____________________

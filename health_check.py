@@ -1,4 +1,5 @@
 """Quick health check - no trades placed"""
+
 import os
 from pathlib import Path
 import sys
@@ -17,10 +18,12 @@ api_secret = os.getenv("EXCHANGE_SECRET_KEY")
 if not api_key or not api_secret:
     sys.exit(1)
 
-exchange = ccxt.kraken({
-    "apiKey": api_key,
-    "secret": api_secret,
-})
+exchange = ccxt.kraken(
+    {
+        "apiKey": api_key,
+        "secret": api_secret,
+    }
+)
 
 
 # Check balance
@@ -40,4 +43,3 @@ for _order in orders:
 ticker = exchange.fetch_ticker("UNI/USD")
 if ticker.get("percentage"):
     pass
-

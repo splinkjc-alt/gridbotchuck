@@ -4,8 +4,8 @@ def analyze(ticker, data):
     Using 1-month (20 trading days) return.
     """
     if data is not None and not data.empty and len(data) > 20:
-        current_price = data['Close'].iloc[-1]
-        past_price = data['Close'].iloc[-20]
+        current_price = data["Close"].iloc[-1]
+        past_price = data["Close"].iloc[-20]
 
         # Score is 1-month return percentage
         score = ((current_price - past_price) / past_price) * 100

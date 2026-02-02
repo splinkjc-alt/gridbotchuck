@@ -117,7 +117,9 @@ class LicenseManager:
         """Generate HMAC signature for license data."""
         # Create a consistent string representation
         data_str = json.dumps(data, sort_keys=True)
-        signature = hmac.new(self._SECRET_KEY.encode(), data_str.encode(), hashlib.sha256).hexdigest()
+        signature = hmac.new(
+            self._SECRET_KEY.encode(), data_str.encode(), hashlib.sha256
+        ).hexdigest()
         return signature
 
     def _verify_signature(self, data: dict, signature: str) -> bool:
@@ -126,7 +128,11 @@ class LicenseManager:
         return hmac.compare_digest(expected, signature)
 
     def generate_license_key(
-        self, license_type: str, customer_email: str, machine_id: str | None = None, expiry_days: int | None = None
+        self,
+        license_type: str,
+        customer_email: str,
+        machine_id: str | None = None,
+        expiry_days: int | None = None,
     ) -> str:
         """
         Generate a new license key.
@@ -137,7 +143,9 @@ class LicenseManager:
             machine_id = self._get_machine_id()
 
         if expiry_days is None:
-            expiry_days = self.FEATURE_LIMITS.get(license_type, {}).get("expiry_days", 365)
+            expiry_days = self.FEATURE_LIMITS.get(license_type, {}).get(
+                "expiry_days", 365
+            )
 
         expiry_date = datetime.now() + timedelta(days=expiry_days)
 
@@ -229,7 +237,9 @@ class LicenseManager:
 
     def get_feature_limit(self, feature: str):
         """Get the limit for a specific feature based on license type."""
-        limits = self.FEATURE_LIMITS.get(self.license_type, self.FEATURE_LIMITS[LicenseType.TRIAL])
+        limits = self.FEATURE_LIMITS.get(
+            self.license_type, self.FEATURE_LIMITS[LicenseType.TRIAL]
+        )
         return limits.get(feature)
 
     def check_feature(self, feature: str) -> bool:
@@ -241,7 +251,9 @@ class LicenseManager:
 
     def get_license_info(self) -> dict:
         """Get current license information."""
-        limits = self.FEATURE_LIMITS.get(self.license_type, self.FEATURE_LIMITS[LicenseType.TRIAL])
+        limits = self.FEATURE_LIMITS.get(
+            self.license_type, self.FEATURE_LIMITS[LicenseType.TRIAL]
+        )
 
         info = {
             "type": self.license_type.upper(),
@@ -257,13 +269,17 @@ class LicenseManager:
 
         return info
 
-    def validate_operation(self, operation: str, current_count: int = 0) -> tuple[bool, str]:
+    def validate_operation(
+        self, operation: str, current_count: int = 0
+    ) -> tuple[bool, str]:
         """
         Validate if an operation is allowed under the current license.
 
         Returns: (allowed: bool, message: str)
         """
-        limits = self.FEATURE_LIMITS.get(self.license_type, self.FEATURE_LIMITS[LicenseType.TRIAL])
+        limits = self.FEATURE_LIMITS.get(
+            self.license_type, self.FEATURE_LIMITS[LicenseType.TRIAL]
+        )
 
         if operation == "add_pair":
             max_pairs = limits.get("max_pairs", 1)
@@ -276,7 +292,10 @@ class LicenseManager:
         elif operation == "add_grid":
             max_grids = limits.get("max_grids", 5)
             if max_grids != -1 and current_count >= max_grids:
-                return False, f"License limit reached: Maximum {max_grids} grid levels allowed. Upgrade to unlock more."
+                return (
+                    False,
+                    f"License limit reached: Maximum {max_grids} grid levels allowed. Upgrade to unlock more.",
+                )
 
         elif operation == "market_scanner":
             if not limits.get("market_scanner", False):
@@ -314,10 +333,14 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="GridBot Pro License Generator")
-    parser.add_argument("--type", choices=["trial", "basic", "pro", "enterprise"], default="basic")
+    parser.add_argument(
+        "--type", choices=["trial", "basic", "pro", "enterprise"], default="basic"
+    )
     parser.add_argument("--email", required=True, help="Customer email")
     parser.add_argument("--days", type=int, help="License validity in days")
-    parser.add_argument("--machine-id", help="Target machine ID (leave empty for current machine)")
+    parser.add_argument(
+        "--machine-id", help="Target machine ID (leave empty for current machine)"
+    )
 
     args = parser.parse_args()
 
@@ -327,6 +350,8 @@ if __name__ == "__main__":
         pass
 
     license_key = manager.generate_license_key(
-        license_type=args.type, customer_email=args.email, machine_id=args.machine_id, expiry_days=args.days
+        license_type=args.type,
+        customer_email=args.email,
+        machine_id=args.machine_id,
+        expiry_days=args.days,
     )
-

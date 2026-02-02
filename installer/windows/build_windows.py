@@ -20,8 +20,10 @@ DESKTOP_DIR = ROOT_DIR / "desktop"
 BUILD_DIR = ROOT_DIR / "build"
 DIST_DIR = ROOT_DIR / "dist"
 
+
 def print_step(message):
     """Print a formatted step message."""
+
 
 def run_command(cmd, cwd=None):
     """Run a command and check for errors."""
@@ -29,6 +31,7 @@ def run_command(cmd, cwd=None):
     if result.returncode != 0:
         sys.exit(1)
     return result.stdout
+
 
 def clean_build_dirs():
     """Clean previous build artifacts."""
@@ -40,6 +43,7 @@ def clean_build_dirs():
             shutil.rmtree(dir_path)
         dir_path.mkdir(parents=True, exist_ok=True)
 
+
 def bundle_python_bot():
     """Bundle Python bot with PyInstaller."""
     print_step("Bundling Python bot with PyInstaller")
@@ -50,12 +54,10 @@ def bundle_python_bot():
         create_pyinstaller_spec()
 
     # Run PyInstaller
-    run_command([
-        sys.executable, "-m", "PyInstaller",
-        str(spec_file),
-        "--clean",
-        "--noconfirm"
-    ], cwd=ROOT_DIR)
+    run_command(
+        [sys.executable, "-m", "PyInstaller", str(spec_file), "--clean", "--noconfirm"],
+        cwd=ROOT_DIR,
+    )
 
 
 def create_pyinstaller_spec():
@@ -128,6 +130,7 @@ coll = COLLECT(
     spec_file = INSTALLER_DIR / "gridbot.spec"
     spec_file.write_text(spec_content)
 
+
 def build_electron_app():
     """Build Electron desktop app."""
     print_step("Building Electron desktop app")
@@ -169,6 +172,7 @@ def find_nsis():
     # Try to find in PATH
     result = shutil.which("makensis")
     return result
+
 
 def create_nsis_script():
     """Create NSIS installer script."""
@@ -241,6 +245,7 @@ SectionEnd
     nsis_script = INSTALLER_DIR / "installer.nsi"
     nsis_script.write_text(nsis_content)
 
+
 def main():
     """Main build process."""
 
@@ -261,6 +266,7 @@ def main():
 
     except Exception:
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

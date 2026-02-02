@@ -20,11 +20,19 @@ class Plotter:
         self,
         data: pd.DataFrame,
     ) -> None:
-        fig = make_subplots(rows=3, cols=1, shared_xaxes=True, row_heights=[0.70, 0.15, 0.15], vertical_spacing=0.02)
+        fig = make_subplots(
+            rows=3,
+            cols=1,
+            shared_xaxes=True,
+            row_heights=[0.70, 0.15, 0.15],
+            vertical_spacing=0.02,
+        )
         self._add_candlestick_trace(fig, data)
         trigger_price = self.grid_manager.get_trigger_price()
         self._add_trigger_price_line(fig, trigger_price)
-        self._add_grid_lines(fig, self.grid_manager.price_grids, self.grid_manager.central_price)
+        self._add_grid_lines(
+            fig, self.grid_manager.price_grids, self.grid_manager.central_price
+        )
         self._add_trade_markers(fig, self.order_book.get_completed_orders())
         self._add_volume_trace(fig, data)
         self._add_account_value_trace(fig, data)
@@ -108,7 +116,9 @@ class Plotter:
         orders: list[Order],
     ) -> None:
         for order in orders:
-            icon_name = "triangle-up" if order.side == OrderSide.BUY else "triangle-down"
+            icon_name = (
+                "triangle-up" if order.side == OrderSide.BUY else "triangle-down"
+            )
             icon_color = "green" if order.side == OrderSide.BUY else "red"
             fig.add_trace(
                 go.Scatter(
@@ -135,7 +145,8 @@ class Plotter:
         data: pd.DataFrame,
     ) -> None:
         volume_colors = [
-            "green" if close >= open_ else "red" for close, open_ in zip(data["close"], data["open"], strict=False)
+            "green" if close >= open_ else "red"
+            for close, open_ in zip(data["close"], data["open"], strict=False)
         ]
 
         fig.add_trace(

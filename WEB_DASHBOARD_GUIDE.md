@@ -74,11 +74,11 @@ async def run_bot(...):
     event_bus = EventBus()
     notification_handler = initialize_notification_handler(config_manager, event_bus)
     bot = GridTradingBot(...)
-    
+
     # Add API integration
     api_integration = BotAPIIntegration(bot, event_bus, config_manager, port=8080)
     await api_integration.start()
-    
+
     try:
         if bot.trading_mode in {TradingMode.LIVE, TradingMode.PAPER_TRADING}:
             bot_task = asyncio.create_task(bot.run(), name="BotTask")
@@ -169,7 +169,7 @@ async with aiohttp.ClientSession() as session:
     async with session.post('http://localhost:8080/api/bot/start') as resp:
         data = await resp.json()
         print(data)  # {'success': True, 'message': 'Bot starting...'}
-    
+
     # Get status
     async with session.get('http://localhost:8080/api/bot/status') as resp:
         status = await resp.json()

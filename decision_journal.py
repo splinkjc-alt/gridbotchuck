@@ -30,6 +30,7 @@ from pathlib import Path
 @dataclass
 class Decision:
     """A single trading decision."""
+
     timestamp: str
     bot_name: str
     action: str  # BUY, SELL, HOLD, SKIP, ERROR
@@ -145,7 +146,8 @@ class DecisionJournal:
 
         signals_json = json.dumps(decision.signals) if decision.signals else None
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO decisions (
                 timestamp, bot_name, action, pair, price,
                 rsi, ema_9, ema_30, volatility_pct, trend,
@@ -153,14 +155,33 @@ class DecisionJournal:
                 fiat_balance, crypto_balance, reasoning, signals,
                 exchange_status, websocket_connected, outcome, outcome_price, pnl
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            decision.timestamp, decision.bot_name, decision.action, decision.pair, decision.price,
-            decision.rsi, decision.ema_9, decision.ema_30, decision.volatility_pct, decision.trend,
-            decision.grid_level, decision.grid_position, decision.open_buy_orders, decision.open_sell_orders,
-            decision.fiat_balance, decision.crypto_balance, decision.reasoning, signals_json,
-            decision.exchange_status, 1 if decision.websocket_connected else 0,
-            decision.outcome, decision.outcome_price, decision.pnl
-        ))
+        """,
+            (
+                decision.timestamp,
+                decision.bot_name,
+                decision.action,
+                decision.pair,
+                decision.price,
+                decision.rsi,
+                decision.ema_9,
+                decision.ema_30,
+                decision.volatility_pct,
+                decision.trend,
+                decision.grid_level,
+                decision.grid_position,
+                decision.open_buy_orders,
+                decision.open_sell_orders,
+                decision.fiat_balance,
+                decision.crypto_balance,
+                decision.reasoning,
+                signals_json,
+                decision.exchange_status,
+                1 if decision.websocket_connected else 0,
+                decision.outcome,
+                decision.outcome_price,
+                decision.pnl,
+            ),
+        )
 
         decision_id = cursor.lastrowid
         conn.commit()
@@ -168,16 +189,25 @@ class DecisionJournal:
 
         return decision_id
 
-    def update_outcome(self, decision_id: int, outcome: str, outcome_price: float = None, pnl: float = None):
+    def update_outcome(
+        self,
+        decision_id: int,
+        outcome: str,
+        outcome_price: float = None,
+        pnl: float = None,
+    ):
         """Update the outcome of a decision."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE decisions
             SET outcome = ?, outcome_price = ?, pnl = ?
             WHERE id = ?
-        """, (outcome, outcome_price, pnl, decision_id))
+        """,
+            (outcome, outcome_price, pnl, decision_id),
+        )
 
         conn.commit()
         conn.close()
@@ -188,12 +218,15 @@ class DecisionJournal:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT * FROM decisions
             WHERE bot_name = ?
             ORDER BY timestamp DESC
             LIMIT ?
-        """, (self.bot_name, limit))
+        """,
+            (self.bot_name, limit),
+        )
 
         results = [dict(row) for row in cursor.fetchall()]
         conn.close()
@@ -205,51 +238,66 @@ class DecisionJournal:
         cursor = conn.cursor()
 
         # Action counts
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT action, COUNT(*) as count
             FROM decisions
             WHERE bot_name = ?
             GROUP BY action
-        """, (self.bot_name,))
+        """,
+            (self.bot_name,),
+        )
         actions = dict(cursor.fetchall())
 
         # Outcome counts
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT outcome, COUNT(*) as count
             FROM decisions
             WHERE bot_name = ? AND outcome IS NOT NULL
             GROUP BY outcome
-        """, (self.bot_name,))
+        """,
+            (self.bot_name,),
+        )
         outcomes = dict(cursor.fetchall())
 
         # Exchange errors
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) FROM decisions
             WHERE bot_name = ? AND exchange_status != 'ok'
-        """, (self.bot_name,))
+        """,
+            (self.bot_name,),
+        )
         exchange_errors = cursor.fetchone()[0]
 
         # Total PnL
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT SUM(pnl) FROM decisions
             WHERE bot_name = ? AND pnl IS NOT NULL
-        """, (self.bot_name,))
+        """,
+            (self.bot_name,),
+        )
         total_pnl = cursor.fetchone()[0] or 0
 
         # Decision frequency
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) FROM decisions WHERE bot_name = ?
-        """, (self.bot_name,))
+        """,
+            (self.bot_name,),
+        )
         total = cursor.fetchone()[0]
 
         conn.close()
 
         return {
-            'total_decisions': total,
-            'actions': actions,
-            'outcomes': outcomes,
-            'exchange_errors': exchange_errors,
-            'total_pnl': total_pnl
+            "total_decisions": total,
+            "actions": actions,
+            "outcomes": outcomes,
+            "exchange_errors": exchange_errors,
+            "total_pnl": total_pnl,
         }
 
     def analyze_patterns(self) -> dict:
@@ -261,28 +309,35 @@ class DecisionJournal:
         patterns = {}
 
         # When does the bot SKIP?
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT reasoning, COUNT(*) as count
             FROM decisions
             WHERE bot_name = ? AND action = 'SKIP'
             GROUP BY reasoning
             ORDER BY count DESC
             LIMIT 5
-        """, (self.bot_name,))
-        patterns['skip_reasons'] = [dict(row) for row in cursor.fetchall()]
+        """,
+            (self.bot_name,),
+        )
+        patterns["skip_reasons"] = [dict(row) for row in cursor.fetchall()]
 
         # When does the bot ERROR?
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT exchange_status, COUNT(*) as count
             FROM decisions
             WHERE bot_name = ? AND action = 'ERROR'
             GROUP BY exchange_status
             ORDER BY count DESC
-        """, (self.bot_name,))
-        patterns['error_causes'] = [dict(row) for row in cursor.fetchall()]
+        """,
+            (self.bot_name,),
+        )
+        patterns["error_causes"] = [dict(row) for row in cursor.fetchall()]
 
         # What RSI levels trigger buys?
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 CASE
                     WHEN rsi < 30 THEN 'oversold (<30)'
@@ -295,17 +350,22 @@ class DecisionJournal:
             FROM decisions
             WHERE bot_name = ? AND rsi IS NOT NULL
             GROUP BY rsi_zone, action
-        """, (self.bot_name,))
-        patterns['rsi_actions'] = [dict(row) for row in cursor.fetchall()]
+        """,
+            (self.bot_name,),
+        )
+        patterns["rsi_actions"] = [dict(row) for row in cursor.fetchall()]
 
         # Grid position analysis
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT grid_position, action, COUNT(*) as count
             FROM decisions
             WHERE bot_name = ? AND grid_position IS NOT NULL
             GROUP BY grid_position, action
-        """, (self.bot_name,))
-        patterns['grid_actions'] = [dict(row) for row in cursor.fetchall()]
+        """,
+            (self.bot_name,),
+        )
+        patterns["grid_actions"] = [dict(row) for row in cursor.fetchall()]
 
         conn.close()
         return patterns
@@ -321,26 +381,30 @@ class DecisionJournal:
 
         print(f"\nTotal Decisions: {stats['total_decisions']}")
         print("\nActions:")
-        for action, count in stats['actions'].items():
-            pct = (count / stats['total_decisions'] * 100) if stats['total_decisions'] > 0 else 0
+        for action, count in stats["actions"].items():
+            pct = (
+                (count / stats["total_decisions"] * 100)
+                if stats["total_decisions"] > 0
+                else 0
+            )
             print(f"  {action:10} {count:5} ({pct:.1f}%)")
 
-        if stats['outcomes']:
+        if stats["outcomes"]:
             print("\nOutcomes:")
-            for outcome, count in stats['outcomes'].items():
+            for outcome, count in stats["outcomes"].items():
                 print(f"  {outcome:10} {count:5}")
 
         print(f"\nExchange Errors: {stats['exchange_errors']}")
         print(f"Total P/L: ${stats['total_pnl']:.2f}")
 
-        if patterns['skip_reasons']:
+        if patterns["skip_reasons"]:
             print("\nTop Skip Reasons:")
-            for p in patterns['skip_reasons'][:3]:
+            for p in patterns["skip_reasons"][:3]:
                 print(f"  - {p['reasoning'][:50]}... ({p['count']}x)")
 
-        if patterns['error_causes']:
+        if patterns["error_causes"]:
             print("\nError Causes:")
-            for p in patterns['error_causes']:
+            for p in patterns["error_causes"]:
                 print(f"  - {p['exchange_status']}: {p['count']}x")
 
         print(f"{'='*60}\n")
@@ -355,15 +419,15 @@ class DecisionJournal:
         patterns = self.analyze_patterns()
 
         export = {
-            'bot_name': self.bot_name,
-            'exported_at': datetime.now().isoformat(),
-            'stats': stats,
-            'patterns': patterns,
-            'decisions': decisions
+            "bot_name": self.bot_name,
+            "exported_at": datetime.now().isoformat(),
+            "stats": stats,
+            "patterns": patterns,
+            "decisions": decisions,
         }
 
         Path(filepath).parent.mkdir(parents=True, exist_ok=True)
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(export, f, indent=2, default=str)
 
         return filepath
@@ -384,7 +448,7 @@ def create_decision_from_state(
     fiat: float = 0,
     crypto: float = 0,
     exchange_status: str = "ok",
-    signals: list = None
+    signals: list = None,
 ) -> Decision:
     """Helper to create a decision object."""
     return Decision(
@@ -402,7 +466,7 @@ def create_decision_from_state(
         crypto_balance=crypto,
         reasoning=reasoning,
         signals=signals,
-        exchange_status=exchange_status
+        exchange_status=exchange_status,
     )
 
 
@@ -427,7 +491,7 @@ if __name__ == "__main__":
         open_sells=1,
         fiat=500,
         crypto=100,
-        signals=["rsi_oversold", "grid_level_hit"]
+        signals=["rsi_oversold", "grid_level_hit"],
     )
     journal.log_decision(d1)
 
@@ -443,7 +507,7 @@ if __name__ == "__main__":
         open_buys=2,
         open_sells=1,
         fiat=450,
-        crypto=150
+        crypto=150,
     )
     journal.log_decision(d2)
 
@@ -453,7 +517,7 @@ if __name__ == "__main__":
         pair="ADA/USD",
         price=0.39,
         reasoning="Kraken connection timeout",
-        exchange_status="error"
+        exchange_status="error",
     )
     journal.log_decision(d3)
 

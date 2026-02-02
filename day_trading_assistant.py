@@ -31,6 +31,7 @@ from strategies.market_analyzer import CoinAnalysis, MarketAnalyzer
 
 class TradeAction(Enum):
     """User decision on trade opportunity."""
+
     ACCEPT = "accept"
     DECLINE = "decline"
     WATCH = "watch"
@@ -38,6 +39,7 @@ class TradeAction(Enum):
 
 class TradeStatus(Enum):
     """Status of a trade."""
+
     PENDING = "pending"
     OPEN = "open"
     CLOSED_WIN = "closed_win"
@@ -74,8 +76,12 @@ class TradeOpportunity:
 
     def __str__(self) -> str:
         """Format opportunity for display."""
-        bullish_patterns = [p for p, detected in self.patterns.items() if detected and "bullish" in p]
-        pattern_str = ", ".join(bullish_patterns) if bullish_patterns else "Momentum/Trend"
+        bullish_patterns = [
+            p for p, detected in self.patterns.items() if detected and "bullish" in p
+        ]
+        pattern_str = (
+            ", ".join(bullish_patterns) if bullish_patterns else "Momentum/Trend"
+        )
 
         return f"""
 ================================================================
@@ -147,7 +153,9 @@ class PaperTrade:
         if self.highest_price_since_entry == 0.0:
             self.highest_price_since_entry = self.entry_price
 
-    def update_with_current_price(self, current_price: float, ema_9: float | None = None) -> bool:
+    def update_with_current_price(
+        self, current_price: float, ema_9: float | None = None
+    ) -> bool:
         """
         Check if stop, target, EMA cross, or time-based exit hit.
         Returns True if trade should close.
@@ -237,13 +245,17 @@ class TradingStats:
 
         if trade.pnl_dollars > 0:
             self.wins += 1
-            self.avg_win = (self.avg_win * (self.wins - 1) + trade.pnl_dollars) / self.wins
+            self.avg_win = (
+                self.avg_win * (self.wins - 1) + trade.pnl_dollars
+            ) / self.wins
             self.largest_win = max(self.largest_win, trade.pnl_dollars)
         else:
             if trade.status == TradeStatus.STOPPED_OUT:
                 self.stopped_out += 1
             self.losses += 1
-            self.avg_loss = (self.avg_loss * (self.losses - 1) + abs(trade.pnl_dollars)) / self.losses
+            self.avg_loss = (
+                self.avg_loss * (self.losses - 1) + abs(trade.pnl_dollars)
+            ) / self.losses
             self.largest_loss = max(self.largest_loss, abs(trade.pnl_dollars))
 
         self.total_pnl += trade.pnl_dollars
@@ -316,7 +328,9 @@ class DayTradingAssistant:
             self.config_manager,
             self.trading_mode,
         )
-        self.market_analyzer = MarketAnalyzer(self.exchange_service, self.config_manager)
+        self.market_analyzer = MarketAnalyzer(
+            self.exchange_service, self.config_manager
+        )
 
         # Configuration
         self.virtual_balance = virtual_balance
@@ -340,9 +354,13 @@ class DayTradingAssistant:
 
         logging.info("Day Trading Assistant initialized")
         logging.info(f"Virtual balance: ${self.virtual_balance:,.2f}")
-        logging.info(f"Position size: ${self.position_size_min}-${self.position_size_max}")
+        logging.info(
+            f"Position size: ${self.position_size_min}-${self.position_size_max}"
+        )
         logging.info(f"Score threshold: {self.score_threshold}")
-        logging.info(f"Scanning {len(self.candidate_pairs)} pairs every {self.scan_interval}s")
+        logging.info(
+            f"Scanning {len(self.candidate_pairs)} pairs every {self.scan_interval}s"
+        )
 
     def _load_candidate_pairs(self) -> list[str]:
         """Load candidate pairs from config."""
@@ -357,10 +375,26 @@ class DayTradingAssistant:
 
         # Default list of active crypto pairs
         return [
-            "XRP/USD", "ADA/USD", "SOL/USD", "DOGE/USD", "MATIC/USD",
-            "AVAX/USD", "DOT/USD", "LINK/USD", "ATOM/USD", "UNI/USD",
-            "NEAR/USD", "APT/USD", "ARB/USD", "OP/USD", "FIL/USD",
-            "0G/USD", "API3/USD", "FOLKS/USD", "DAG/USD", "CPOOL/USD",
+            "XRP/USD",
+            "ADA/USD",
+            "SOL/USD",
+            "DOGE/USD",
+            "MATIC/USD",
+            "AVAX/USD",
+            "DOT/USD",
+            "LINK/USD",
+            "ATOM/USD",
+            "UNI/USD",
+            "NEAR/USD",
+            "APT/USD",
+            "ARB/USD",
+            "OP/USD",
+            "FIL/USD",
+            "0G/USD",
+            "API3/USD",
+            "FOLKS/USD",
+            "DAG/USD",
+            "CPOOL/USD",
         ]
 
     async def prompt_user_action(self, opportunity: TradeOpportunity) -> TradeAction:
@@ -427,7 +461,9 @@ class DayTradingAssistant:
 
     async def scan_for_opportunities(self):
         """Scan all pairs for MEAN REVERSION opportunities."""
-        logging.info(f"Scanning {len(self.candidate_pairs)} pairs for mean reversion setups...")
+        logging.info(
+            f"Scanning {len(self.candidate_pairs)} pairs for mean reversion setups..."
+        )
 
         opportunities_found = 0
         new_opportunities = []
@@ -456,16 +492,19 @@ class DayTradingAssistant:
                     new_opportunities.append(opportunity)
                     opportunities_found += 1
 
-                    logging.info(f"MEAN REVERSION: {analysis.pair} - RSI:{analysis.rsi:.1f}, MR Score:{mr_score:.1f}")
+                    logging.info(
+                        f"MEAN REVERSION: {analysis.pair} - RSI:{analysis.rsi:.1f}, MR Score:{mr_score:.1f}"
+                    )
 
         except Exception as e:
             logging.error(f"Error in scan_for_opportunities: {e}", exc_info=True)
 
-        logging.info(f"Scan complete. Found {opportunities_found} opportunities (score >= {self.score_threshold})")
+        logging.info(
+            f"Scan complete. Found {opportunities_found} opportunities (score >= {self.score_threshold})"
+        )
 
         # Present each opportunity and handle based on auto_accept mode
         for opportunity in new_opportunities:
-
             # Check if we can accept more trades
             can_accept = len(self.open_trades) < self.max_concurrent_trades
 
@@ -474,7 +513,9 @@ class DayTradingAssistant:
                 try:
                     trade = self.accept_trade(opportunity)
                     opportunity.user_action = TradeAction.ACCEPT
-                    logging.info(f"Auto-accepted trade: {trade.trade_id} - {trade.pair}")
+                    logging.info(
+                        f"Auto-accepted trade: {trade.trade_id} - {trade.pair}"
+                    )
                 except Exception as e:
                     logging.error(f"Error accepting trade: {e}")
                     opportunity.user_action = TradeAction.DECLINE
@@ -498,8 +539,9 @@ class DayTradingAssistant:
 
         return opportunities_found
 
-
-    def _create_opportunity(self, pair: str, analysis: CoinAnalysis) -> TradeOpportunity:
+    def _create_opportunity(
+        self, pair: str, analysis: CoinAnalysis
+    ) -> TradeOpportunity:
         """Create a trade opportunity from analysis."""
         current_price = analysis.price
 
@@ -511,7 +553,7 @@ class DayTradingAssistant:
         # We're buying dips, so we want quick bounces (3-5%), not big trends
         if analysis.rsi < 40:  # Oversold mean reversion trade
             entry = current_price * 0.999  # Buy slightly below current (limit order)
-            stop = current_price * 0.97    # 3% stop loss (tighter)
+            stop = current_price * 0.97  # 3% stop loss (tighter)
             target = current_price * 1.04  # 4% target (quick bounce)
         else:
             # Default conservative
@@ -525,10 +567,16 @@ class DayTradingAssistant:
         stop_distance_pct = abs((stop / entry) - 1)
 
         # Position size = risk / stop distance
-        suggested_size = risk_dollars_max / stop_distance_pct if stop_distance_pct > 0 else self.position_size_min
+        suggested_size = (
+            risk_dollars_max / stop_distance_pct
+            if stop_distance_pct > 0
+            else self.position_size_min
+        )
 
         # Cap at min/max
-        suggested_size = max(self.position_size_min, min(self.position_size_max, suggested_size))
+        suggested_size = max(
+            self.position_size_min, min(self.position_size_max, suggested_size)
+        )
 
         # Calculate risk/reward
         risk_dollars = suggested_size * stop_distance_pct
@@ -556,7 +604,9 @@ class DayTradingAssistant:
     def accept_trade(self, opportunity: TradeOpportunity) -> PaperTrade:
         """Accept a trade opportunity and execute in paper trading mode."""
         if opportunity.suggested_position_size > self.available_cash:
-            raise ValueError(f"Insufficient cash. Need ${opportunity.suggested_position_size:.2f}, have ${self.available_cash:.2f}")
+            raise ValueError(
+                f"Insufficient cash. Need ${opportunity.suggested_position_size:.2f}, have ${self.available_cash:.2f}"
+            )
 
         # Create paper trade
         quantity = opportunity.suggested_position_size / opportunity.suggested_entry
@@ -592,7 +642,9 @@ class DayTradingAssistant:
         for trade in self.open_trades[:]:  # Copy list to allow removal
             try:
                 # Get current price
-                current_price = await self.exchange_service.get_current_price(trade.pair)
+                current_price = await self.exchange_service.get_current_price(
+                    trade.pair
+                )
                 if not current_price:
                     continue
 
@@ -600,18 +652,22 @@ class DayTradingAssistant:
                 ema_9 = None
                 try:
                     # Quick analysis to get current EMA
-                    analysis_results = await self.market_analyzer.find_best_trading_pairs(
-                        candidate_pairs=[trade.pair],
-                        timeframe="5m",  # Match scanning timeframe
-                        min_volume_threshold=0,
-                        min_price=0,
-                        max_price=1000000,
+                    analysis_results = (
+                        await self.market_analyzer.find_best_trading_pairs(
+                            candidate_pairs=[trade.pair],
+                            timeframe="5m",  # Match scanning timeframe
+                            min_volume_threshold=0,
+                            min_price=0,
+                            max_price=1000000,
+                        )
                     )
                     if analysis_results:
                         # Extract EMA from analysis (available in CoinAnalysis object)
                         # For now, use a simple calculation: EMA ~= price if above EMAs
                         # TODO: Access actual EMA value from analysis object if available
-                        ema_9 = current_price * 0.98  # Conservative 2% trailing stop as proxy
+                        ema_9 = (
+                            current_price * 0.98
+                        )  # Conservative 2% trailing stop as proxy
                 except Exception as e:
                     logging.debug(f"Could not fetch EMA for {trade.pair}: {e}")
 
@@ -619,7 +675,9 @@ class DayTradingAssistant:
                 if trade.update_with_current_price(current_price, ema_9):
                     # Trade closed
                     self.open_trades.remove(trade)
-                    self.available_cash += trade.position_size_dollars + trade.pnl_dollars
+                    self.available_cash += (
+                        trade.position_size_dollars + trade.pnl_dollars
+                    )
                     self.stats.update(trade)
 
                     logging.info(f"Trade closed: {trade}")
@@ -654,6 +712,7 @@ class DayTradingAssistant:
 async def main():
     """Run the day trading assistant."""
     from dotenv import load_dotenv
+
     load_dotenv()  # Load API keys from .env file
 
     config_path = "config/config.json"
@@ -675,7 +734,7 @@ async def main():
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     asyncio.run(main())

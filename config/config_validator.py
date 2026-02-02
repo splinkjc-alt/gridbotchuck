@@ -17,22 +17,37 @@ class ConfigValidator:
         missing_fields += self._validate_required_fields(config)
         invalid_fields += self._validate_exchange(config)
         missing_fields += self._validate_pair(config)
-        missing_trading_settings, invalid_trading_settings = self._validate_trading_settings(config)
+        missing_trading_settings, invalid_trading_settings = (
+            self._validate_trading_settings(config)
+        )
         missing_fields += missing_trading_settings
         invalid_fields += invalid_trading_settings
-        missing_grid_settings, invalid_grid_settings = self._validate_grid_strategy(config)
+        missing_grid_settings, invalid_grid_settings = self._validate_grid_strategy(
+            config
+        )
         missing_fields += missing_grid_settings
         invalid_fields += invalid_grid_settings
         invalid_fields += self._validate_limits(config)
-        missing_logging_settings, invalid_logging_settings = self._validate_logging(config)
+        missing_logging_settings, invalid_logging_settings = self._validate_logging(
+            config
+        )
         missing_fields += missing_logging_settings
         invalid_fields += invalid_logging_settings
 
         if missing_fields or invalid_fields:
-            raise ConfigValidationError(missing_fields=missing_fields, invalid_fields=invalid_fields)
+            raise ConfigValidationError(
+                missing_fields=missing_fields, invalid_fields=invalid_fields
+            )
 
     def _validate_required_fields(self, config):
-        required_fields = ["exchange", "pair", "trading_settings", "grid_strategy", "risk_management", "logging"]
+        required_fields = [
+            "exchange",
+            "pair",
+            "trading_settings",
+            "grid_strategy",
+            "risk_management",
+            "logging",
+        ]
         missing_fields = [field for field in required_fields if field not in config]
         if missing_fields:
             self.logger.error(f"Missing required fields: {missing_fields}")
@@ -47,7 +62,11 @@ class ConfigValidator:
             invalid_fields.append("exchange.name")
 
         trading_fee = exchange.get("trading_fee")
-        if trading_fee is None or not isinstance(trading_fee, float | int) or trading_fee < 0:
+        if (
+            trading_fee is None
+            or not isinstance(trading_fee, float | int)
+            or trading_fee < 0
+        ):
             self.logger.error("Invalid or missing trading fee.")
             invalid_fields.append("exchange.trading_fee")
 
@@ -86,9 +105,25 @@ class ConfigValidator:
 
         # Validate timeframe
         timeframe = trading_settings.get("timeframe")
-        valid_timeframes = ["1s", "1m", "3m", "5m", "15m", "30m", "1h", "2h", "6h", "12h", "1d", "1w", "1M"]
+        valid_timeframes = [
+            "1s",
+            "1m",
+            "3m",
+            "5m",
+            "15m",
+            "30m",
+            "1h",
+            "2h",
+            "6h",
+            "12h",
+            "1d",
+            "1w",
+            "1M",
+        ]
         if timeframe not in valid_timeframes:
-            self.logger.error(f"Invalid timeframe: {timeframe}. Must be one of {valid_timeframes}.")
+            self.logger.error(
+                f"Invalid timeframe: {timeframe}. Must be one of {valid_timeframes}."
+            )
             invalid_fields.append("trading_settings.timeframe")
 
         # Validate period
@@ -147,11 +182,15 @@ class ConfigValidator:
 
         if top is not None and bottom is not None:
             if not isinstance(top, int | float) or not isinstance(bottom, int | float):
-                self.logger.error("'top' and 'bottom' in 'grid_strategy.range' must be numbers.")
+                self.logger.error(
+                    "'top' and 'bottom' in 'grid_strategy.range' must be numbers."
+                )
                 invalid_fields.append("grid_strategy.range.top")
                 invalid_fields.append("grid_strategy.range.bottom")
             elif bottom >= top:
-                self.logger.error("'grid_strategy.range.bottom' must be less than 'grid_strategy.range.top'.")
+                self.logger.error(
+                    "'grid_strategy.range.bottom' must be less than 'grid_strategy.range.top'."
+                )
                 invalid_fields.append("grid_strategy.range.top")
                 invalid_fields.append("grid_strategy.range.bottom")
 
@@ -168,7 +207,9 @@ class ConfigValidator:
             self.logger.error("Take profit enabled flag must be a boolean.")
             invalid_fields.append("risk_management.take_profit.enabled")
 
-        if take_profit.get("threshold") is None or not isinstance(take_profit.get("threshold"), float | int):
+        if take_profit.get("threshold") is None or not isinstance(
+            take_profit.get("threshold"), float | int
+        ):
             self.logger.error("Invalid or missing take profit threshold.")
             invalid_fields.append("risk_management.take_profit.threshold")
 
@@ -177,7 +218,9 @@ class ConfigValidator:
             self.logger.error("Stop loss enabled flag must be a boolean.")
             invalid_fields.append("risk_management.stop_loss.enabled")
 
-        if stop_loss.get("threshold") is None or not isinstance(stop_loss.get("threshold"), float | int):
+        if stop_loss.get("threshold") is None or not isinstance(
+            stop_loss.get("threshold"), float | int
+        ):
             self.logger.error("Invalid or missing stop loss threshold.")
             invalid_fields.append("risk_management.stop_loss.threshold")
 
@@ -194,7 +237,9 @@ class ConfigValidator:
         if log_level is None:
             missing_fields.append("logging.log_level")
         elif log_level.upper() not in valid_log_levels:
-            self.logger.error(f"Invalid log level: {log_level}. Must be one of {valid_log_levels}.")
+            self.logger.error(
+                f"Invalid log level: {log_level}. Must be one of {valid_log_levels}."
+            )
             invalid_fields.append("logging.log_level")
 
         # Validate log to file

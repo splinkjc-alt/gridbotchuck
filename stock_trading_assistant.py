@@ -31,6 +31,7 @@ import yfinance as yf
 # News analyzer integration
 try:
     from news_analyzer import NewsAnalyzer, NewsBacktester
+
     NEWS_AVAILABLE = True
 except ImportError:
     NEWS_AVAILABLE = False
@@ -38,20 +39,21 @@ except ImportError:
 # News-Market learning integration
 try:
     from news_market_learner import NewsMarketLearner, fetch_live_news
+
     LEARNER_AVAILABLE = True
 except ImportError:
     LEARNER_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 
 @dataclass
 class StockAnalysis:
     """Technical analysis for a stock."""
+
     symbol: str
     price: float
     rsi: float
@@ -98,20 +100,33 @@ class StockTradingAssistant:
         # Default high-volatility watchlist
         self.watchlist = watchlist or [
             # Tech/High Beta
-            "TSLA", "NVDA", "AMD", "PLTR", "HOOD",
+            "TSLA",
+            "NVDA",
+            "AMD",
+            "PLTR",
+            "HOOD",
             # Leveraged ETFs (3x volatility)
-            "TQQQ", "SOXL", "UPRO", "SPXL",
+            "TQQQ",
+            "SOXL",
+            "UPRO",
+            "SPXL",
             # Meme/Volatile
-            "MARA", "RIOT", "COIN", "SHOP", "SOFI",
+            "MARA",
+            "RIOT",
+            "COIN",
+            "SHOP",
+            "SOFI",
             # Large cap momentum
-            "AAPL", "MSFT", "META", "GOOGL", "AMZN",
+            "AAPL",
+            "MSFT",
+            "META",
+            "GOOGL",
+            "AMZN",
         ]
 
         # Initialize Alpaca clients (for paper trading only)
         self.trading_client = TradingClient(
-            api_key=api_key,
-            secret_key=secret_key,
-            paper=paper
+            api_key=api_key, secret_key=secret_key, paper=paper
         )
 
         # Track open positions
@@ -200,7 +215,11 @@ class StockTradingAssistant:
                 self.news_signals[symbol] = signal
 
                 if signal.headline_count > 0:
-                    emoji = "+" if signal.score > 0.15 else ("-" if signal.score < -0.15 else "~")
+                    emoji = (
+                        "+"
+                        if signal.score > 0.15
+                        else ("-" if signal.score < -0.15 else "~")
+                    )
                     logging.info(
                         f"  {symbol}: {emoji} {signal.sentiment} ({signal.score:+.2f}) "
                         f"- {signal.headline_count} headlines - {signal.recommendation.upper()}"
@@ -217,7 +236,9 @@ class StockTradingAssistant:
         bullish = sum(1 for s in self.news_signals.values() if s.sentiment == "bullish")
         bearish = sum(1 for s in self.news_signals.values() if s.sentiment == "bearish")
         logging.info("-" * 50)
-        logging.info(f"NEWS SUMMARY: {bullish} bullish, {bearish} bearish, {len(self.news_signals) - bullish - bearish} neutral")
+        logging.info(
+            f"NEWS SUMMARY: {bullish} bullish, {bearish} bearish, {len(self.news_signals) - bullish - bearish} neutral"
+        )
         logging.info("=" * 50)
 
     def get_news_score_adjustment(self, symbol: str) -> tuple[float, float]:
@@ -263,7 +284,9 @@ class StockTradingAssistant:
 
         return rsi.iloc[-1]
 
-    def calculate_bollinger_position(self, prices: pd.Series, period: int = 20) -> float:
+    def calculate_bollinger_position(
+        self, prices: pd.Series, period: int = 20
+    ) -> float:
         """
         Calculate position within Bollinger Bands (0-100).
         0 = at lower band (oversold)
@@ -353,8 +376,10 @@ class StockTradingAssistant:
                 bb_position=bb_position,
                 volume_ratio=volume_ratio,
                 mean_reversion_score=max(0, min(score, 100)),
-                news_sentiment=news_adj / 20 if news_adj else 0,  # Convert back to -1 to +1
-                news_confidence=news_conf
+                news_sentiment=news_adj / 20
+                if news_adj
+                else 0,  # Convert back to -1 to +1
+                news_confidence=news_conf,
             )
 
         except Exception as e:
@@ -391,7 +416,11 @@ class StockTradingAssistant:
                     continue
 
                 opportunities.append(analysis)
-                news_str = f", News: {analysis.news_sentiment:+.2f}" if analysis.news_confidence > 0 else ""
+                news_str = (
+                    f", News: {analysis.news_sentiment:+.2f}"
+                    if analysis.news_confidence > 0
+                    else ""
+                )
                 logging.info(
                     f"MEAN REVERSION: {analysis.symbol} - "
                     f"Price: ${analysis.price:.2f}, "
@@ -399,7 +428,9 @@ class StockTradingAssistant:
                     f"Score: {analysis.mean_reversion_score:.1f}{news_str}"
                 )
 
-        logging.info(f"Found {len(opportunities)} opportunities (score >= {self.threshold})")
+        logging.info(
+            f"Found {len(opportunities)} opportunities (score >= {self.threshold})"
+        )
 
         # Record news snapshots for learning (cause-effect correlation)
         if self.learner and LEARNER_AVAILABLE:
@@ -409,7 +440,9 @@ class StockTradingAssistant:
                 try:
                     headlines = fetch_live_news(analysis.symbol)
                     if headlines:
-                        self.learner.record_snapshot(analysis.symbol, headlines, analysis.price)
+                        self.learner.record_snapshot(
+                            analysis.symbol, headlines, analysis.price
+                        )
                 except Exception:
                     pass  # Silent fail - learning is optional
 
@@ -421,7 +454,9 @@ class StockTradingAssistant:
 
         return opportunities
 
-    async def open_paper_trade(self, analysis: StockAnalysis, position_size: float = 500.0):
+    async def open_paper_trade(
+        self, analysis: StockAnalysis, position_size: float = 500.0
+    ):
         """
         Open a LIVE trade on Alpaca for mean reversion opportunity.
 
@@ -431,7 +466,7 @@ class StockTradingAssistant:
         """
         # Calculate trade parameters
         entry = analysis.price
-        stop = entry * 0.97   # 3% stop loss
+        stop = entry * 0.97  # 3% stop loss
         target = entry * 1.04  # 4% target (quick bounce)
 
         shares = int(position_size / entry)
@@ -450,7 +485,7 @@ class StockTradingAssistant:
                 symbol=analysis.symbol,
                 qty=shares,
                 side=OrderSide.BUY,
-                time_in_force=TimeInForce.DAY
+                time_in_force=TimeInForce.DAY,
             )
             order = self.trading_client.submit_order(order_request)
 
@@ -471,7 +506,7 @@ class StockTradingAssistant:
                 "target": target,
                 "shares": shares,
                 "order_id": str(order.id),
-                "opened_at": datetime.now()
+                "opened_at": datetime.now(),
             }
 
         except Exception as e:
@@ -496,23 +531,29 @@ class StockTradingAssistant:
 
                 # Check stop loss
                 if current_price <= trade["stop"]:
-                    await self.close_position(symbol, shares, "STOP LOSS", current_price, pnl_pct)
+                    await self.close_position(
+                        symbol, shares, "STOP LOSS", current_price, pnl_pct
+                    )
 
                 # Check target
                 elif current_price >= trade["target"]:
-                    await self.close_position(symbol, shares, "TARGET HIT", current_price, pnl_pct)
+                    await self.close_position(
+                        symbol, shares, "TARGET HIT", current_price, pnl_pct
+                    )
 
             except Exception as e:
                 logging.error(f"Error monitoring {symbol}: {e}")
 
-    async def close_position(self, symbol: str, shares: int, reason: str, price: float, pnl_pct: float):
+    async def close_position(
+        self, symbol: str, shares: int, reason: str, price: float, pnl_pct: float
+    ):
         """Close a position by selling shares."""
         try:
             order_request = MarketOrderRequest(
                 symbol=symbol,
                 qty=shares,
                 side=OrderSide.SELL,
-                time_in_force=TimeInForce.DAY
+                time_in_force=TimeInForce.DAY,
             )
             order = self.trading_client.submit_order(order_request)
 
@@ -563,7 +604,9 @@ class StockTradingAssistant:
 
                 # Check if market is open
                 if not self.is_market_open():
-                    logging.info(f"Market closed ({now_et.strftime('%I:%M %p ET')}). Sleeping 5 min...")
+                    logging.info(
+                        f"Market closed ({now_et.strftime('%I:%M %p ET')}). Sleeping 5 min..."
+                    )
                     await asyncio.sleep(300)  # 5 minutes
                     continue
 
@@ -575,7 +618,9 @@ class StockTradingAssistant:
                     opportunities = await self.scan_for_opportunities()
 
                     # Open trades for top opportunities
-                    for opp in opportunities[:max_concurrent_trades - len(self.open_trades)]:
+                    for opp in opportunities[
+                        : max_concurrent_trades - len(self.open_trades)
+                    ]:
                         if opp.symbol not in self.open_trades:
                             await self.open_paper_trade(opp)
 
@@ -607,7 +652,7 @@ async def main():
         api_key=api_key,
         secret_key=secret_key,
         paper=False,  # LIVE trading with real money
-        threshold=60.0  # Mean reversion score threshold
+        threshold=60.0,  # Mean reversion score threshold
     )
 
     # Run

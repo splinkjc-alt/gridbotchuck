@@ -20,6 +20,7 @@ from core.services.exchange_interface import ExchangeInterface
 
 class MarketCondition(Enum):
     """Market condition classifications."""
+
     STRONG_TREND_UP = "strong_trend_up"
     TREND_UP = "trend_up"
     RANGING = "ranging"
@@ -31,6 +32,7 @@ class MarketCondition(Enum):
 
 class GridTradingSignal(Enum):
     """Grid trading signal recommendations."""
+
     IDEAL = "ideal"  # Perfect conditions for grid trading
     FAVORABLE = "favorable"  # Good conditions
     NEUTRAL = "neutral"  # Can proceed with caution
@@ -41,6 +43,7 @@ class GridTradingSignal(Enum):
 @dataclass
 class TimeframeAnalysis:
     """Analysis result for a single timeframe."""
+
     timeframe: str
     trend: str  # "bullish", "bearish", "neutral"
     trend_strength: float  # 0-100
@@ -60,6 +63,7 @@ class TimeframeAnalysis:
 @dataclass
 class MultiTimeframeResult:
     """Combined multi-timeframe analysis result."""
+
     primary_trend: str  # Overall trend from higher timeframes
     trend_alignment: bool  # Are all timeframes aligned?
     market_condition: MarketCondition
@@ -182,7 +186,9 @@ class MultiTimeframeAnalyzer:
         market_condition = self._determine_market_condition(analyses, trend_strength)
 
         # Calculate grid trading signal
-        grid_signal = self._calculate_grid_signal(market_condition, trend_strength, analyses)
+        grid_signal = self._calculate_grid_signal(
+            market_condition, trend_strength, analyses
+        )
 
         # Calculate spacing multiplier based on volatility
         spacing_multiplier = self._calculate_spacing_multiplier(analyses)
@@ -203,7 +209,11 @@ class MultiTimeframeAnalyzer:
 
         # Generate recommendations
         recommendations = self._generate_recommendations(
-            market_condition, grid_signal, spacing_multiplier, recommended_bias, analyses
+            market_condition,
+            grid_signal,
+            spacing_multiplier,
+            recommended_bias,
+            analyses,
         )
 
         # Calculate confidence
@@ -245,7 +255,9 @@ class MultiTimeframeAnalyzer:
 
             # Calculate moving averages
             ma_50 = self._calculate_sma(data["close"], 50)
-            ma_200 = self._calculate_sma(data["close"], 200) if len(data) >= 200 else ma_50
+            ma_200 = (
+                self._calculate_sma(data["close"], 200) if len(data) >= 200 else ma_50
+            )
 
             # Calculate RSI
             rsi = self._calculate_rsi(data["close"], 14)
@@ -259,7 +271,9 @@ class MultiTimeframeAnalyzer:
             volatility_percentile = self._calculate_percentile(atr_series, atr)
 
             # Determine trend
-            trend, trend_strength = self._determine_trend(data, ma_50, ma_200, current_price)
+            trend, trend_strength = self._determine_trend(
+                data, ma_50, ma_200, current_price
+            )
 
             # Calculate support and resistance
             support, resistance = self._calculate_support_resistance(data)
@@ -297,7 +311,9 @@ class MultiTimeframeAnalyzer:
         """Fetch OHLCV data from exchange."""
         try:
             if hasattr(self.exchange_service, "fetch_ohlcv_simple"):
-                return await self.exchange_service.fetch_ohlcv_simple(pair, timeframe, limit)
+                return await self.exchange_service.fetch_ohlcv_simple(
+                    pair, timeframe, limit
+                )
             elif hasattr(self.exchange_service, "fetch_ohlcv"):
                 return self.exchange_service.fetch_ohlcv(pair, timeframe, limit=limit)
             return None
@@ -385,7 +401,11 @@ class MultiTimeframeAnalyzer:
         ma50_above_ma200 = ma_50 > ma_200
 
         # Calculate price momentum (rate of change)
-        roc = ((current_price - data["close"].iloc[-20]) / data["close"].iloc[-20]) * 100 if len(data) >= 20 else 0
+        roc = (
+            ((current_price - data["close"].iloc[-20]) / data["close"].iloc[-20]) * 100
+            if len(data) >= 20
+            else 0
+        )
 
         # Determine trend
         if above_ma50 and above_ma200 and ma50_above_ma200:
@@ -490,11 +510,17 @@ class MultiTimeframeAnalyzer:
 
         # Check for high volatility
         config_analysis = analyses.get("config", analyses.get("execution"))
-        if config_analysis and config_analysis.volatility_percentile >= self.HIGH_VOLATILITY_PERCENTILE:
+        if (
+            config_analysis
+            and config_analysis.volatility_percentile >= self.HIGH_VOLATILITY_PERCENTILE
+        ):
             return MarketCondition.VOLATILE
 
         # Check for consolidation
-        if config_analysis and config_analysis.volatility_percentile <= self.LOW_VOLATILITY_PERCENTILE:
+        if (
+            config_analysis
+            and config_analysis.volatility_percentile <= self.LOW_VOLATILITY_PERCENTILE
+        ):
             return MarketCondition.CONSOLIDATING
 
         # Check if ranging
@@ -513,7 +539,10 @@ class MultiTimeframeAnalyzer:
         """Calculate grid trading recommendation."""
 
         # Strong trends are bad for grids
-        if market_condition in [MarketCondition.STRONG_TREND_UP, MarketCondition.STRONG_TREND_DOWN]:
+        if market_condition in [
+            MarketCondition.STRONG_TREND_UP,
+            MarketCondition.STRONG_TREND_DOWN,
+        ]:
             return GridTradingSignal.AVOID
 
         # Moderate trends are unfavorable
@@ -626,8 +655,11 @@ class MultiTimeframeAnalyzer:
 
         # Range is valid if price is in range and it somewhat covers S/R
         is_valid = price_in_range and (
-            range_covers_sr or
-            (abs(grid_bottom - support) / support < 0.1 and abs(grid_top - resistance) / resistance < 0.1)
+            range_covers_sr
+            or (
+                abs(grid_bottom - support) / support < 0.1
+                and abs(grid_top - resistance) / resistance < 0.1
+            )
         )
 
         return is_valid, (suggested_bottom, suggested_top)
@@ -774,15 +806,24 @@ class MultiTimeframeAnalyzer:
         result = await self.analyze(pair, grid_bottom, grid_top)
 
         if result.grid_signal == GridTradingSignal.AVOID:
-            return False, f"Market in {result.market_condition.value} - not suitable for grid trading"
+            return (
+                False,
+                f"Market in {result.market_condition.value} - not suitable for grid trading",
+            )
 
         if result.grid_signal == GridTradingSignal.UNFAVORABLE:
             return False, f"Unfavorable conditions: {result.market_condition.value}"
 
         if not result.range_valid:
-            return False, f"Grid range may be outdated. Suggested: {result.suggested_range}"
+            return (
+                False,
+                f"Grid range may be outdated. Suggested: {result.suggested_range}",
+            )
 
-        return True, f"Conditions: {result.grid_signal.value} ({result.confidence:.0f}% confidence)"
+        return (
+            True,
+            f"Conditions: {result.grid_signal.value} ({result.confidence:.0f}% confidence)",
+        )
 
     async def get_optimal_spacing(
         self,

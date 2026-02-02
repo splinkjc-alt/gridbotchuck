@@ -1,4 +1,5 @@
 """Quick test to see what's available on Coinbase."""
+
 import os
 
 import ccxt
@@ -6,23 +7,29 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def test_coinbase():
     # Convert literal \n to actual newlines for EC private key
     secret = os.getenv("COINBASE_SECRET_KEY").replace("\\n", "\n")
 
-    exchange = ccxt.coinbase({
-        "apiKey": os.getenv("COINBASE_API_KEY"),
-        "secret": secret,
-        "enableRateLimit": True,
-    })
+    exchange = ccxt.coinbase(
+        {
+            "apiKey": os.getenv("COINBASE_API_KEY"),
+            "secret": secret,
+            "enableRateLimit": True,
+        }
+    )
 
     try:
         # Load markets
         markets = exchange.load_markets()
 
         # Find USD pairs
-        usd_pairs = [symbol for symbol in markets if "/USD" in symbol and markets[symbol]["active"]]
-
+        usd_pairs = [
+            symbol
+            for symbol in markets
+            if "/USD" in symbol and markets[symbol]["active"]
+        ]
 
         # Test fetching OHLCV for XRP/USD
         if "XRP/USD" in usd_pairs:
@@ -32,7 +39,9 @@ def test_coinbase():
 
     except Exception:
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     test_coinbase()

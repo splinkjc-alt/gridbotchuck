@@ -63,7 +63,9 @@ class TestBotController:
 
         await self.run_command_test(bot_controller, mock_input)
 
-        event_bus.publish_sync.assert_called_once_with(Events.STOP_BOT, "User requested shutdown")
+        event_bus.publish_sync.assert_called_once_with(
+            Events.STOP_BOT, "User requested shutdown"
+        )
         assert bot_controller._stop_listening
 
     @pytest.mark.asyncio
@@ -100,7 +102,9 @@ class TestBotController:
 
         await self.run_command_test(bot_controller, mock_input)
 
-        event_bus.publish_sync.assert_called_once_with(Events.STOP_BOT, "User issued stop command")
+        event_bus.publish_sync.assert_called_once_with(
+            Events.STOP_BOT, "User issued stop command"
+        )
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(2)
@@ -112,12 +116,18 @@ class TestBotController:
         await self.run_command_test(bot_controller, mock_input)
 
         assert event_bus.publish_sync.call_count == 2
-        event_bus.publish_sync.assert_any_call(Events.STOP_BOT, "User issued restart command")
-        event_bus.publish_sync.assert_any_call(Events.START_BOT, "User issued restart command")
+        event_bus.publish_sync.assert_any_call(
+            Events.STOP_BOT, "User issued restart command"
+        )
+        event_bus.publish_sync.assert_any_call(
+            Events.START_BOT, "User issued restart command"
+        )
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(2)
-    async def test_command_listener_invalid_command(self, mock_input, setup_bot_controller):
+    async def test_command_listener_invalid_command(
+        self, mock_input, setup_bot_controller
+    ):
         bot_controller, _, _ = setup_bot_controller
         mock_input.side_effect = ["invalid", StopIteration]
 
@@ -143,7 +153,9 @@ class TestBotController:
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(2)
-    async def test_command_listener_unexpected_error(self, mock_input, setup_bot_controller):
+    async def test_command_listener_unexpected_error(
+        self, mock_input, setup_bot_controller
+    ):
         bot_controller, _, _ = setup_bot_controller
         mock_input.side_effect = Exception("Unexpected error")
 
@@ -157,7 +169,9 @@ class TestBotController:
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(2)
-    async def test_command_listener_invalid_pause_duration(self, mock_input, setup_bot_controller):
+    async def test_command_listener_invalid_pause_duration(
+        self, mock_input, setup_bot_controller
+    ):
         bot_controller, _, _ = setup_bot_controller
         mock_input.side_effect = ["pause invalid", StopIteration]
 

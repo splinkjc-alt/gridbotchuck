@@ -31,11 +31,12 @@ st.set_page_config(
     page_title="Trading Control Center Pro",
     page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
 )
 
 # Custom CSS
-st.markdown("""
+st.markdown(
+    """
 <style>
     /* Main styling */
     .main-header {
@@ -141,7 +142,9 @@ st.markdown("""
         50% { opacity: 0.5; }
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Browser notification JavaScript
 notification_js = """
@@ -235,9 +238,7 @@ Be helpful, concise, and friendly. Answer questions about bot status, trading st
             model="claude-sonnet-4-5-20251029",
             max_tokens=1024,
             system=system_prompt,
-            messages=[
-                {"role": "user", "content": user_message}
-            ]
+            messages=[{"role": "user", "content": user_message}],
         )
 
         return message.content[0].text
@@ -267,7 +268,7 @@ def get_bot_status():
             "strategy": "Mean Reversion (RSI < 45)",
             "balance": "$10,000",
             "open_trades": 0,
-            "color": "#2ecc71"
+            "color": "#2ecc71",
         },
         "stock": {
             "name": "Stock Day Trader",
@@ -276,7 +277,7 @@ def get_bot_status():
             "strategy": "Mean Reversion (RSI < 40)",
             "balance": "$25,000",
             "open_trades": 0,
-            "color": "#f39c12"
+            "color": "#f39c12",
         },
         "grid": {
             "name": "GridBot Chuck",
@@ -285,8 +286,8 @@ def get_bot_status():
             "strategy": "Grid Trading",
             "balance": "Live",
             "profit": "$3.00+",
-            "color": "#3498db"
-        }
+            "color": "#3498db",
+        },
     }
 
 
@@ -297,15 +298,17 @@ def create_performance_chart():
     pnl = [0, 5, -2, 8, 3, 10, 7, 15, 12, 18]
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=dates,
-        y=pnl,
-        mode="lines+markers",
-        name="P&L",
-        line={"color": "#667eea", "width": 3},
-        fill="tozeroy",
-        fillcolor="rgba(102, 126, 234, 0.2)"
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=dates,
+            y=pnl,
+            mode="lines+markers",
+            name="P&L",
+            line={"color": "#667eea", "width": 3},
+            fill="tozeroy",
+            fillcolor="rgba(102, 126, 234, 0.2)",
+        )
+    )
 
     fig.update_layout(
         title="Cumulative P&L",
@@ -313,7 +316,7 @@ def create_performance_chart():
         yaxis_title="Profit/Loss ($)",
         height=400,
         template="plotly_white",
-        hovermode="x unified"
+        hovermode="x unified",
     )
 
     return fig
@@ -322,16 +325,22 @@ def create_performance_chart():
 def create_price_chart(pair="BTC/USD"):
     """Create live price chart"""
     # Placeholder - replace with real price data
-    times = pd.date_range(start=datetime.now() - timedelta(hours=24), periods=100, freq="15min")
-    prices = [45000 + i*10 + (i%10)*50 for i in range(100)]
+    times = pd.date_range(
+        start=datetime.now() - timedelta(hours=24), periods=100, freq="15min"
+    )
+    prices = [45000 + i * 10 + (i % 10) * 50 for i in range(100)]
 
-    fig = go.Figure(data=[go.Candlestick(
-        x=times,
-        open=[p-20 for p in prices],
-        high=[p+50 for p in prices],
-        low=[p-50 for p in prices],
-        close=prices
-    )])
+    fig = go.Figure(
+        data=[
+            go.Candlestick(
+                x=times,
+                open=[p - 20 for p in prices],
+                high=[p + 50 for p in prices],
+                low=[p - 50 for p in prices],
+                close=prices,
+            )
+        ]
+    )
 
     fig.update_layout(
         title=f"{pair} - 15min Chart",
@@ -339,7 +348,7 @@ def create_price_chart(pair="BTC/USD"):
         yaxis_title="Price",
         height=500,
         template="plotly_dark",
-        xaxis_rangeslider_visible=False
+        xaxis_rangeslider_visible=False,
     )
 
     return fig
@@ -349,7 +358,10 @@ def create_price_chart(pair="BTC/USD"):
 
 components.html(notification_js, height=0)
 
-st.markdown('<div class="main-header">🚀 Trading Control Center Pro</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="main-header">🚀 Trading Control Center Pro</div>',
+    unsafe_allow_html=True,
+)
 
 # Quick stats bar
 col1, col2, col3, col4 = st.columns(4)
@@ -365,14 +377,9 @@ with col4:
 st.markdown("---")
 
 # Tabs
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "💬 AI Chat",
-    "📊 Bots",
-    "⏳ Trades",
-    "📈 Analytics",
-    "📉 Charts",
-    "⚡ Actions"
-])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+    ["💬 AI Chat", "📊 Bots", "⏳ Trades", "📈 Analytics", "📉 Charts", "⚡ Actions"]
+)
 
 # ==================== TAB 1: AI CHAT ====================
 with tab1:
@@ -384,13 +391,21 @@ with tab1:
     # Display messages
     for msg in st.session_state.messages:
         if msg["role"] == "user":
-            st.markdown(f'<div class="chat-message user-message">👤 You: {msg["content"]}</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="chat-message user-message">👤 You: {msg["content"]}</div>',
+                unsafe_allow_html=True,
+            )
         else:
-            st.markdown(f'<div class="chat-message assistant-message">🤖 Claude: {msg["content"]}</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="chat-message assistant-message">🤖 Claude: {msg["content"]}</div>',
+                unsafe_allow_html=True,
+            )
 
     # Chat input
     with st.form("chat_form", clear_on_submit=True):
-        user_input = st.text_input("Message:", placeholder="Ask anything... or use voice 🎤")
+        user_input = st.text_input(
+            "Message:", placeholder="Ask anything... or use voice 🎤"
+        )
         col1, col2 = st.columns([3, 1])
 
         with col1:
@@ -435,9 +450,15 @@ with tab2:
 
             with col3:
                 if bot["status"] == "Running":
-                    st.markdown('<div class="status-good">✅ Active</div>', unsafe_allow_html=True)
+                    st.markdown(
+                        '<div class="status-good">✅ Active</div>',
+                        unsafe_allow_html=True,
+                    )
                 else:
-                    st.markdown('<div class="status-warn">😴 Sleeping</div>', unsafe_allow_html=True)
+                    st.markdown(
+                        '<div class="status-warn">😴 Sleeping</div>',
+                        unsafe_allow_html=True,
+                    )
 
             st.markdown("---")
 
@@ -449,7 +470,8 @@ with tab3:
         st.info("✨ No pending trades. Bots are scanning for opportunities!")
 
         with st.expander("👀 See Example"):
-            st.markdown("""
+            st.markdown(
+                """
             <div class="trade-card">
                 <h3>🪙 DOGE/USD - Mean Reversion</h3>
                 <p><strong>Entry:</strong> $0.1245 | <strong>Current:</strong> $0.1250</p>
@@ -457,11 +479,18 @@ with tab3:
                 <p><strong>RSI:</strong> 38 (Oversold) | <strong>Score:</strong> 65/100</p>
                 <p><strong>Risk:</strong> $20 | <strong>Reward:</strong> $60 (1:3)</p>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
             col1, col2 = st.columns(2)
             with col1:
-                st.button("✅ APPROVE", type="primary", disabled=True, use_container_width=True)
+                st.button(
+                    "✅ APPROVE",
+                    type="primary",
+                    disabled=True,
+                    use_container_width=True,
+                )
             with col2:
                 st.button("❌ DECLINE", disabled=True, use_container_width=True)
 
@@ -472,28 +501,37 @@ with tab4:
     # Metrics
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("""
+        st.markdown(
+            """
         <div class="metric-card">
             <h2>0</h2>
             <p>Total Trades</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col2:
-        st.markdown("""
+        st.markdown(
+            """
         <div class="metric-card">
             <h2>N/A</h2>
             <p>Win Rate</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col3:
-        st.markdown("""
+        st.markdown(
+            """
         <div class="metric-card">
             <h2>$0.00</h2>
             <p>Net P&L</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     st.markdown("---")
 
@@ -551,6 +589,9 @@ with col2:
         time.sleep(10)
         st.rerun()
 with col3:
-    st.caption("🔔 Notifications: " + ("ON" if st.session_state.notifications_enabled else "OFF"))
+    st.caption(
+        "🔔 Notifications: "
+        + ("ON" if st.session_state.notifications_enabled else "OFF")
+    )
 
 st.caption("💡 Add to home screen on Android for app-like experience!")

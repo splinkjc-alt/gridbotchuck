@@ -55,7 +55,9 @@ class EventBus:
         callback_name = getattr(callback, "__name__", str(callback))
         caller_frame = inspect.stack()[1]
         caller_name = f"{caller_frame.function} (from {caller_frame.filename}:{caller_frame.lineno})"
-        self.logger.info(f"Callback '{callback_name}' subscribed to event: {event_type} by {caller_name}")
+        self.logger.info(
+            f"Callback '{callback_name}' subscribed to event: {event_type} by {caller_name}"
+        )
 
     async def publish(
         self,
@@ -80,7 +82,9 @@ class EventBus:
             results = await asyncio.gather(*tasks, return_exceptions=True)
             for result in results:
                 if isinstance(result, Exception):
-                    self.logger.error(f"Exception in async event callback: {result}", exc_info=True)
+                    self.logger.error(
+                        f"Exception in async event callback: {result}", exc_info=True
+                    )
 
     def publish_sync(
         self,
@@ -95,7 +99,9 @@ class EventBus:
             loop = asyncio.get_event_loop()
             for callback in self.subscribers[event_type]:
                 if asyncio.iscoroutinefunction(callback):
-                    asyncio.run_coroutine_threadsafe(self._safe_invoke_async(callback, data), loop)
+                    asyncio.run_coroutine_threadsafe(
+                        self._safe_invoke_async(callback, data), loop
+                    )
                 else:
                     self._safe_invoke_sync(callback, data)
 
@@ -115,7 +121,9 @@ class EventBus:
                 self._tasks.discard(completed_task)
 
         task.add_done_callback(remove_task)
-        self.logger.debug(f"Task created for callback '{callback.__name__}' with data: {data}")
+        self.logger.debug(
+            f"Task created for callback '{callback.__name__}' with data: {data}"
+        )
 
     async def _invoke_callback(
         self,
@@ -123,10 +131,14 @@ class EventBus:
         data: Any,
     ) -> None:
         try:
-            self.logger.info(f"Executing async callback '{callback.__name__}' for event with data: {data}")
+            self.logger.info(
+                f"Executing async callback '{callback.__name__}' for event with data: {data}"
+            )
             await callback(data)
         except Exception as e:
-            self.logger.error(f"Error in async callback '{callback.__name__}': {e}", exc_info=True)
+            self.logger.error(
+                f"Error in async callback '{callback.__name__}': {e}", exc_info=True
+            )
 
     def _safe_invoke_sync(
         self,

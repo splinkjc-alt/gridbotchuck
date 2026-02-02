@@ -36,7 +36,7 @@ async def run_bot(
     )
     bot_controller = BotController(bot, event_bus)
     health_check = HealthCheck(bot, notification_handler, event_bus)
-    
+
     # Add API Integration for web control
     api_integration = BotAPIIntegration(bot, event_bus, config_manager, port=api_port)
     await api_integration.start()
@@ -208,7 +208,7 @@ api_integration = BotAPIIntegration(bot, event_bus, config_manager, port=9090)
 
 ## 🔐 Security Note
 
-⚠️ This dashboard is for **local network use only**. 
+⚠️ This dashboard is for **local network use only**.
 
 For remote/internet access, add authentication:
 ```python

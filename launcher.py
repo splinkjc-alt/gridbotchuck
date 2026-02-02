@@ -66,7 +66,9 @@ def get_user_input(prompt: str, default: str = "") -> str:
     return input(f"{prompt}: ").strip()
 
 
-def get_int_input(prompt: str, default: int, min_val: int = 1, max_val: int = 100) -> int:
+def get_int_input(
+    prompt: str, default: int, min_val: int = 1, max_val: int = 100
+) -> int:
     """Get integer input with validation."""
     while True:
         try:
@@ -80,7 +82,9 @@ def get_int_input(prompt: str, default: int, min_val: int = 1, max_val: int = 10
             pass
 
 
-def get_float_input(prompt: str, default: float, min_val: float = 0, max_val: float = float("inf")) -> float:
+def get_float_input(
+    prompt: str, default: float, min_val: float = 0, max_val: float = float("inf")
+) -> float:
     """Get float input with validation."""
     while True:
         try:
@@ -150,7 +154,6 @@ async def run_smart_scan_menu():
     max_price = get_float_input("Maximum price ($)", 100.0, min_price, 1000000)
     min_volume = get_float_input("Minimum 24h volume ($)", 100000, 0, 1000000000)
 
-
     # Load environment variables
     load_dotenv()
 
@@ -185,7 +188,6 @@ async def run_smart_scan_menu():
         )
 
         if results:
-
             # Ask if user wants to trade one
 
             choice = get_int_input("Choice", 0, 0, 3)
@@ -226,7 +228,6 @@ async def run_auto_portfolio_menu(
 
     # Get exchange if not provided
     if not exchange_name:
-
         exchange_choice = get_int_input("Exchange", 1, 1, 4)
         exchange_map = {1: "kraken", 2: "coinbase", 3: "kucoin", 4: "binance"}
         exchange_name = exchange_map[exchange_choice]
@@ -238,11 +239,13 @@ async def run_auto_portfolio_menu(
     min_entry_score = get_float_input("Minimum entry score (0-100)", 65.0, 0, 100)
     scan_interval = get_int_input("Scan interval (seconds)", 300, 60, 3600)
 
-
-    confirm = input(f"\n{Colors.GREEN}Start Auto-Portfolio? (y/n): {Colors.END}").strip().lower()
+    confirm = (
+        input(f"\n{Colors.GREEN}Start Auto-Portfolio? (y/n): {Colors.END}")
+        .strip()
+        .lower()
+    )
     if confirm != "y":
         return
-
 
     # Load environment variables
     load_dotenv()

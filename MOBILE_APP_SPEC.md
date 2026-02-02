@@ -2,11 +2,11 @@
 
 ## 🎯 Project Overview
 
-**Product Name:** Grid Trading Bot  
-**Current Platform:** Python desktop application with web dashboard  
-**Target Mobile Platform:** Android (Kotlin/Java via Android Studio)  
-**Backend:** Python asyncio server with aiohttp REST API  
-**Exchange:** Kraken (via CCXT library)  
+**Product Name:** Grid Trading Bot
+**Current Platform:** Python desktop application with web dashboard
+**Target Mobile Platform:** Android (Kotlin/Java via Android Studio)
+**Backend:** Python asyncio server with aiohttp REST API
+**Exchange:** Kraken (via CCXT library)
 
 The mobile app will be a **companion app** that connects to the running bot's REST API to monitor and control trading operations.
 
@@ -321,43 +321,43 @@ app/
 interface BotApiService {
     @GET("bot/status")
     suspend fun getBotStatus(): Response<BotStatusResponse>
-    
+
     @GET("bot/metrics")
     suspend fun getMetrics(): Response<MetricsResponse>
-    
+
     @GET("bot/orders")
     suspend fun getOrders(): Response<OrdersResponse>
-    
+
     @GET("bot/pnl")
     suspend fun getPnL(): Response<PnLResponse>
-    
+
     @POST("bot/start")
     suspend fun startBot(): Response<ActionResponse>
-    
+
     @POST("bot/stop")
     suspend fun stopBot(): Response<ActionResponse>
-    
+
     @POST("bot/pause")
     suspend fun pauseBot(): Response<ActionResponse>
-    
+
     @POST("bot/resume")
     suspend fun resumeBot(): Response<ActionResponse>
-    
+
     @GET("config")
     suspend fun getConfig(): Response<ConfigResponse>
-    
+
     @POST("config/update")
     suspend fun updateConfig(@Body config: ConfigUpdate): Response<ActionResponse>
-    
+
     @POST("market/scan")
     suspend fun scanMarkets(@Body request: ScanRequest): Response<ScanResponse>
-    
+
     @GET("market/scan/results")
     suspend fun getScanResults(): Response<ScanResponse>
-    
+
     @POST("market/select")
     suspend fun selectPair(@Body request: SelectPairRequest): Response<ActionResponse>
-    
+
     @GET("mtf/status")
     suspend fun getMtfStatus(): Response<MtfResponse>
 }
@@ -496,5 +496,5 @@ curl http://<BOT_IP>:8080/api/bot/status
 
 ---
 
-*Document created: December 19, 2025*  
+*Document created: December 19, 2025*
 *For Grid Trading Bot v1.0*

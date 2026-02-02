@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 @dataclass
 class BotStats:
     """Statistics for a single bot."""
+
     name: str
     exchange: str
     strategy: str
@@ -39,21 +40,21 @@ class BotStats:
 def parse_crosskiller_log(log_path: str) -> BotStats:
     """Parse Crosskiller EMA bot log file."""
     stats = BotStats(
-        name="Crosskiller",
-        exchange="Coinbase",
-        strategy="EMA 9/20 Crossover"
+        name="Crosskiller", exchange="Coinbase", strategy="EMA 9/20 Crossover"
     )
 
     if not os.path.exists(log_path):
         stats.status = "Log not found"
         return stats
 
-    with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
     # Count trades
-    buy_matches = re.findall(r'\[OK\] BUY FILLED: (\w+/\w+)', content)
-    sell_matches = re.findall(r'\[OK\] SELL FILLED: (\w+/\w+) \| P&L: \$([+-]?\d+\.?\d*)', content)
+    buy_matches = re.findall(r"\[OK\] BUY FILLED: (\w+/\w+)", content)
+    sell_matches = re.findall(
+        r"\[OK\] SELL FILLED: (\w+/\w+) \| P&L: \$([+-]?\d+\.?\d*)", content
+    )
 
     stats.buys = len(buy_matches)
     stats.sells = len(sell_matches)
@@ -76,19 +77,19 @@ def parse_crosskiller_log(log_path: str) -> BotStats:
                 stats.biggest_loss_pair = pair
 
     # Get current positions (last balance sync)
-    balance_matches = re.findall(r'(\w+)/USD: [\d.]+ \(~\$[\d.]+\)', content)
+    balance_matches = re.findall(r"(\w+)/USD: [\d.]+ \(~\$[\d.]+\)", content)
     if balance_matches:
         # Get unique pairs from last few matches
         stats.current_positions = list(set(balance_matches[-6:]))
 
     # Get start time
-    time_match = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', content)
+    time_match = re.search(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})", content)
     if time_match:
-        stats.start_time = datetime.strptime(time_match.group(1), '%Y-%m-%d %H:%M:%S')
+        stats.start_time = datetime.strptime(time_match.group(1), "%Y-%m-%d %H:%M:%S")
         stats.runtime_hours = (datetime.now() - stats.start_time).total_seconds() / 3600
 
     # Check if still running (recent activity)
-    last_cycle = re.findall(r'--- Cycle at (\d{2}:\d{2}:\d{2}) ---', content)
+    last_cycle = re.findall(r"--- Cycle at (\d{2}:\d{2}:\d{2}) ---", content)
     if last_cycle:
         stats.status = "Active - Scanning"
     else:
@@ -99,31 +100,29 @@ def parse_crosskiller_log(log_path: str) -> BotStats:
 
 def parse_grid_bot_log(log_path: str, name: str, pair: str) -> BotStats:
     """Parse grid trading bot log file."""
-    stats = BotStats(
-        name=name,
-        exchange="Kraken",
-        strategy=f"{pair} Grid Trading"
-    )
+    stats = BotStats(name=name, exchange="Kraken", strategy=f"{pair} Grid Trading")
 
     if not os.path.exists(log_path):
         stats.status = "Log not found"
         return stats
 
-    with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
     # Get current price
-    price_matches = re.findall(r'ticker current price: ([\d.]+)', content)
+    price_matches = re.findall(r"ticker current price: ([\d.]+)", content)
     if price_matches:
         stats.current_price = float(price_matches[-1])
 
     # Get grid range from filename
-    range_match = re.search(r'range([\d.]+-[\d.]+)', log_path)
+    range_match = re.search(r"range([\d.]+-[\d.]+)", log_path)
     if range_match:
-        stats.grid_range = range_match.group(1).replace('-', ' - ')
+        stats.grid_range = range_match.group(1).replace("-", " - ")
 
     # Count grid executions
-    exec_matches = re.findall(r'Executed|Grid level|order filled', content, re.IGNORECASE)
+    exec_matches = re.findall(
+        r"Executed|Grid level|order filled", content, re.IGNORECASE
+    )
     stats.total_trades = len(exec_matches)
 
     # Check health status
@@ -135,9 +134,9 @@ def parse_grid_bot_log(log_path: str, name: str, pair: str) -> BotStats:
         stats.status = "Running"
 
     # Get start time
-    time_match = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', content)
+    time_match = re.search(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})", content)
     if time_match:
-        stats.start_time = datetime.strptime(time_match.group(1), '%Y-%m-%d %H:%M:%S')
+        stats.start_time = datetime.strptime(time_match.group(1), "%Y-%m-%d %H:%M:%S")
         stats.runtime_hours = (datetime.now() - stats.start_time).total_seconds() / 3600
 
     return stats
@@ -148,14 +147,14 @@ def parse_marketbot_log(log_path: str) -> BotStats:
     stats = BotStats(
         name="Sleeping Marketbot",
         exchange="Alpaca",
-        strategy="Mean Reversion (RSI < 40)"
+        strategy="Mean Reversion (RSI < 40)",
     )
 
     if not os.path.exists(log_path):
         stats.status = "Log not found"
         return stats
 
-    with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
     # Check if market is open
@@ -165,11 +164,11 @@ def parse_marketbot_log(log_path: str) -> BotStats:
         stats.status = "Active"
 
     # Get paper trades
-    paper_trades = re.findall(r'PAPER TRADE OPENED: (\w+)', content)
+    paper_trades = re.findall(r"PAPER TRADE OPENED: (\w+)", content)
     stats.current_positions = list(set(paper_trades))
 
     # Count opportunities found
-    opps = re.findall(r'Found (\d+) opportunities', content)
+    opps = re.findall(r"Found (\d+) opportunities", content)
     if opps:
         stats.total_trades = sum(int(o) for o in opps)
 
@@ -216,7 +215,9 @@ def generate_markdown_report(stats_list: list[BotStats]) -> str:
 
         if stats.realized_pnl != 0 or stats.sells > 0:
             pnl_color = "+" if stats.realized_pnl >= 0 else ""
-            report += f"| **Realized P&L** | **{pnl_color}${stats.realized_pnl:.2f}** |\n"
+            report += (
+                f"| **Realized P&L** | **{pnl_color}${stats.realized_pnl:.2f}** |\n"
+            )
 
         if stats.wins + stats.losses > 0:
             report += f"| **Win Rate** | {win_rate:.0f}% ({stats.wins}W / {stats.losses}L) |\n"
@@ -274,16 +275,18 @@ def main():
 
     # Crosskiller - check temp output file first, fallback to ema_bot.log
     crosskiller_log = None
-    temp_outputs = Path(r"C:\Users\splin\AppData\Local\Temp\claude\C--Users-splin\tasks")
+    temp_outputs = Path(
+        r"C:\Users\splin\AppData\Local\Temp\claude\C--Users-splin\tasks"
+    )
     if temp_outputs.exists():
         # Find most recent b*.output file
         outputs = list(temp_outputs.glob("b*.output"))
         if outputs:
             latest = max(outputs, key=lambda p: p.stat().st_mtime)
             # Check if it's the EMA bot
-            with open(latest, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(latest, "r", encoding="utf-8", errors="ignore") as f:
                 first_lines = f.read(2000)
-                if 'EMABot' in first_lines or 'EMA 9/20' in first_lines:
+                if "EMABot" in first_lines or "EMA 9/20" in first_lines:
                     crosskiller_log = str(latest)
 
     if not crosskiller_log:
@@ -307,9 +310,12 @@ def main():
     if temp_outputs.exists():
         outputs = list(temp_outputs.glob("b*.output"))
         for output in sorted(outputs, key=lambda p: p.stat().st_mtime, reverse=True):
-            with open(output, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(output, "r", encoding="utf-8", errors="ignore") as f:
                 first_lines = f.read(2000)
-                if 'Stock Trading' in first_lines or 'mean reversion' in first_lines.lower():
+                if (
+                    "Stock Trading" in first_lines
+                    or "mean reversion" in first_lines.lower()
+                ):
                     marketbot_log = str(output)
                     break
 
@@ -320,10 +326,12 @@ def main():
     report = generate_markdown_report(stats_list)
 
     # Save report
-    report_file = base_dir / f"reports/daily_report_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
+    report_file = (
+        base_dir / f"reports/daily_report_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
+    )
     report_file.parent.mkdir(exist_ok=True)
 
-    with open(report_file, 'w', encoding='utf-8') as f:
+    with open(report_file, "w", encoding="utf-8") as f:
         f.write(report)
 
     print(report)

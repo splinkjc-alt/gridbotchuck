@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Prediction:
     """A sentiment prediction."""
+
     id: int
     symbol: str
     headline: str
@@ -34,6 +35,7 @@ class Prediction:
 @dataclass
 class Outcome:
     """The actual outcome of a prediction."""
+
     prediction_id: int
     price_after_1h: Optional[float]
     price_after_4h: Optional[float]
@@ -49,6 +51,7 @@ class Outcome:
 @dataclass
 class SourceStats:
     """Statistics for a news source."""
+
     source: str
     total_predictions: int
     correct_1h: int
@@ -84,7 +87,7 @@ class NewsTracker:
         cursor = conn.cursor()
 
         # Predictions table
-        cursor.execute('''
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS predictions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 symbol TEXT NOT NULL,
@@ -102,10 +105,10 @@ class NewsTracker:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(symbol, headline, source)
             )
-        ''')
+        """)
 
         # Outcomes table
-        cursor.execute('''
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS outcomes (
                 prediction_id INTEGER PRIMARY KEY,
                 price_after_1h REAL,
@@ -123,10 +126,10 @@ class NewsTracker:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (prediction_id) REFERENCES predictions(id)
             )
-        ''')
+        """)
 
         # Source stats cache table
-        cursor.execute('''
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS source_stats (
                 source TEXT PRIMARY KEY,
                 api_source TEXT,
@@ -141,21 +144,36 @@ class NewsTracker:
                 avg_confidence REAL DEFAULT 0,
                 last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        ''')
+        """)
 
         # Indexes
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_predictions_symbol ON predictions(symbol)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_predictions_source ON predictions(source)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_predictions_created ON predictions(created_at)')
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_predictions_symbol ON predictions(symbol)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_predictions_source ON predictions(source)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_predictions_created ON predictions(created_at)"
+        )
 
         conn.commit()
         conn.close()
 
-    def add_prediction(self, symbol: str, headline: str, summary: str,
-                      source: str, api_source: str, url: str,
-                      sentiment_score: float, sentiment_label: str,
-                      confidence: float, price_at_news: float,
-                      news_published_at: datetime = None) -> int:
+    def add_prediction(
+        self,
+        symbol: str,
+        headline: str,
+        summary: str,
+        source: str,
+        api_source: str,
+        url: str,
+        sentiment_score: float,
+        sentiment_label: str,
+        confidence: float,
+        price_at_news: float,
+        news_published_at: datetime = None,
+    ) -> int:
         """
         Add a new prediction to track.
 
@@ -173,15 +191,29 @@ class NewsTracker:
         cursor = conn.cursor()
 
         try:
-            cursor.execute('''
+            cursor.execute(
+                """
                 INSERT OR IGNORE INTO predictions
                 (symbol, headline, summary, source, api_source, url,
                  sentiment_score, sentiment_label, confidence, price_at_news,
                  predicted_direction, news_published_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (symbol, headline, summary, source, api_source, url,
-                  sentiment_score, sentiment_label, confidence, price_at_news,
-                  predicted_direction, news_published_at))
+            """,
+                (
+                    symbol,
+                    headline,
+                    summary,
+                    source,
+                    api_source,
+                    url,
+                    sentiment_score,
+                    sentiment_label,
+                    confidence,
+                    price_at_news,
+                    predicted_direction,
+                    news_published_at,
+                ),
+            )
 
             conn.commit()
             return cursor.lastrowid
@@ -189,8 +221,9 @@ class NewsTracker:
         finally:
             conn.close()
 
-    def update_outcome(self, prediction_id: int, price_after: float,
-                       hours_elapsed: int):
+    def update_outcome(
+        self, prediction_id: int, price_after: float, hours_elapsed: int
+    ):
         """
         Update outcome for a prediction.
 
@@ -204,10 +237,13 @@ class NewsTracker:
 
         try:
             # Get prediction info
-            cursor.execute('''
+            cursor.execute(
+                """
                 SELECT price_at_news, predicted_direction, sentiment_label
                 FROM predictions WHERE id = ?
-            ''', (prediction_id,))
+            """,
+                (prediction_id,),
+            )
             row = cursor.fetchone()
             if not row:
                 return
@@ -229,18 +265,23 @@ class NewsTracker:
                 actual_direction = "neutral"
 
             # Was prediction correct?
-            correct = (predicted_direction == actual_direction) or \
-                     (predicted_direction == "neutral" and abs(pct_change) < 1)
+            correct = (predicted_direction == actual_direction) or (
+                predicted_direction == "neutral" and abs(pct_change) < 1
+            )
 
             # Ensure outcome row exists
-            cursor.execute('''
+            cursor.execute(
+                """
                 INSERT OR IGNORE INTO outcomes (prediction_id)
                 VALUES (?)
-            ''', (prediction_id,))
+            """,
+                (prediction_id,),
+            )
 
             # Update appropriate columns
             if hours_elapsed == 1:
-                cursor.execute('''
+                cursor.execute(
+                    """
                     UPDATE outcomes SET
                         price_after_1h = ?,
                         pct_change_1h = ?,
@@ -248,10 +289,19 @@ class NewsTracker:
                         correct_1h = ?,
                         updated_at = CURRENT_TIMESTAMP
                     WHERE prediction_id = ?
-                ''', (price_after, pct_change, actual_direction, int(correct), prediction_id))
+                """,
+                    (
+                        price_after,
+                        pct_change,
+                        actual_direction,
+                        int(correct),
+                        prediction_id,
+                    ),
+                )
 
             elif hours_elapsed == 4:
-                cursor.execute('''
+                cursor.execute(
+                    """
                     UPDATE outcomes SET
                         price_after_4h = ?,
                         pct_change_4h = ?,
@@ -259,10 +309,19 @@ class NewsTracker:
                         correct_4h = ?,
                         updated_at = CURRENT_TIMESTAMP
                     WHERE prediction_id = ?
-                ''', (price_after, pct_change, actual_direction, int(correct), prediction_id))
+                """,
+                    (
+                        price_after,
+                        pct_change,
+                        actual_direction,
+                        int(correct),
+                        prediction_id,
+                    ),
+                )
 
             elif hours_elapsed == 24:
-                cursor.execute('''
+                cursor.execute(
+                    """
                     UPDATE outcomes SET
                         price_after_24h = ?,
                         pct_change_24h = ?,
@@ -270,7 +329,15 @@ class NewsTracker:
                         correct_24h = ?,
                         updated_at = CURRENT_TIMESTAMP
                     WHERE prediction_id = ?
-                ''', (price_after, pct_change, actual_direction, int(correct), prediction_id))
+                """,
+                    (
+                        price_after,
+                        pct_change,
+                        actual_direction,
+                        int(correct),
+                        prediction_id,
+                    ),
+                )
 
             conn.commit()
 
@@ -291,7 +358,8 @@ class NewsTracker:
         cursor = conn.cursor()
 
         try:
-            cursor.execute('''
+            cursor.execute(
+                """
                 SELECT
                     p.source,
                     COUNT(*) as total,
@@ -309,26 +377,44 @@ class NewsTracker:
                 GROUP BY p.source
                 HAVING COUNT(*) >= ?
                 ORDER BY (SUM(CASE WHEN o.correct_24h = 1 THEN 1.0 ELSE 0 END) / COUNT(*)) DESC
-            ''', (min_predictions,))
+            """,
+                (min_predictions,),
+            )
 
             stats = []
             for row in cursor.fetchall():
-                source, total, c1h, c4h, c24h, avg_conf, \
-                    total_bull, correct_bull, total_bear, correct_bear = row
+                (
+                    source,
+                    total,
+                    c1h,
+                    c4h,
+                    c24h,
+                    avg_conf,
+                    total_bull,
+                    correct_bull,
+                    total_bear,
+                    correct_bear,
+                ) = row
 
-                stats.append(SourceStats(
-                    source=source,
-                    total_predictions=total,
-                    correct_1h=c1h or 0,
-                    correct_4h=c4h or 0,
-                    correct_24h=c24h or 0,
-                    accuracy_1h=(c1h / total * 100) if total > 0 else 0,
-                    accuracy_4h=(c4h / total * 100) if total > 0 else 0,
-                    accuracy_24h=(c24h / total * 100) if total > 0 else 0,
-                    avg_confidence=avg_conf or 0,
-                    bullish_accuracy=(correct_bull / total_bull * 100) if total_bull > 0 else 0,
-                    bearish_accuracy=(correct_bear / total_bear * 100) if total_bear > 0 else 0
-                ))
+                stats.append(
+                    SourceStats(
+                        source=source,
+                        total_predictions=total,
+                        correct_1h=c1h or 0,
+                        correct_4h=c4h or 0,
+                        correct_24h=c24h or 0,
+                        accuracy_1h=(c1h / total * 100) if total > 0 else 0,
+                        accuracy_4h=(c4h / total * 100) if total > 0 else 0,
+                        accuracy_24h=(c24h / total * 100) if total > 0 else 0,
+                        avg_confidence=avg_conf or 0,
+                        bullish_accuracy=(correct_bull / total_bull * 100)
+                        if total_bull > 0
+                        else 0,
+                        bearish_accuracy=(correct_bear / total_bear * 100)
+                        if total_bear > 0
+                        else 0,
+                    )
+                )
 
             return stats
 
@@ -348,13 +434,16 @@ class NewsTracker:
             cutoff = datetime.now() - timedelta(hours=hours)
             column = f"price_after_{hours}h"
 
-            cursor.execute(f'''
+            cursor.execute(
+                f"""
                 SELECT p.id, p.symbol, p.created_at
                 FROM predictions p
                 LEFT JOIN outcomes o ON p.id = o.prediction_id
                 WHERE p.created_at < ?
                 AND (o.{column} IS NULL OR o.prediction_id IS NULL)
-            ''', (cutoff,))
+            """,
+                (cutoff,),
+            )
 
             return cursor.fetchall()
 
@@ -369,7 +458,8 @@ class NewsTracker:
 
         try:
             if symbol:
-                cursor.execute('''
+                cursor.execute(
+                    """
                     SELECT p.*, o.pct_change_1h, o.pct_change_24h,
                            o.correct_1h, o.correct_24h
                     FROM predictions p
@@ -377,16 +467,21 @@ class NewsTracker:
                     WHERE p.symbol = ?
                     ORDER BY p.created_at DESC
                     LIMIT ?
-                ''', (symbol, limit))
+                """,
+                    (symbol, limit),
+                )
             else:
-                cursor.execute('''
+                cursor.execute(
+                    """
                     SELECT p.*, o.pct_change_1h, o.pct_change_24h,
                            o.correct_1h, o.correct_24h
                     FROM predictions p
                     LEFT JOIN outcomes o ON p.id = o.prediction_id
                     ORDER BY p.created_at DESC
                     LIMIT ?
-                ''', (limit,))
+                """,
+                    (limit,),
+                )
 
             return [dict(row) for row in cursor.fetchall()]
 
@@ -417,6 +512,8 @@ class NewsTracker:
             best = stats[0]
             worst = stats[-1]
             report += f"Best Source (24h): {best.source} ({best.accuracy_24h:.1f}%)\n"
-            report += f"Worst Source (24h): {worst.source} ({worst.accuracy_24h:.1f}%)\n"
+            report += (
+                f"Worst Source (24h): {worst.source} ({worst.accuracy_24h:.1f}%)\n"
+            )
 
         return report

@@ -13,7 +13,7 @@ Your grid trading bot now has **4 convenient ways to open the dashboard** with a
 #### 1. **Batch File** (Recommended for Windows)
 - **File**: `dashboard_launcher.bat`
 - **Usage**: Double-click
-- **Features**: 
+- **Features**:
   - Auto-installs dependencies
   - Shows status messages
   - One-click operation
@@ -474,7 +474,7 @@ Documentation total:      ~60 KB  (comprehensive)
 
 ## Ready to Use!
 
-Your desktop launcher system is **fully implemented and documented**. 
+Your desktop launcher system is **fully implemented and documented**.
 
 ### To Get Started:
 

@@ -27,7 +27,9 @@ class ConfigManager:
                 self.config = json.load(file)
                 self.config_validator.validate(self.config)
             except json.JSONDecodeError as e:
-                self.logger.error(f"Failed to parse config file {self.config_file}: {e}")
+                self.logger.error(
+                    f"Failed to parse config file {self.config_file}: {e}"
+                )
                 raise ConfigParseError(self.config_file, e) from e
 
     def get(self, key, default=None):
@@ -256,7 +258,12 @@ class ConfigManager:
         """Get range validation settings."""
         mtf = self.get_multi_timeframe_analysis()
         return mtf.get(
-            "range_validation", {"enabled": True, "auto_suggest_range": True, "warn_if_price_outside_range": True}
+            "range_validation",
+            {
+                "enabled": True,
+                "auto_suggest_range": True,
+                "warn_if_price_outside_range": True,
+            },
         )
 
     def is_range_validation_enabled(self) -> bool:

@@ -4,10 +4,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-e = ccxt.kraken({
-    "apiKey": os.getenv("EXCHANGE_API_KEY"),
-    "secret": os.getenv("EXCHANGE_SECRET_KEY")
-})
+e = ccxt.kraken(
+    {
+        "apiKey": os.getenv("EXCHANGE_API_KEY"),
+        "secret": os.getenv("EXCHANGE_SECRET_KEY"),
+    }
+)
 
 # Check all open orders
 orders = e.fetch_open_orders()

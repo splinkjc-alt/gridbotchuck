@@ -102,7 +102,9 @@ class PairScanResult:
             },
         }
 
-    def to_config(self, exchange_name: str = "kraken", initial_balance: float = 100.0) -> dict:
+    def to_config(
+        self, exchange_name: str = "kraken", initial_balance: float = 100.0
+    ) -> dict:
         """Generate a config.json compatible configuration."""
         return {
             "exchange": {
@@ -224,7 +226,9 @@ class PairScanner:
                 )
                 if result:
                     results.append(result)
-                    self.logger.debug(f"Analyzed {pair}: Score={result.total_score:.1f}")
+                    self.logger.debug(
+                        f"Analyzed {pair}: Score={result.total_score:.1f}"
+                    )
             except Exception as e:
                 self.logger.warning(f"Failed to analyze {pair}: {e}")
 
@@ -262,7 +266,9 @@ class PairScanner:
         """Analyze a single pair for grid trading suitability."""
         try:
             # Fetch OHLCV data
-            ohlcv = await self.exchange_service.fetch_ohlcv_simple(pair, timeframe, lookback_candles)
+            ohlcv = await self.exchange_service.fetch_ohlcv_simple(
+                pair, timeframe, lookback_candles
+            )
 
             if ohlcv is None or len(ohlcv) < 24:  # Need at least 24 candles
                 return None
@@ -280,11 +286,15 @@ class PairScanner:
             price_24h_high = float(ohlcv["high"].iloc[-24:].max())
             price_24h_low = float(ohlcv["low"].iloc[-24:].min())
             price_24h_change_pct = (
-                ((current_price / float(ohlcv["close"].iloc[-24]) - 1) * 100) if len(ohlcv) >= 24 else 0
+                ((current_price / float(ohlcv["close"].iloc[-24]) - 1) * 100)
+                if len(ohlcv) >= 24
+                else 0
             )
 
             # Volume metrics
-            volume_24h = float(ohlcv["volume"].iloc[-24:].sum()) * current_price  # Convert to quote currency
+            volume_24h = (
+                float(ohlcv["volume"].iloc[-24:].sum()) * current_price
+            )  # Convert to quote currency
             volume_avg = float(ohlcv["volume"].mean()) * current_price
 
             # Volume filter
@@ -309,12 +319,18 @@ class PairScanner:
 
             # Generate grid recommendations
             grid_top, grid_bottom = self._calculate_grid_range(ohlcv, current_price)
-            num_grids = self._calculate_optimal_grids(grid_top, grid_bottom, current_price)
+            num_grids = self._calculate_optimal_grids(
+                grid_top, grid_bottom, current_price
+            )
 
             # Quality flags
             is_range_bound = range_bound_score >= 60
             has_good_volume = volume_24h >= self.VOLUME_GOOD_THRESHOLD
-            volatility_optimal = self.VOLATILITY_OPTIMAL_LOW <= daily_volatility <= self.VOLATILITY_OPTIMAL_HIGH
+            volatility_optimal = (
+                self.VOLATILITY_OPTIMAL_LOW
+                <= daily_volatility
+                <= self.VOLATILITY_OPTIMAL_HIGH
+            )
 
             return PairScanResult(
                 pair=pair,
@@ -409,7 +425,9 @@ class PairScanner:
             range_consistency_score = max(0, 50 - (range_pct - 25) * 2)  # Too wide
 
         # Combine scores
-        return trend_score * 0.4 + oscillation_score * 0.3 + range_consistency_score * 0.3
+        return (
+            trend_score * 0.4 + oscillation_score * 0.3 + range_consistency_score * 0.3
+        )
 
     def _score_volatility(self, daily_volatility: float) -> float:
         """
@@ -419,7 +437,11 @@ class PairScanner:
         Too low (<1%): Not enough price movement for profits
         Too high (>10%): Risk of grid being breached
         """
-        if self.VOLATILITY_OPTIMAL_LOW <= daily_volatility <= self.VOLATILITY_OPTIMAL_HIGH:
+        if (
+            self.VOLATILITY_OPTIMAL_LOW
+            <= daily_volatility
+            <= self.VOLATILITY_OPTIMAL_HIGH
+        ):
             # Perfect range
             return 100
         elif daily_volatility < self.VOLATILITY_OPTIMAL_LOW:
@@ -451,7 +473,9 @@ class PairScanner:
             return 80 + ratio * 20
         elif volume_24h >= self.VOLUME_MIN_THRESHOLD:
             # Scale from 40 to 80
-            ratio = (volume_24h - self.VOLUME_MIN_THRESHOLD) / (self.VOLUME_GOOD_THRESHOLD - self.VOLUME_MIN_THRESHOLD)
+            ratio = (volume_24h - self.VOLUME_MIN_THRESHOLD) / (
+                self.VOLUME_GOOD_THRESHOLD - self.VOLUME_MIN_THRESHOLD
+            )
             return 40 + ratio * 40
         else:
             # Below minimum
@@ -516,7 +540,9 @@ class PairScanner:
         else:
             return 5
 
-    def print_scan_results(self, results: list[PairScanResult], top_n: int = 10) -> None:
+    def print_scan_results(
+        self, results: list[PairScanResult], top_n: int = 10
+    ) -> None:
         """Print formatted scan results to console."""
 
         for result in results[:top_n]:
@@ -529,12 +555,14 @@ class PairScanner:
                 pass
 
             # Range quality descriptor
-            if result.range_bound_score >= 80 or result.range_bound_score >= 60 or result.range_bound_score >= 40:
+            if (
+                result.range_bound_score >= 80
+                or result.range_bound_score >= 60
+                or result.range_bound_score >= 40
+            ):
                 pass
             else:
                 pass
-
-
 
     async def save_configs(
         self,
@@ -567,7 +595,9 @@ class PairScanner:
 
             # Generate filename
             pair_safe = result.pair.replace("/", "_")
-            filename = f"config_{pair_safe}_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
+            filename = (
+                f"config_{pair_safe}_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
+            )
             filepath = output_path / filename
 
             with open(filepath, "w") as f:

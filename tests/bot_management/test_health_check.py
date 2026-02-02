@@ -48,7 +48,9 @@ class TestHealthCheck(unittest.IsolatedAsyncioTestCase):
     @patch("psutil.virtual_memory")
     @patch("psutil.disk_usage")
     @patch("psutil.Process")
-    def test_check_resource_usage(self, mock_process, mock_disk_usage, mock_virtual_memory, mock_cpu_percent):
+    def test_check_resource_usage(
+        self, mock_process, mock_disk_usage, mock_virtual_memory, mock_cpu_percent
+    ):
         mock_virtual_memory.return_value.percent = 85
         mock_disk_usage.return_value.percent = 10
 
@@ -107,11 +109,19 @@ class TestHealthCheck(unittest.IsolatedAsyncioTestCase):
                 thread_count=4,
             )
             self.health_check._metrics_history.append(metrics)
-            if len(self.health_check._metrics_history) > self.health_check.metrics_history_size:
+            if (
+                len(self.health_check._metrics_history)
+                > self.health_check.metrics_history_size
+            ):
                 self.health_check._metrics_history.pop(0)
 
-        assert len(self.health_check._metrics_history) == 5  # Should match metrics_history_size
-        assert self.health_check._metrics_history[-1].cpu_percent > self.health_check._metrics_history[0].cpu_percent
+        assert (
+            len(self.health_check._metrics_history) == 5
+        )  # Should match metrics_history_size
+        assert (
+            self.health_check._metrics_history[-1].cpu_percent
+            > self.health_check._metrics_history[0].cpu_percent
+        )
 
     def test_resource_trends_calculation(self):
         """Test that resource usage trends are correctly calculated"""
@@ -226,16 +236,24 @@ class TestHealthCheck(unittest.IsolatedAsyncioTestCase):
         self.health_check.start.assert_awaited_once()
 
     async def test_perform_checks_success(self):
-        self.bot.get_bot_health_status = AsyncMock(return_value={"strategy": True, "exchange_status": "ok"})
-        self.health_check._check_resource_usage = Mock(return_value={"cpu": 10, "memory": 10, "disk": 10})
+        self.bot.get_bot_health_status = AsyncMock(
+            return_value={"strategy": True, "exchange_status": "ok"}
+        )
+        self.health_check._check_resource_usage = Mock(
+            return_value={"cpu": 10, "memory": 10, "disk": 10}
+        )
 
         self.health_check._check_and_alert_bot_health = AsyncMock()
         self.health_check._check_and_alert_resource_usage = AsyncMock()
 
         await self.health_check._perform_checks()
 
-        self.health_check._check_and_alert_bot_health.assert_awaited_with({"strategy": True, "exchange_status": "ok"})
-        self.health_check._check_and_alert_resource_usage.assert_awaited_with({"cpu": 10, "memory": 10, "disk": 10})
+        self.health_check._check_and_alert_bot_health.assert_awaited_with(
+            {"strategy": True, "exchange_status": "ok"}
+        )
+        self.health_check._check_and_alert_resource_usage.assert_awaited_with(
+            {"cpu": 10, "memory": 10, "disk": 10}
+        )
 
     async def test_check_and_alert_bot_health_with_alerts(self):
         health_status = {"strategy": False, "exchange_status": "maintenance"}
@@ -284,7 +302,9 @@ class TestHealthCheck(unittest.IsolatedAsyncioTestCase):
 
         await self.health_check.start()
 
-        self.health_check.logger.warning.assert_called_once_with("HealthCheck is already running.")
+        self.health_check.logger.warning.assert_called_once_with(
+            "HealthCheck is already running."
+        )
 
     def test_handle_stop_when_not_running(self):
         self.health_check._is_running = False
@@ -292,7 +312,9 @@ class TestHealthCheck(unittest.IsolatedAsyncioTestCase):
 
         self.health_check._handle_stop("Already stopped")
 
-        self.health_check.logger.warning.assert_called_once_with("HealthCheck is not running.")
+        self.health_check.logger.warning.assert_called_once_with(
+            "HealthCheck is not running."
+        )
 
     async def asyncTearDown(self):
         """Clean up any pending tasks after each test"""

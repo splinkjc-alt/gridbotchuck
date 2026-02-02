@@ -43,7 +43,9 @@ class RotationBotIntegration:
 
         # Subscribe to rotation events
         self.event_bus.subscribe("profit_rotation_new_entry", self._handle_new_entry)
-        self.event_bus.subscribe("profit_rotation_completed", self._handle_rotation_completed)
+        self.event_bus.subscribe(
+            "profit_rotation_completed", self._handle_rotation_completed
+        )
 
         # Track bot state
         self.active = False
@@ -57,7 +59,9 @@ class RotationBotIntegration:
             initial_pair: Initial trading pair
             initial_balance: Initial capital
         """
-        self.logger.info(f"Starting rotation-enabled bot: {initial_pair} with ${initial_balance:.2f}")
+        self.logger.info(
+            f"Starting rotation-enabled bot: {initial_pair} with ${initial_balance:.2f}"
+        )
 
         self.current_pair = initial_pair
         self.active = True
@@ -160,12 +164,18 @@ class RotationBotIntegration:
             return
 
         try:
-            open_orders = await self.bot.exchange_service.fetch_open_orders(self.current_pair)
-            self.logger.info(f"Cancelling {len(open_orders)} orders for {self.current_pair}")
+            open_orders = await self.bot.exchange_service.fetch_open_orders(
+                self.current_pair
+            )
+            self.logger.info(
+                f"Cancelling {len(open_orders)} orders for {self.current_pair}"
+            )
 
             for order in open_orders:
                 try:
-                    await self.bot.exchange_service.cancel_order(order["id"], self.current_pair)
+                    await self.bot.exchange_service.cancel_order(
+                        order["id"], self.current_pair
+                    )
                 except Exception as e:
                     self.logger.warning(f"Failed to cancel order {order['id']}: {e}")
 
@@ -194,7 +204,9 @@ class RotationBotIntegration:
             top = current_price * (1 + range_percent)
 
             # Update config
-            self.config_manager.config["grid_strategy"]["range"]["bottom"] = round(bottom, 4)
+            self.config_manager.config["grid_strategy"]["range"]["bottom"] = round(
+                bottom, 4
+            )
             self.config_manager.config["grid_strategy"]["range"]["top"] = round(top, 4)
 
             self.logger.info(

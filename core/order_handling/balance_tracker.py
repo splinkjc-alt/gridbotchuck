@@ -44,7 +44,9 @@ class BalanceTracker:
         self.reserved_fiat: float = 0.0
         self.reserved_crypto: float = 0.0
 
-        self.event_bus.subscribe(Events.ORDER_FILLED, self._update_balance_on_order_completion)
+        self.event_bus.subscribe(
+            Events.ORDER_FILLED, self._update_balance_on_order_completion
+        )
 
     async def setup_balances(
         self,
@@ -66,7 +68,10 @@ class BalanceTracker:
         if self.trading_mode == TradingMode.BACKTEST:
             self.balance = initial_balance
             self.crypto_balance = initial_crypto_balance
-        elif self.trading_mode == TradingMode.LIVE or self.trading_mode == TradingMode.PAPER_TRADING:
+        elif (
+            self.trading_mode == TradingMode.LIVE
+            or self.trading_mode == TradingMode.PAPER_TRADING
+        ):
             # WORKAROUND: Skip live balance fetch due to async hanging issue
             # Use configured initial balances instead
             self.logger.warning(
@@ -132,7 +137,9 @@ class BalanceTracker:
                 old_balance = self.balance
                 old_crypto = self.crypto_balance
 
-                self.balance, self.crypto_balance = await self._fetch_live_balances(exchange_service)
+                self.balance, self.crypto_balance = await self._fetch_live_balances(
+                    exchange_service
+                )
 
                 # Reset reserved amounts since we're syncing with actual exchange state
                 self.reserved_fiat = 0.0
@@ -146,7 +153,9 @@ class BalanceTracker:
 
                 # If we got crypto balance, we're done
                 if self.crypto_balance > 0:
-                    self.logger.info(f"Balance sync successful - crypto balance: {self.crypto_balance}")
+                    self.logger.info(
+                        f"Balance sync successful - crypto balance: {self.crypto_balance}"
+                    )
                     return True
 
                 # If no crypto balance yet, wait and retry (exchange might be slow to update)
@@ -160,7 +169,9 @@ class BalanceTracker:
                     await asyncio.sleep(retry_delay)
 
             except Exception as e:
-                self.logger.error(f"Failed to sync balances from exchange (attempt {attempt + 1}): {e}")
+                self.logger.error(
+                    f"Failed to sync balances from exchange (attempt {attempt + 1}): {e}"
+                )
                 if attempt < max_retries - 1:
                     import asyncio
 
@@ -217,7 +228,9 @@ class BalanceTracker:
 
         self.crypto_balance += quantity
         self.total_fees += fee
-        self.logger.info(f"Buy order completed: {quantity} crypto purchased at {price}.")
+        self.logger.info(
+            f"Buy order completed: {quantity} crypto purchased at {price}."
+        )
 
     def _update_after_sell_order_filled(
         self,
@@ -240,7 +253,9 @@ class BalanceTracker:
         self.reserved_crypto -= quantity
 
         if self.reserved_crypto < 0:
-            self.crypto_balance += abs(self.reserved_crypto)  # Adjust with excess reserved crypto
+            self.crypto_balance += abs(
+                self.reserved_crypto
+            )  # Adjust with excess reserved crypto
             self.reserved_crypto = 0
 
         self.balance += sale_proceeds
@@ -262,16 +277,24 @@ class BalanceTracker:
             )
 
         # Use filled if available, otherwise use amount (Kraken sometimes returns 0 for filled on immediate market orders)
-        filled_amount = initial_order.filled if initial_order.filled > 0 else initial_order.amount
-        avg_price = initial_order.average if initial_order.average else initial_order.price
+        filled_amount = (
+            initial_order.filled if initial_order.filled > 0 else initial_order.amount
+        )
+        avg_price = (
+            initial_order.average if initial_order.average else initial_order.price
+        )
 
         # Calculate cost - if no price info, estimate from the order
         if avg_price and avg_price > 0:
             total_cost = filled_amount * avg_price
         else:
             # Fallback: use cost if available, or estimate
-            total_cost = initial_order.cost if initial_order.cost else filled_amount * 12.50
-            self.logger.warning(f"No price info available, using estimated cost: ${total_cost:.2f}")
+            total_cost = (
+                initial_order.cost if initial_order.cost else filled_amount * 12.50
+            )
+            self.logger.warning(
+                f"No price info available, using estimated cost: ${total_cost:.2f}"
+            )
 
         fee = self.fee_calculator.calculate_fee(total_cost)
 
@@ -294,11 +317,15 @@ class BalanceTracker:
             amount: The amount of fiat to reserve.
         """
         if self.balance < amount:
-            raise InsufficientBalanceError(f"Insufficient fiat balance to reserve {amount}.")
+            raise InsufficientBalanceError(
+                f"Insufficient fiat balance to reserve {amount}."
+            )
 
         self.reserved_fiat += amount
         self.balance -= amount
-        self.logger.info(f"Reserved {amount} fiat for a buy order. Remaining fiat balance: {self.balance}.")
+        self.logger.info(
+            f"Reserved {amount} fiat for a buy order. Remaining fiat balance: {self.balance}."
+        )
 
     def reserve_funds_for_sell(
         self,
@@ -311,7 +338,9 @@ class BalanceTracker:
             quantity: The quantity of crypto to reserve.
         """
         if self.crypto_balance < quantity:
-            raise InsufficientCryptoBalanceError(f"Insufficient crypto balance to reserve {quantity}.")
+            raise InsufficientCryptoBalanceError(
+                f"Insufficient crypto balance to reserve {quantity}."
+            )
 
         self.reserved_crypto += quantity
         self.crypto_balance -= quantity
@@ -347,4 +376,7 @@ class BalanceTracker:
         Returns:
             float: The total account value in fiat terms.
         """
-        return self.get_adjusted_fiat_balance() + self.get_adjusted_crypto_balance() * price
+        return (
+            self.get_adjusted_fiat_balance()
+            + self.get_adjusted_crypto_balance() * price
+        )

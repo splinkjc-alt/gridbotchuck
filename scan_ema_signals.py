@@ -29,29 +29,46 @@ def calculate_ema(prices: pd.Series, period: int) -> pd.Series:
 
 
 async def main():
-
     # Connect to Kraken
-    exchange = ccxt.kraken({
-        "apiKey": os.getenv("EXCHANGE_API_KEY"),
-        "secret": os.getenv("EXCHANGE_SECRET_KEY"),
-    })
+    exchange = ccxt.kraken(
+        {
+            "apiKey": os.getenv("EXCHANGE_API_KEY"),
+            "secret": os.getenv("EXCHANGE_SECRET_KEY"),
+        }
+    )
 
     # Candidate pairs to scan
     pairs = [
-        "UNI/USD", "SOL/USD", "XRP/USD", "ADA/USD", "DOGE/USD",
-        "AVAX/USD", "DOT/USD", "LINK/USD", "ATOM/USD",
-        "FIL/USD", "NEAR/USD", "APT/USD", "ARB/USD", "OP/USD",
-        "SUI/USD", "TIA/USD", "INJ/USD", "FET/USD", "RENDER/USD",
+        "UNI/USD",
+        "SOL/USD",
+        "XRP/USD",
+        "ADA/USD",
+        "DOGE/USD",
+        "AVAX/USD",
+        "DOT/USD",
+        "LINK/USD",
+        "ATOM/USD",
+        "FIL/USD",
+        "NEAR/USD",
+        "APT/USD",
+        "ARB/USD",
+        "OP/USD",
+        "SUI/USD",
+        "TIA/USD",
+        "INJ/USD",
+        "FET/USD",
+        "RENDER/USD",
     ]
 
     results = []
-
 
     for pair in pairs:
         try:
             # Fetch OHLCV (15m candles)
             ohlcv = exchange.fetch_ohlcv(pair, "15m", limit=50)
-            df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
+            df = pd.DataFrame(
+                ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+            )
 
             if len(df) < 25:
                 continue
@@ -131,25 +148,36 @@ async def main():
             ticker = exchange.fetch_ticker(pair)
             change_24h = ticker.get("percentage", 0) or 0
 
-            results.append({
-                "pair": pair,
-                "price": price,
-                "ema_9": current_9,
-                "ema_20": current_20,
-                "spread": current_spread,
-                "spread_change": spread_change,
-                "signal": signal,
-                "signal_type": signal_type,
-                "action": action,
-                "change_24h": change_24h,
-            })
+            results.append(
+                {
+                    "pair": pair,
+                    "price": price,
+                    "ema_9": current_9,
+                    "ema_20": current_20,
+                    "spread": current_spread,
+                    "spread_change": spread_change,
+                    "signal": signal,
+                    "signal_type": signal_type,
+                    "action": action,
+                    "change_24h": change_24h,
+                }
+            )
 
         except Exception as e:
             if "does not have market" not in str(e):
                 pass
 
     # Sort by action priority
-    priority = {"BUY": 0, "SAFE_BUY": 1, "BULLISH": 2, "WATCH": 3, "HOLD": 4, "WARN_SELL": 5, "SELL": 6, "BEARISH": 7}
+    priority = {
+        "BUY": 0,
+        "SAFE_BUY": 1,
+        "BULLISH": 2,
+        "WATCH": 3,
+        "HOLD": 4,
+        "WARN_SELL": 5,
+        "SELL": 6,
+        "BEARISH": 7,
+    }
     results.sort(key=lambda x: (priority.get(x["signal_type"], 8), -x["spread_change"]))
 
     # Display results
@@ -157,12 +185,10 @@ async def main():
     for r in results:
         "↑" if r["spread_change"] > 0 else "↓" if r["spread_change"] < 0 else "→"
 
-
     # Actionable Summary
     buy_now = [r for r in results if r["signal_type"] == "BUY"]
     safe_buy = [r for r in results if r["signal_type"] == "SAFE_BUY"]
     sell_now = [r for r in results if r["signal_type"] in ("SELL", "WARN_SELL")]
-
 
     if buy_now:
         for r in buy_now:
@@ -179,11 +205,14 @@ async def main():
     if not buy_now and not safe_buy:
         pass
 
-
     # Best opportunities
-    all_buys = [r for r in results if r["signal_type"] in ("BUY", "SAFE_BUY", "BULLISH")]
+    all_buys = [
+        r for r in results if r["signal_type"] in ("BUY", "SAFE_BUY", "BULLISH")
+    ]
     if all_buys:
-        top = sorted(all_buys, key=lambda x: (x["spread_change"], x["change_24h"]), reverse=True)[:5]
+        top = sorted(
+            all_buys, key=lambda x: (x["spread_change"], x["change_24h"]), reverse=True
+        )[:5]
         for _i, r in enumerate(top, 1):
             pass
 

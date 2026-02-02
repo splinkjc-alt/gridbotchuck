@@ -16,11 +16,13 @@ def calculate_rsi(data, period=14):
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
+
 def calculate_volume_ratio(data, period=20):
     """Calculate current volume vs average volume."""
     avg_volume = data.rolling(window=period).mean()
     ratio = data / avg_volume
     return ratio
+
 
 def analyze_btc_drop():
     """Analyze the BTC drop around Dec 29, 2025 6:00 AM."""
@@ -35,7 +37,9 @@ def analyze_btc_drop():
     ohlcv = exchange.fetch_ohlcv("BTC/USD", "5m", since=since, limit=200)
 
     # Convert to DataFrame
-    df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
+    df = pd.DataFrame(
+        ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+    )
     df["datetime"] = pd.to_datetime(df["timestamp"], unit="ms")
 
     # Calculate indicators
@@ -54,18 +58,20 @@ def analyze_btc_drop():
     lowest_idx = df["low"].idxmin()
     opportunity_candle = df.loc[lowest_idx]
 
-
-
     # Check a few candles before
     if lowest_idx > 0:
         df.loc[lowest_idx - 1]
 
     # Check a few candles after (recovery)
     if lowest_idx < len(df) - 3:
-        recovery_candles = df.loc[lowest_idx:lowest_idx+3]
+        recovery_candles = df.loc[lowest_idx : lowest_idx + 3]
         for i, (idx, candle) in enumerate(recovery_candles.iterrows()):
             if i > 0:  # Skip the bottom candle itself
-                ((candle["close"] - opportunity_candle["close"]) / opportunity_candle["close"] * 100)
+                (
+                    (candle["close"] - opportunity_candle["close"])
+                    / opportunity_candle["close"]
+                    * 100
+                )
 
     # What would have caught this?
     triggers = []
@@ -81,10 +87,14 @@ def analyze_btc_drop():
         triggers.append(f"[YES] RSI(14) < 40: {opportunity_candle['rsi_14']:.1f}")
 
     if opportunity_candle["volume_ratio"] > 2.0:
-        triggers.append(f"[YES] Volume Spike > 2x: {opportunity_candle['volume_ratio']:.2f}x")
+        triggers.append(
+            f"[YES] Volume Spike > 2x: {opportunity_candle['volume_ratio']:.2f}x"
+        )
 
     if opportunity_candle["price_change_pct"] < -2.0:
-        triggers.append(f"[YES] Large Red Candle < -2%: {opportunity_candle['price_change_pct']:.2f}%")
+        triggers.append(
+            f"[YES] Large Red Candle < -2%: {opportunity_candle['price_change_pct']:.2f}%"
+        )
 
     if triggers:
         pass
@@ -105,4 +115,5 @@ if __name__ == "__main__":
         analyze_btc_drop()
     except Exception:
         import traceback
+
         traceback.print_exc()

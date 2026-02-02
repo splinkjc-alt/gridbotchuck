@@ -60,10 +60,14 @@ class TestNotificationHandler:
         )
         assert handler.enabled is True
         mock_apprise.return_value.add.assert_called_once_with("mock://example.com")
-        event_bus.subscribe.assert_called_once_with(Events.ORDER_FILLED, handler._send_notification_on_order_filled)
+        event_bus.subscribe.assert_called_once_with(
+            Events.ORDER_FILLED, handler._send_notification_on_order_filled
+        )
 
     @patch("apprise.Apprise")
-    def test_notification_handler_disabled_initialization(self, mock_apprise, event_bus):
+    def test_notification_handler_disabled_initialization(
+        self, mock_apprise, event_bus
+    ):
         handler = NotificationHandler(
             event_bus=event_bus,
             urls=None,
@@ -74,7 +78,9 @@ class TestNotificationHandler:
         event_bus.subscribe.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_send_notification_with_predefined_content(self, notification_handler_enabled, mock_order):
+    async def test_send_notification_with_predefined_content(
+        self, notification_handler_enabled, mock_order
+    ):
         handler = notification_handler_enabled
         with patch.object(handler.apprise_instance, "notify") as mock_notify:
             handler.send_notification(
@@ -88,7 +94,9 @@ class TestNotificationHandler:
             )
 
     @pytest.mark.asyncio
-    async def test_send_notification_with_missing_placeholder(self, notification_handler_enabled):
+    async def test_send_notification_with_missing_placeholder(
+        self, notification_handler_enabled
+    ):
         handler = notification_handler_enabled
         with (
             patch.object(handler.apprise_instance, "notify") as mock_notify,
@@ -105,7 +113,9 @@ class TestNotificationHandler:
             )
 
     @pytest.mark.asyncio
-    async def test_send_notification_with_order_failed(self, notification_handler_enabled):
+    async def test_send_notification_with_order_failed(
+        self, notification_handler_enabled
+    ):
         handler = notification_handler_enabled
         error_details = "Insufficient funds"
 
@@ -152,10 +162,14 @@ class TestNotificationHandler:
         with patch.object(handler, "async_send_notification") as mock_async_send:
             await handler._send_notification_on_order_filled(mock_order)
 
-            mock_async_send.assert_called_once_with(NotificationType.ORDER_FILLED, order_details=str(mock_order))
+            mock_async_send.assert_called_once_with(
+                NotificationType.ORDER_FILLED, order_details=str(mock_order)
+            )
 
     def test_send_notification_disabled(self, notification_handler_disabled):
         handler = notification_handler_disabled
         with patch("apprise.Apprise.notify") as mock_notify:
-            handler.send_notification(NotificationType.ORDER_FILLED, order_details="test")
+            handler.send_notification(
+                NotificationType.ORDER_FILLED, order_details="test"
+            )
             mock_notify.assert_not_called()

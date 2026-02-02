@@ -2,10 +2,10 @@
 
 ## 🎯 Project Overview
 
-**Product Name:** GridBot Chuck  
-**Tagline:** "Professional Cryptocurrency Grid Trading Bot"  
-**Website URL:** gridbotchuck.netlify.app  
-**Target Audience:** Cryptocurrency traders, from beginners to advanced  
+**Product Name:** GridBot Chuck
+**Tagline:** "Professional Cryptocurrency Grid Trading Bot"
+**Website URL:** gridbotchuck.netlify.app
+**Target Audience:** Cryptocurrency traders, from beginners to advanced
 
 ---
 
@@ -100,7 +100,7 @@ GridBot Chuck is an automated cryptocurrency trading bot that uses **grid tradin
 ### Colors
 
 - **Primary:** Electric Blue (#2563EB) - Trust, technology
-- **Secondary:** Emerald Green (#10B981) - Profit, success  
+- **Secondary:** Emerald Green (#10B981) - Profit, success
 - **Accent:** Purple (#8B5CF6) - Premium, innovation
 - **Background Dark:** #0F172A (Slate 900)
 - **Background Light:** #F8FAFC (Slate 50)

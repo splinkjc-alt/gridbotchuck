@@ -28,11 +28,15 @@ def initialize_config(config_path: str) -> ConfigManager:
         return ConfigManager(config_path, ConfigValidator())
 
     except ConfigError as e:
-        logging.error(f"An error occured during the initialization of ConfigManager {e}")
+        logging.error(
+            f"An error occured during the initialization of ConfigManager {e}"
+        )
         exit(1)
 
 
-def initialize_notification_handler(config_manager: ConfigManager, event_bus: EventBus) -> NotificationHandler:
+def initialize_notification_handler(
+    config_manager: ConfigManager, event_bus: EventBus
+) -> NotificationHandler:
     notification_urls = os.getenv("APPRISE_NOTIFICATION_URLS", "").split(",")
     trading_mode = config_manager.get_trading_mode()
     return NotificationHandler(event_bus, notification_urls, trading_mode)
@@ -48,7 +52,11 @@ async def run_bot(
 ) -> dict[str, Any] | None:
     config_manager = initialize_config(config_path)
     config_name = generate_config_name(config_manager)
-    setup_logging(config_manager.get_logging_level(), config_manager.should_log_to_file(), config_name)
+    setup_logging(
+        config_manager.get_logging_level(),
+        config_manager.should_log_to_file(),
+        config_name,
+    )
     event_bus = EventBus()
     notification_handler = initialize_notification_handler(config_manager, event_bus)
     bot = GridTradingBot(
@@ -66,25 +74,39 @@ async def run_bot(
     config_api_port = config_manager.config.get("api", {}).get("port", api_port)
 
     # Initialize API server for web control
-    api_integration = BotAPIIntegration(bot, event_bus, config_manager, port=config_api_port)
+    api_integration = BotAPIIntegration(
+        bot, event_bus, config_manager, port=config_api_port
+    )
     await api_integration.start()
 
     if profile:
-        cProfile.runctx("asyncio.run(bot.run())", globals(), locals(), "profile_results.prof")
+        cProfile.runctx(
+            "asyncio.run(bot.run())", globals(), locals(), "profile_results.prof"
+        )
         return None
 
     try:
         if bot.trading_mode in {TradingMode.LIVE, TradingMode.PAPER_TRADING}:
             if wait_for_start:
-                logging.info("Bot started in WAIT mode. Waiting for start command via API...")
+                logging.info(
+                    "Bot started in WAIT mode. Waiting for start command via API..."
+                )
                 await bot.initialize()
-                bot_controller_task = asyncio.create_task(bot_controller.command_listener(), name="BotControllerTask")
-                health_check_task = asyncio.create_task(health_check.start(), name="HealthCheckTask")
+                bot_controller_task = asyncio.create_task(
+                    bot_controller.command_listener(), name="BotControllerTask"
+                )
+                health_check_task = asyncio.create_task(
+                    health_check.start(), name="HealthCheckTask"
+                )
                 await asyncio.gather(bot_controller_task, health_check_task)
             else:
                 bot_task = asyncio.create_task(bot.run(), name="BotTask")
-                bot_controller_task = asyncio.create_task(bot_controller.command_listener(), name="BotControllerTask")
-                health_check_task = asyncio.create_task(health_check.start(), name="HealthCheckTask")
+                bot_controller_task = asyncio.create_task(
+                    bot_controller.command_listener(), name="BotControllerTask"
+                )
+                health_check_task = asyncio.create_task(
+                    health_check.start(), name="HealthCheckTask"
+                )
                 await asyncio.gather(bot_task, bot_controller_task, health_check_task)
         else:
             await bot.run()
@@ -109,13 +131,17 @@ async def cleanup_tasks():
 
     current_task = asyncio.current_task()
     tasks_to_cancel = {
-        task for task in asyncio.all_tasks() if task is not current_task and not task.done() and not task.cancelled()
+        task
+        for task in asyncio.all_tasks()
+        if task is not current_task and not task.done() and not task.cancelled()
     }
 
     logging.info(f"Tasks to cancel: {len(tasks_to_cancel)}")
 
     for task in tasks_to_cancel:
-        logging.info(f"Task to cancel: {task} - Done: {task.done()} - Cancelled: {task.cancelled()}")
+        logging.info(
+            f"Task to cancel: {task} - Done: {task.done()} - Cancelled: {task.cancelled()}"
+        )
         task.cancel()
 
     try:
@@ -154,7 +180,9 @@ if __name__ == "__main__":
                     )
                 else:
                     if args.save_performance_results:
-                        save_or_append_performance_results(result, args.save_performance_results)
+                        save_or_append_performance_results(
+                            result, args.save_performance_results
+                        )
 
         except Exception as e:
             logging.error(f"Critical error in main: {e}", exc_info=True)

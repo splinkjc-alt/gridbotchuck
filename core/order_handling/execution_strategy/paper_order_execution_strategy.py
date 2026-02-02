@@ -69,7 +69,9 @@ class PaperOrderExecutionStrategy(OrderExecutionStrategyInterface):
         self._simulated_orders[order_id] = order
 
         side_str = "BUY" if order_side == OrderSide.BUY else "SELL"
-        self.logger.info(f"PAPER MARKET {side_str} {quantity:.6f} {pair} @ ${price:.4f} (Order: {order_id})")
+        self.logger.info(
+            f"PAPER MARKET {side_str} {quantity:.6f} {pair} @ ${price:.4f} (Order: {order_id})"
+        )
 
         return order
 
@@ -106,7 +108,9 @@ class PaperOrderExecutionStrategy(OrderExecutionStrategyInterface):
         self._simulated_orders[order_id] = order
 
         side_str = "BUY" if order_side == OrderSide.BUY else "SELL"
-        self.logger.info(f"PAPER LIMIT {side_str} {quantity:.6f} {pair} @ ${price:.4f} (Order: {order_id})")
+        self.logger.info(
+            f"PAPER LIMIT {side_str} {quantity:.6f} {pair} @ ${price:.4f} (Order: {order_id})"
+        )
 
         return order
 
@@ -171,7 +175,9 @@ class PaperOrderExecutionStrategy(OrderExecutionStrategyInterface):
                 filled_orders.append(order)
 
                 side_str = "BUY" if order.side == OrderSide.BUY else "SELL"
-                self.logger.info(f"PAPER ORDER FILLED {side_str} {order.amount:.6f} {pair} @ ${order.price:.4f}")
+                self.logger.info(
+                    f"PAPER ORDER FILLED {side_str} {order.amount:.6f} {pair} @ ${order.price:.4f}"
+                )
 
         return filled_orders
 
@@ -179,7 +185,9 @@ class PaperOrderExecutionStrategy(OrderExecutionStrategyInterface):
         """Get all open simulated orders."""
         orders = []
         for order in self._simulated_orders.values():
-            if order.status == OrderStatus.OPEN and (pair is None or order.symbol == pair):
+            if order.status == OrderStatus.OPEN and (
+                pair is None or order.symbol == pair
+            ):
                 orders.append(order)
         return orders
 

@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class NewsArticle:
     """A news article."""
+
     headline: str
     summary: str
     source: str
@@ -49,9 +50,7 @@ class NewsFetcher:
         self.newsapi_key = os.getenv("NEWSAPI_KEY")
 
         self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'GridBotChuck/1.0'
-        })
+        self.session.headers.update({"User-Agent": "GridBotChuck/1.0"})
 
         # Rate limiting
         self.last_call = {}
@@ -74,18 +73,14 @@ class NewsFetcher:
             logger.warning("Alpaca API keys not set")
             return []
 
-        self._rate_limit('alpaca', 0.5)  # 2 calls/sec allowed
+        self._rate_limit("alpaca", 0.5)  # 2 calls/sec allowed
 
         url = "https://data.alpaca.markets/v1beta1/news"
         headers = {
-            'APCA-API-KEY-ID': self.alpaca_key,
-            'APCA-API-SECRET-KEY': self.alpaca_secret
+            "APCA-API-KEY-ID": self.alpaca_key,
+            "APCA-API-SECRET-KEY": self.alpaca_secret,
         }
-        params = {
-            'symbols': symbol,
-            'limit': 50,
-            'sort': 'desc'
-        }
+        params = {"symbols": symbol, "limit": 50, "sort": "desc"}
 
         try:
             resp = self.session.get(url, headers=headers, params=params, timeout=10)
@@ -93,25 +88,29 @@ class NewsFetcher:
             data = resp.json()
 
             articles = []
-            for item in data.get('news', []):
+            for item in data.get("news", []):
                 try:
                     # Parse time
-                    time_str = item.get('created_at', '')
+                    time_str = item.get("created_at", "")
                     if time_str:
-                        pub_time = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
+                        pub_time = datetime.fromisoformat(
+                            time_str.replace("Z", "+00:00")
+                        )
                         pub_time = pub_time.replace(tzinfo=None)
                     else:
                         pub_time = datetime.now()
 
-                    articles.append(NewsArticle(
-                        headline=item.get('headline', ''),
-                        summary=item.get('summary', ''),
-                        source=item.get('source', 'Unknown'),
-                        url=item.get('url', ''),
-                        published=pub_time,
-                        symbols=item.get('symbols', [symbol]),
-                        api_source='alpaca'
-                    ))
+                    articles.append(
+                        NewsArticle(
+                            headline=item.get("headline", ""),
+                            summary=item.get("summary", ""),
+                            source=item.get("source", "Unknown"),
+                            url=item.get("url", ""),
+                            published=pub_time,
+                            symbols=item.get("symbols", [symbol]),
+                            api_source="alpaca",
+                        )
+                    )
                 except Exception as e:
                     logger.debug(f"Error parsing Alpaca article: {e}")
 
@@ -122,8 +121,12 @@ class NewsFetcher:
             logger.error(f"Alpaca News API error: {e}")
             return []
 
-    def fetch_finnhub(self, symbol: str, from_date: Optional[datetime] = None,
-                      to_date: Optional[datetime] = None) -> list[NewsArticle]:
+    def fetch_finnhub(
+        self,
+        symbol: str,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
+    ) -> list[NewsArticle]:
         """
         Fetch news from Finnhub.
 
@@ -133,7 +136,7 @@ class NewsFetcher:
             logger.warning("Finnhub API key not set")
             return []
 
-        self._rate_limit('finnhub', 1.0)  # 1 second between calls
+        self._rate_limit("finnhub", 1.0)  # 1 second between calls
 
         if not from_date:
             from_date = datetime.now() - timedelta(days=7)
@@ -142,10 +145,10 @@ class NewsFetcher:
 
         url = "https://finnhub.io/api/v1/company-news"
         params = {
-            'symbol': symbol,
-            'from': from_date.strftime('%Y-%m-%d'),
-            'to': to_date.strftime('%Y-%m-%d'),
-            'token': self.finnhub_key
+            "symbol": symbol,
+            "from": from_date.strftime("%Y-%m-%d"),
+            "to": to_date.strftime("%Y-%m-%d"),
+            "token": self.finnhub_key,
         }
 
         try:
@@ -156,15 +159,17 @@ class NewsFetcher:
             articles = []
             for item in data[:50]:  # Limit to 50 articles
                 try:
-                    articles.append(NewsArticle(
-                        headline=item.get('headline', ''),
-                        summary=item.get('summary', ''),
-                        source=item.get('source', 'Unknown'),
-                        url=item.get('url', ''),
-                        published=datetime.fromtimestamp(item.get('datetime', 0)),
-                        symbols=[symbol],
-                        api_source='finnhub'
-                    ))
+                    articles.append(
+                        NewsArticle(
+                            headline=item.get("headline", ""),
+                            summary=item.get("summary", ""),
+                            source=item.get("source", "Unknown"),
+                            url=item.get("url", ""),
+                            published=datetime.fromtimestamp(item.get("datetime", 0)),
+                            symbols=[symbol],
+                            api_source="finnhub",
+                        )
+                    )
                 except Exception as e:
                     logger.debug(f"Error parsing Finnhub article: {e}")
 
@@ -174,7 +179,9 @@ class NewsFetcher:
             logger.error(f"Finnhub API error: {e}")
             return []
 
-    def fetch_alphavantage(self, symbol: str, topics: str = "earnings") -> list[NewsArticle]:
+    def fetch_alphavantage(
+        self, symbol: str, topics: str = "earnings"
+    ) -> list[NewsArticle]:
         """
         Fetch news from Alpha Vantage.
 
@@ -185,15 +192,15 @@ class NewsFetcher:
             logger.warning("Alpha Vantage API key not set")
             return []
 
-        self._rate_limit('alphavantage', 12.0)  # 12 seconds between calls
+        self._rate_limit("alphavantage", 12.0)  # 12 seconds between calls
 
         url = "https://www.alphavantage.co/query"
         params = {
-            'function': 'NEWS_SENTIMENT',
-            'tickers': symbol,
-            'topics': topics,
-            'apikey': self.alphavantage_key,
-            'limit': 50
+            "function": "NEWS_SENTIMENT",
+            "tickers": symbol,
+            "topics": topics,
+            "apikey": self.alphavantage_key,
+            "limit": 50,
         }
 
         try:
@@ -202,27 +209,29 @@ class NewsFetcher:
             data = resp.json()
 
             articles = []
-            for item in data.get('feed', []):
+            for item in data.get("feed", []):
                 try:
                     # Parse time
-                    time_str = item.get('time_published', '')
+                    time_str = item.get("time_published", "")
                     if time_str:
-                        pub_time = datetime.strptime(time_str[:15], '%Y%m%dT%H%M%S')
+                        pub_time = datetime.strptime(time_str[:15], "%Y%m%dT%H%M%S")
                     else:
                         pub_time = datetime.now()
 
                     # Get symbols
-                    symbols = [t['ticker'] for t in item.get('ticker_sentiment', [])]
+                    symbols = [t["ticker"] for t in item.get("ticker_sentiment", [])]
 
-                    articles.append(NewsArticle(
-                        headline=item.get('title', ''),
-                        summary=item.get('summary', ''),
-                        source=item.get('source', 'Unknown'),
-                        url=item.get('url', ''),
-                        published=pub_time,
-                        symbols=symbols or [symbol],
-                        api_source='alphavantage'
-                    ))
+                    articles.append(
+                        NewsArticle(
+                            headline=item.get("title", ""),
+                            summary=item.get("summary", ""),
+                            source=item.get("source", "Unknown"),
+                            url=item.get("url", ""),
+                            published=pub_time,
+                            symbols=symbols or [symbol],
+                            api_source="alphavantage",
+                        )
+                    )
                 except Exception as e:
                     logger.debug(f"Error parsing AlphaVantage article: {e}")
 
@@ -242,18 +251,18 @@ class NewsFetcher:
             logger.warning("NewsAPI key not set")
             return []
 
-        self._rate_limit('newsapi', 1.0)
+        self._rate_limit("newsapi", 1.0)
 
         # Search by symbol or company name
         query = company_name if company_name else symbol
 
         url = "https://newsapi.org/v2/everything"
         params = {
-            'q': f'"{query}" stock OR shares',
-            'language': 'en',
-            'sortBy': 'publishedAt',
-            'pageSize': 50,
-            'apiKey': self.newsapi_key
+            "q": f'"{query}" stock OR shares',
+            "language": "en",
+            "sortBy": "publishedAt",
+            "pageSize": 50,
+            "apiKey": self.newsapi_key,
         }
 
         try:
@@ -262,25 +271,29 @@ class NewsFetcher:
             data = resp.json()
 
             articles = []
-            for item in data.get('articles', []):
+            for item in data.get("articles", []):
                 try:
                     # Parse time
-                    time_str = item.get('publishedAt', '')
+                    time_str = item.get("publishedAt", "")
                     if time_str:
-                        pub_time = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
+                        pub_time = datetime.fromisoformat(
+                            time_str.replace("Z", "+00:00")
+                        )
                         pub_time = pub_time.replace(tzinfo=None)
                     else:
                         pub_time = datetime.now()
 
-                    articles.append(NewsArticle(
-                        headline=item.get('title', ''),
-                        summary=item.get('description', ''),
-                        source=item.get('source', {}).get('name', 'Unknown'),
-                        url=item.get('url', ''),
-                        published=pub_time,
-                        symbols=[symbol],
-                        api_source='newsapi'
-                    ))
+                    articles.append(
+                        NewsArticle(
+                            headline=item.get("title", ""),
+                            summary=item.get("description", ""),
+                            source=item.get("source", {}).get("name", "Unknown"),
+                            url=item.get("url", ""),
+                            published=pub_time,
+                            symbols=[symbol],
+                            api_source="newsapi",
+                        )
+                    )
                 except Exception as e:
                     logger.debug(f"Error parsing NewsAPI article: {e}")
 

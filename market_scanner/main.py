@@ -4,6 +4,7 @@ import pandas as pd
 import config
 from strategies import long_term, strategic, risk, trading
 
+
 class MarketScanner:
     def __init__(self):
         self.currency = config.CURRENCY
@@ -13,14 +14,14 @@ class MarketScanner:
         """Returns the configured list of AI stocks."""
         stocks = config.AI_STOCKS
         if self.scan_limit:
-            return stocks[:self.scan_limit]
+            return stocks[: self.scan_limit]
         return stocks
 
     def get_ai_crypto_pairs(self):
         """Returns a list of AI-related crypto pairs."""
         pairs = [f"{token}/{self.currency}" for token in config.AI_CRYPTO_TOKENS]
         if self.scan_limit:
-            return pairs[:self.scan_limit]
+            return pairs[: self.scan_limit]
         return pairs
 
     def get_stock_data(self, symbol):
@@ -36,11 +37,14 @@ class MarketScanner:
         """Fetches historical data for a crypto pair."""
         try:
             exchange = ccxt.coinbase()
-            ohlcv = exchange.fetch_ohlcv(symbol, timeframe='1d', limit=300)
+            ohlcv = exchange.fetch_ohlcv(symbol, timeframe="1d", limit=300)
             if ohlcv:
-                df = pd.DataFrame(ohlcv, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
-                df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
-                df.set_index('Timestamp', inplace=True)
+                df = pd.DataFrame(
+                    ohlcv,
+                    columns=["Timestamp", "Open", "High", "Low", "Close", "Volume"],
+                )
+                df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms")
+                df.set_index("Timestamp", inplace=True)
                 return df
         except Exception:
             return None
@@ -52,11 +56,12 @@ class MarketScanner:
             return None
 
         return {
-            'Long-Term': (ticker, long_term.analyze(ticker, data)),
-            'Strategic': (ticker, strategic.analyze(ticker, data)),
-            'Risk': (ticker, risk.analyze(ticker, data)),
-            'Trading': (ticker, trading.analyze(ticker, data))
+            "Long-Term": (ticker, long_term.analyze(ticker, data)),
+            "Strategic": (ticker, strategic.analyze(ticker, data)),
+            "Risk": (ticker, risk.analyze(ticker, data)),
+            "Trading": (ticker, trading.analyze(ticker, data)),
         }
+
 
 def run_cli_scan():
     scanner = MarketScanner()
@@ -65,16 +70,11 @@ def run_cli_scan():
     stocks = scanner.get_ai_stocks()
     crypto = scanner.get_ai_crypto_pairs()
 
-    results = {
-        'Long-Term': [],
-        'Strategic': [],
-        'Risk': [],
-        'Trading': []
-    }
+    results = {"Long-Term": [], "Strategic": [], "Risk": [], "Trading": []}
 
     print(f"Scanning {len(stocks)} Stocks...")
     for i, ticker in enumerate(stocks):
-        print(f"  [{i+1}/{len(stocks)}] Fetching {ticker}...", end='\r')
+        print(f"  [{i+1}/{len(stocks)}] Fetching {ticker}...", end="\r")
         data = scanner.get_stock_data(ticker)
         analysis = scanner.analyze_asset(ticker, data)
         if analysis:
@@ -83,23 +83,23 @@ def run_cli_scan():
 
     print(f"\nScanning {len(crypto)} Crypto Pairs...")
     for i, ticker in enumerate(crypto):
-        print(f"  [{i+1}/{len(crypto)}] Fetching {ticker}...", end='\r')
+        print(f"  [{i+1}/{len(crypto)}] Fetching {ticker}...", end="\r")
         data = scanner.get_crypto_data(ticker)
         analysis = scanner.analyze_asset(ticker, data)
         if analysis:
             for category, result in analysis.items():
                 results[category].append(result)
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("MARKET SCANNER RESULTS - TOP 5 PICKS")
-    print("="*60)
+    print("=" * 60)
 
     # Process and Print Top 5 for each category
     categories = {
-        'Long-Term': "Strongest Trend (Price vs 200 SMA)",
-        'Strategic': "Best Momentum (1-Month Return)",
-        'Risk': "Safest Assets (Lowest Volatility)",
-        'Trading': "Best Dip Buy Opportunities (Lowest RSI)"
+        "Long-Term": "Strongest Trend (Price vs 200 SMA)",
+        "Strategic": "Best Momentum (1-Month Return)",
+        "Risk": "Safest Assets (Lowest Volatility)",
+        "Trading": "Best Dip Buy Opportunities (Lowest RSI)",
     }
 
     for cat, desc in categories.items():
@@ -113,6 +113,7 @@ def run_cli_scan():
         for i, (asset, score) in enumerate(sorted_picks[:5], 1):
             score_display = f"{score:.2f}" if score != -999 else "N/A"
             print(f"{i:<5} {asset:<10} {score_display}")
+
 
 if __name__ == "__main__":
     run_cli_scan()

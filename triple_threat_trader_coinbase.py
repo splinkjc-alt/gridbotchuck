@@ -30,13 +30,13 @@ from strategies.market_analyzer import CoinAnalysis, MarketAnalyzer
 
 # Logging setup
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 
 class StrategyType(Enum):
     """Trading strategy types."""
+
     MEAN_REVERSION = "mean_reversion"
     MOMENTUM = "momentum"
     BREAKOUT = "breakout"
@@ -45,6 +45,7 @@ class StrategyType(Enum):
 @dataclass
 class TripleThreatSignal:
     """Trading signal with strategy type."""
+
     pair: str
     strategy: StrategyType
     score: float
@@ -75,7 +76,7 @@ class TripleThreatTrader:
         self,
         capital: float = 3000.0,
         max_risk_per_trade: float = 0.02,  # 2%
-        max_concurrent: int = 7  # Increased to catch more opportunities
+        max_concurrent: int = 7,  # Increased to catch more opportunities
     ):
         """Initialize the Triple-Threat Trader."""
         self.capital = capital
@@ -95,29 +96,44 @@ class TripleThreatTrader:
 
         # Candidate pairs (high liquidity)
         self.pairs = [
-            "XRP/USD", "ADA/USD", "DOGE/USD", "DOT/USD",
-            "LINK/USD", "ATOM/USD", "UNI/USD", "AVAX/USD",
-            "FIL/USD", "NEAR/USD", "APT/USD", "ARB/USD",
-            "OP/USD", "SOL/USD"
+            "XRP/USD",
+            "ADA/USD",
+            "DOGE/USD",
+            "DOT/USD",
+            "LINK/USD",
+            "ATOM/USD",
+            "UNI/USD",
+            "AVAX/USD",
+            "FIL/USD",
+            "NEAR/USD",
+            "APT/USD",
+            "ARB/USD",
+            "OP/USD",
+            "SOL/USD",
         ]
 
         # Initialize services
-        self.config_manager = ConfigManager("config/config_coinbase.json", ConfigValidator())
+        self.config_manager = ConfigManager(
+            "config/config_coinbase.json", ConfigValidator()
+        )
         self.trading_mode = TradingMode.PAPER_TRADING
 
         self.exchange_service = ExchangeServiceFactory.create_exchange_service(
-            self.config_manager,
-            self.trading_mode
+            self.config_manager, self.trading_mode
         )
 
-        self.market_analyzer = MarketAnalyzer(self.exchange_service, self.config_manager)
+        self.market_analyzer = MarketAnalyzer(
+            self.exchange_service, self.config_manager
+        )
 
         logging.info("=" * 60)
         logging.info("TRIPLE-THREAT TRADER - COINBASE")
         logging.info("=" * 60)
         logging.info("Exchange: Coinbase Advanced")
         logging.info(f"Capital: ${self.capital:,.2f}")
-        logging.info(f"Max Risk/Trade: {self.max_risk_per_trade*100:.1f}% (${self.capital * self.max_risk_per_trade:.2f})")
+        logging.info(
+            f"Max Risk/Trade: {self.max_risk_per_trade*100:.1f}% (${self.capital * self.max_risk_per_trade:.2f})"
+        )
         logging.info(f"Max Concurrent: {self.max_concurrent} trades")
         logging.info(f"Scanning: {len(self.pairs)} pairs")
         logging.info("=" * 60)
@@ -153,7 +169,9 @@ class TripleThreatTrader:
 
         return position_size
 
-    def detect_mean_reversion(self, analysis: CoinAnalysis) -> TripleThreatSignal | None:
+    def detect_mean_reversion(
+        self, analysis: CoinAnalysis
+    ) -> TripleThreatSignal | None:
         """
         Detect mean reversion opportunity (oversold bounce).
 
@@ -206,7 +224,7 @@ class TripleThreatTrader:
             volume_ratio=analysis.volume_score / 100,
             risk_pct=3.0,
             reward_pct=4.0,
-            risk_reward_ratio=4.0/3.0
+            risk_reward_ratio=4.0 / 3.0,
         )
 
     def detect_momentum(self, analysis: CoinAnalysis) -> TripleThreatSignal | None:
@@ -265,10 +283,12 @@ class TripleThreatTrader:
             volume_ratio=analysis.volume_score / 100,
             risk_pct=3.0,
             reward_pct=8.0,
-            risk_reward_ratio=8.0/3.0
+            risk_reward_ratio=8.0 / 3.0,
         )
 
-    async def detect_breakout(self, analysis: CoinAnalysis) -> TripleThreatSignal | None:
+    async def detect_breakout(
+        self, analysis: CoinAnalysis
+    ) -> TripleThreatSignal | None:
         """
         Detect breakout/pump opportunity (steep climb).
 
@@ -282,9 +302,7 @@ class TripleThreatTrader:
         try:
             # Fetch 15min candles (last 10 = 2.5 hours)
             df = await self.exchange_service.fetch_ohlcv_simple(
-                pair=analysis.pair,
-                timeframe="15m",
-                limit=10
+                pair=analysis.pair, timeframe="15m", limit=10
             )
 
             if len(df) < 2:
@@ -363,7 +381,7 @@ class TripleThreatTrader:
                 volume_ratio=volume_ratio,
                 risk_pct=4.0,
                 reward_pct=15.0,
-                risk_reward_ratio=15.0/4.0
+                risk_reward_ratio=15.0 / 4.0,
             )
 
         except Exception as e:
@@ -387,7 +405,7 @@ class TripleThreatTrader:
                 timeframe="5m",
                 min_volume_threshold=100000,
                 min_price=0.01,
-                max_price=100.0
+                max_price=100.0,
             )
 
             # Check each analysis against all strategies
@@ -396,31 +414,43 @@ class TripleThreatTrader:
                 mr_signal = self.detect_mean_reversion(analysis)
                 if mr_signal:
                     signals.append(mr_signal)
-                    logging.info(f"🔵 MEAN REVERSION: {mr_signal.pair} | RSI: {mr_signal.rsi:.1f} | Score: {mr_signal.score:.1f}")
+                    logging.info(
+                        f"🔵 MEAN REVERSION: {mr_signal.pair} | RSI: {mr_signal.rsi:.1f} | Score: {mr_signal.score:.1f}"
+                    )
 
                 # 2. Check Momentum
                 mom_signal = self.detect_momentum(analysis)
                 if mom_signal:
                     signals.append(mom_signal)
-                    logging.info(f"🟢 MOMENTUM: {mom_signal.pair} | RSI: {mom_signal.rsi:.1f} | Score: {mom_signal.score:.1f}")
+                    logging.info(
+                        f"🟢 MOMENTUM: {mom_signal.pair} | RSI: {mom_signal.rsi:.1f} | Score: {mom_signal.score:.1f}"
+                    )
 
                 # 3. Check Breakout
                 bo_signal = await self.detect_breakout(analysis)
                 if bo_signal:
                     signals.append(bo_signal)
-                    logging.info(f"🔴 BREAKOUT: {bo_signal.pair} | +{bo_signal.price_change_15m:.1f}% | Vol: {bo_signal.volume_ratio:.1f}x | Score: {bo_signal.score:.1f}")
+                    logging.info(
+                        f"🔴 BREAKOUT: {bo_signal.pair} | +{bo_signal.price_change_15m:.1f}% | Vol: {bo_signal.volume_ratio:.1f}x | Score: {bo_signal.score:.1f}"
+                    )
 
         except Exception as e:
             logging.error(f"Error scanning: {e}", exc_info=True)
 
         logging.info(f"Scan complete. Found {len(signals)} total opportunities")
-        logging.info(f"  - Mean Reversion: {sum(1 for s in signals if s.strategy == StrategyType.MEAN_REVERSION)}")
-        logging.info(f"  - Momentum: {sum(1 for s in signals if s.strategy == StrategyType.MOMENTUM)}")
-        logging.info(f"  - Breakout: {sum(1 for s in signals if s.strategy == StrategyType.BREAKOUT)}")
+        logging.info(
+            f"  - Mean Reversion: {sum(1 for s in signals if s.strategy == StrategyType.MEAN_REVERSION)}"
+        )
+        logging.info(
+            f"  - Momentum: {sum(1 for s in signals if s.strategy == StrategyType.MOMENTUM)}"
+        )
+        logging.info(
+            f"  - Breakout: {sum(1 for s in signals if s.strategy == StrategyType.BREAKOUT)}"
+        )
         logging.info("=" * 60)
 
         # Auto-accept top signals if under max concurrent
-        signals_to_take = signals[:self.max_concurrent - len(self.open_trades)]
+        signals_to_take = signals[: self.max_concurrent - len(self.open_trades)]
 
         for signal in signals_to_take:
             await self.open_paper_trade(signal)
@@ -434,8 +464,7 @@ class TripleThreatTrader:
 
         # Calculate position size
         position_size = self.calculate_position_size(
-            signal.strategy,
-            signal.risk_pct / 100
+            signal.strategy, signal.risk_pct / 100
         )
 
         shares = position_size / signal.entry
@@ -453,7 +482,7 @@ class TripleThreatTrader:
             "position_size": position_size,
             "opened_at": datetime.now(),
             "risk_dollars": risk_dollars,
-            "reward_dollars": reward_dollars
+            "reward_dollars": reward_dollars,
         }
 
         self.open_trades[trade_id] = trade
@@ -464,7 +493,7 @@ class TripleThreatTrader:
         strategy_icon = {
             StrategyType.MEAN_REVERSION: "🔵",
             StrategyType.MOMENTUM: "🟢",
-            StrategyType.BREAKOUT: "🔴"
+            StrategyType.BREAKOUT: "🔴",
         }[signal.strategy]
 
         logging.info("")
@@ -475,7 +504,9 @@ class TripleThreatTrader:
         logging.info(f"  Stop: ${signal.stop:.6f} ({-signal.risk_pct:.1f}%)")
         logging.info(f"  Target: ${signal.target:.6f} (+{signal.reward_pct:.1f}%)")
         logging.info(f"  Size: {shares:.2f} units = ${position_size:.2f}")
-        logging.info(f"  Risk: ${risk_dollars:.2f} | Reward: ${reward_dollars:.2f} (1:{signal.risk_reward_ratio:.1f})")
+        logging.info(
+            f"  Risk: ${risk_dollars:.2f} | Reward: ${reward_dollars:.2f} (1:{signal.risk_reward_ratio:.1f})"
+        )
         logging.info(f"  Capital remaining: ${self.capital:.2f}")
         logging.info("")
 
@@ -487,7 +518,9 @@ class TripleThreatTrader:
         for trade_id, trade in list(self.open_trades.items()):
             try:
                 # Get current price
-                current_price = await self.exchange_service.get_current_price(trade["pair"])
+                current_price = await self.exchange_service.get_current_price(
+                    trade["pair"]
+                )
 
                 ((current_price - trade["entry"]) / trade["entry"]) * 100
                 (current_price - trade["entry"]) * trade["shares"]
@@ -588,12 +621,13 @@ class TripleThreatTrader:
 async def main():
     """Entry point."""
     from dotenv import load_dotenv
+
     load_dotenv()  # Load API keys from .env file
 
     trader = TripleThreatTrader(
         capital=3000.0,
         max_risk_per_trade=0.02,  # 2%
-        max_concurrent=7  # Increased to catch more opportunities
+        max_concurrent=7,  # Increased to catch more opportunities
     )
 
     await trader.run()

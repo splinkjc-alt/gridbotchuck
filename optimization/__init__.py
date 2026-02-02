@@ -14,5 +14,5 @@ __all__ = [
     "TIMEFRAMES",
     "AssetOptimizer",
     "optimize_all",
-    "optimize_asset"
+    "optimize_asset",
 ]

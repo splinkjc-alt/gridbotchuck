@@ -78,7 +78,11 @@ class ExchangeRateLimiter:
 
     # Default limits for common exchanges (conservative)
     EXCHANGE_LIMITS = {
-        "kraken": {"public": (1, 1), "private": (15, 3), "orders": (10, 1)},  # (max_calls, window_seconds)
+        "kraken": {
+            "public": (1, 1),
+            "private": (15, 3),
+            "orders": (10, 1),
+        },  # (max_calls, window_seconds)
         "binance": {"public": (20, 1), "private": (10, 1), "orders": (10, 1)},
         "bybit": {"public": (50, 1), "private": (50, 1), "orders": (50, 1)},
         "coinbase": {"public": (10, 1), "private": (15, 1), "orders": (10, 1)},
@@ -95,7 +99,9 @@ class ExchangeRateLimiter:
         self.logger = logging.getLogger(self.__class__.__name__)
 
         # Get limits for this exchange
-        limits = self.EXCHANGE_LIMITS.get(self.exchange_name, {"public": (10, 1), "private": (5, 1), "orders": (5, 1)})
+        limits = self.EXCHANGE_LIMITS.get(
+            self.exchange_name, {"public": (10, 1), "private": (5, 1), "orders": (5, 1)}
+        )
 
         # Create rate limiters for each endpoint type
         self.limiters = {
@@ -122,6 +128,5 @@ class ExchangeRateLimiter:
     def get_stats(self) -> dict[str, dict]:
         """Get statistics for all rate limiters."""
         return {
-            endpoint: limiter.get_stats()
-            for endpoint, limiter in self.limiters.items()
+            endpoint: limiter.get_stats() for endpoint, limiter in self.limiters.items()
         }

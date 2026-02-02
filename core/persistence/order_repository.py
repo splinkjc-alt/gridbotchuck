@@ -108,7 +108,12 @@ class OrderRepository:
 
         self.logger.info(f"Order repository initialized at {self.db_path}")
 
-    async def save_order(self, order: Order, grid_level: float | None = None, metadata: dict | None = None):
+    async def save_order(
+        self,
+        order: Order,
+        grid_level: float | None = None,
+        metadata: dict | None = None,
+    ):
         """
         Save or update an order in the database.
 
@@ -138,7 +143,9 @@ class OrderRepository:
                         order.average,
                         order.fee,
                         grid_level,
-                        order.created_at.isoformat() if order.created_at else datetime.now().isoformat(),
+                        order.created_at.isoformat()
+                        if order.created_at
+                        else datetime.now().isoformat(),
                         datetime.now().isoformat(),
                         order.filled_at.isoformat() if order.filled_at else None,
                         json.dumps(metadata) if metadata else None,
@@ -204,7 +211,9 @@ class OrderRepository:
         try:
             async with aiosqlite.connect(self.db_path) as db:
                 db.row_factory = aiosqlite.Row
-                async with db.execute("SELECT * FROM orders WHERE id = ?", (order_id,)) as cursor:
+                async with db.execute(
+                    "SELECT * FROM orders WHERE id = ?", (order_id,)
+                ) as cursor:
                     row = await cursor.fetchone()
 
                     if row:
@@ -388,7 +397,9 @@ class OrderRepository:
                     "total_trades": total_trades,
                     "total_fees": total_fees,
                     "total_profit": total_profit,
-                    "fill_rate": (filled_orders / total_orders * 100) if total_orders > 0 else 0,
+                    "fill_rate": (filled_orders / total_orders * 100)
+                    if total_orders > 0
+                    else 0,
                 }
 
         except Exception as e:
@@ -418,7 +429,9 @@ class OrderRepository:
                 deleted = db.total_changes
                 await db.commit()
 
-            self.logger.info(f"Cleaned up {deleted} old orders (older than {days} days)")
+            self.logger.info(
+                f"Cleaned up {deleted} old orders (older than {days} days)"
+            )
 
         except Exception as e:
             self.logger.error(f"Error cleaning up old orders: {e}")

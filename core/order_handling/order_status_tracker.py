@@ -57,19 +57,26 @@ class OrderStatusTracker:
         Processes open orders by querying their statuses and handling state changes.
         """
         open_orders = self.order_book.get_open_orders()
-        tasks = [self._create_task(self._query_and_handle_order(order)) for order in open_orders]
+        tasks = [
+            self._create_task(self._query_and_handle_order(order))
+            for order in open_orders
+        ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         for result in results:
             if isinstance(result, Exception):
-                self.logger.error(f"Error during order processing: {result}", exc_info=True)
+                self.logger.error(
+                    f"Error during order processing: {result}", exc_info=True
+                )
 
     async def _query_and_handle_order(self, local_order: Order):
         """
         Query order and handling state changes if needed.
         """
         try:
-            remote_order = await self.order_execution_strategy.get_order(local_order.identifier, local_order.symbol)
+            remote_order = await self.order_execution_strategy.get_order(
+                local_order.identifier, local_order.symbol
+            )
             self._handle_order_status_change(remote_order)
 
         except Exception as error:
@@ -93,14 +100,23 @@ class OrderStatusTracker:
         """
         try:
             if remote_order.status == OrderStatus.UNKNOWN:
-                self.logger.error(f"Missing 'status' in remote order object: {remote_order}", exc_info=True)
-                raise ValueError("Order data from the exchange is missing the 'status' field.")
+                self.logger.error(
+                    f"Missing 'status' in remote order object: {remote_order}",
+                    exc_info=True,
+                )
+                raise ValueError(
+                    "Order data from the exchange is missing the 'status' field."
+                )
             elif remote_order.status == OrderStatus.CLOSED:
-                self.order_book.update_order_status(remote_order.identifier, OrderStatus.CLOSED)
+                self.order_book.update_order_status(
+                    remote_order.identifier, OrderStatus.CLOSED
+                )
                 self.event_bus.publish_sync(Events.ORDER_FILLED, remote_order)
                 self.logger.info(f"Order {remote_order.identifier} filled.")
             elif remote_order.status == OrderStatus.CANCELED:
-                self.order_book.update_order_status(remote_order.identifier, OrderStatus.CANCELED)
+                self.order_book.update_order_status(
+                    remote_order.identifier, OrderStatus.CANCELED
+                )
                 self.event_bus.publish_sync(Events.ORDER_CANCELLED, remote_order)
                 self.logger.warning(f"Order {remote_order.identifier} was canceled.")
             elif remote_order.status == OrderStatus.OPEN:  # Still open
@@ -110,7 +126,9 @@ class OrderStatusTracker:
                         f"Remaining: {remote_order.remaining}.",
                     )
                 else:
-                    self.logger.info(f"Order {remote_order} is still open. No fills yet.")
+                    self.logger.info(
+                        f"Order {remote_order} is still open. No fills yet."
+                    )
             else:
                 self.logger.warning(
                     f"Unhandled order status '{remote_order.status}' for order {remote_order.identifier}.",

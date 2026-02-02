@@ -10,14 +10,19 @@ from utils.arg_parser import parse_and_validate_console_args
     ("args", "expected_config"),
     [
         (["--config", "config1.json"], ["config1.json"]),
-        (["--config", "config1.json", "config2.json"], ["config1.json", "config2.json"]),
+        (
+            ["--config", "config1.json", "config2.json"],
+            ["config1.json", "config2.json"],
+        ),
     ],
 )
 @patch("os.path.exists", return_value=True)  # Mock os.path.exists to always return True
 def test_parse_and_validate_console_args_required(mock_exists, args, expected_config):
     with patch.object(sys, "argv", ["program_name", *args]):
         result = parse_and_validate_console_args()
-        assert result.config == expected_config, f"Expected {expected_config}, got {result.config}"
+        assert (
+            result.config == expected_config
+        ), f"Expected {expected_config}, got {result.config}"
 
 
 @patch("os.path.exists", return_value=True)
@@ -25,7 +30,13 @@ def test_parse_and_validate_console_args_save_performance_results_exists(mock_ex
     with patch.object(
         sys,
         "argv",
-        ["program_name", "--config", "config.json", "--save_performance_results", "results.json"],
+        [
+            "program_name",
+            "--config",
+            "config.json",
+            "--save_performance_results",
+            "results.json",
+        ],
     ):
         result = parse_and_validate_console_args()
         assert result.save_performance_results == "results.json"
@@ -37,7 +48,13 @@ def test_parse_and_validate_console_args_save_performance_results_dir_does_not_e
         patch.object(
             sys,
             "argv",
-            ["program_name", "--config", "config.json", "--save_performance_results", "non_existent_dir/results.json"],
+            [
+                "program_name",
+                "--config",
+                "config.json",
+                "--save_performance_results",
+                "non_existent_dir/results.json",
+            ],
         ),
         patch("utils.arg_parser.logging.error") as mock_log,
     ):
@@ -50,26 +67,36 @@ def test_parse_and_validate_console_args_save_performance_results_dir_does_not_e
 
 @patch("os.path.exists", return_value=True)
 def test_parse_and_validate_console_args_no_plot(mock_exists):
-    with patch.object(sys, "argv", ["program_name", "--config", "config.json", "--no-plot"]):
+    with patch.object(
+        sys, "argv", ["program_name", "--config", "config.json", "--no-plot"]
+    ):
         result = parse_and_validate_console_args()
 
-        assert hasattr(result, "no_plot"), "The `no_plot` attribute is missing from the parsed result."
+        assert hasattr(
+            result, "no_plot"
+        ), "The `no_plot` attribute is missing from the parsed result."
         assert result.no_plot is True, "The `no_plot` flag was not set to True."
 
 
 @patch("os.path.exists", return_value=True)
 def test_parse_and_validate_console_args_profile(mock_exists):
-    with patch.object(sys, "argv", ["program_name", "--config", "config.json", "--profile"]):
+    with patch.object(
+        sys, "argv", ["program_name", "--config", "config.json", "--profile"]
+    ):
         result = parse_and_validate_console_args()
 
-        assert hasattr(result, "profile"), "The `profile` attribute is missing from the parsed result."
+        assert hasattr(
+            result, "profile"
+        ), "The `profile` attribute is missing from the parsed result."
         assert result.profile is True, "The `profile` flag was not set to True."
 
 
 @patch("utils.arg_parser.logging.error")
 def test_parse_and_validate_console_args_argument_error(mock_log):
     with patch.object(sys, "argv", ["program_name", "--config"]):
-        with pytest.raises(RuntimeError, match=r"Failed to parse arguments. Please check your inputs."):
+        with pytest.raises(
+            RuntimeError, match=r"Failed to parse arguments. Please check your inputs."
+        ):
             parse_and_validate_console_args()
         mock_log.assert_called_once_with("Argument parsing failed: 2")
 
@@ -80,10 +107,20 @@ def test_parse_and_validate_console_args_unexpected_error(mock_log):
         patch.object(
             sys,
             "argv",
-            ["program_name", "--config", "config.json", "--save_performance_results", "results.json"],
+            [
+                "program_name",
+                "--config",
+                "config.json",
+                "--save_performance_results",
+                "results.json",
+            ],
         ),
         patch("os.path.exists", side_effect=Exception("Unexpected error")),
     ):
-        with pytest.raises(RuntimeError, match=r"An unexpected error occurred during argument parsing."):
+        with pytest.raises(
+            RuntimeError, match=r"An unexpected error occurred during argument parsing."
+        ):
             parse_and_validate_console_args()
-        mock_log.assert_any_call("An unexpected error occurred while parsing arguments: Unexpected error")
+        mock_log.assert_any_call(
+            "An unexpected error occurred while parsing arguments: Unexpected error"
+        )

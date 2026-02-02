@@ -20,7 +20,10 @@ class TestConfigManager:
     def config_manager(self, mock_validator, valid_config):
         # Mocking both open and os.path.exists to simulate a valid config file
         mocked_open = mock_open(read_data=json.dumps(valid_config))
-        with patch("builtins.open", mocked_open), patch("os.path.exists", return_value=True):
+        with (
+            patch("builtins.open", mocked_open),
+            patch("os.path.exists", return_value=True),
+        ):
             return ConfigManager("config.json", mock_validator)
 
     def test_load_config_valid(self, config_manager, valid_config, mock_validator):
@@ -28,7 +31,10 @@ class TestConfigManager:
         assert config_manager.config == valid_config
 
     def test_load_config_file_not_found(self, mock_validator):
-        with patch("os.path.exists", return_value=False), pytest.raises(ConfigFileNotFoundError):
+        with (
+            patch("os.path.exists", return_value=False),
+            pytest.raises(ConfigFileNotFoundError),
+        ):
             ConfigManager("config.json", mock_validator)
 
     def test_load_config_json_decode_error(self, mock_validator):

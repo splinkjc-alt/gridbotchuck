@@ -44,15 +44,27 @@ class GridManager:
         - Buy grid levels are initialized with `READY_TO_BUY`, except for the topmost grid.
         - Sell grid levels are initialized with `READY_TO_SELL`.
         """
-        self.price_grids, self.central_price = self._calculate_price_grids_and_central_price()
+        self.price_grids, self.central_price = (
+            self._calculate_price_grids_and_central_price()
+        )
 
         if self.strategy_type == StrategyType.SIMPLE_GRID:
-            self.sorted_buy_grids = [price_grid for price_grid in self.price_grids if price_grid <= self.central_price]
-            self.sorted_sell_grids = [price_grid for price_grid in self.price_grids if price_grid > self.central_price]
+            self.sorted_buy_grids = [
+                price_grid
+                for price_grid in self.price_grids
+                if price_grid <= self.central_price
+            ]
+            self.sorted_sell_grids = [
+                price_grid
+                for price_grid in self.price_grids
+                if price_grid > self.central_price
+            ]
             self.grid_levels = {
                 price: GridLevel(
                     price,
-                    GridCycleState.READY_TO_BUY if price <= self.central_price else GridCycleState.READY_TO_SELL,
+                    GridCycleState.READY_TO_BUY
+                    if price <= self.central_price
+                    else GridCycleState.READY_TO_SELL,
                 )
                 for price in self.price_grids
             }
@@ -69,7 +81,9 @@ class GridManager:
                 )
                 for price in self.price_grids
             }
-        self.logger.info(f"Grids and levels initialized. Central price: {self.central_price}")
+        self.logger.info(
+            f"Grids and levels initialized. Central price: {self.central_price}"
+        )
         self.logger.info(f"Price grids: {self.price_grids}")
         self.logger.info(f"Buy grids: {self.sorted_buy_grids}")
         self.logger.info(f"Sell grids: {self.sorted_sell_grids}")
@@ -100,14 +114,18 @@ class GridManager:
         """
         # Get buy percent from config or use grid-based calculation
         if buy_percent is None:
-            position_sizing = self.config_manager.config.get("risk_management", {}).get("position_sizing", {})
+            position_sizing = self.config_manager.config.get("risk_management", {}).get(
+                "position_sizing", {}
+            )
             buy_percent = position_sizing.get("buy_percent_of_total", None)
 
         if buy_percent is not None:
             # Use configured percentage of total portfolio
             buy_value = total_balance * (buy_percent / 100.0)
             order_size = buy_value / current_price
-            self.logger.debug(f"Order size: {order_size:.6f} ({buy_percent}% of ${total_balance:.2f})")
+            self.logger.debug(
+                f"Order size: {order_size:.6f} ({buy_percent}% of ${total_balance:.2f})"
+            )
         else:
             # Fall back to grid-based sizing
             total_grids = len(self.grid_levels)
@@ -134,9 +152,15 @@ class GridManager:
         """
         current_crypto_value_in_fiat = current_crypto_balance * current_price
         total_portfolio_value = current_fiat_balance + current_crypto_value_in_fiat
-        target_crypto_allocation_in_fiat = total_portfolio_value / 2  # Allocate 50% of balance for initial buy
-        fiat_to_allocate_for_purchase = target_crypto_allocation_in_fiat - current_crypto_value_in_fiat
-        fiat_to_allocate_for_purchase = max(0, min(fiat_to_allocate_for_purchase, current_fiat_balance))
+        target_crypto_allocation_in_fiat = (
+            total_portfolio_value / 2
+        )  # Allocate 50% of balance for initial buy
+        fiat_to_allocate_for_purchase = (
+            target_crypto_allocation_in_fiat - current_crypto_value_in_fiat
+        )
+        fiat_to_allocate_for_purchase = max(
+            0, min(fiat_to_allocate_for_purchase, current_fiat_balance)
+        )
         return fiat_to_allocate_for_purchase / current_price
 
     def pair_grid_levels(
@@ -168,7 +192,9 @@ class GridManager:
             )
 
         else:
-            raise ValueError(f"Invalid pairing type: {pairing_type}. Must be 'buy' or 'sell'.")
+            raise ValueError(
+                f"Invalid pairing type: {pairing_type}. Must be 'buy' or 'sell'."
+            )
 
     def get_paired_sell_level(
         self,
@@ -184,12 +210,16 @@ class GridManager:
             The paired sell grid level, or None if no valid level exists.
         """
         if self.strategy_type == StrategyType.SIMPLE_GRID:
-            self.logger.info(f"Looking for paired sell level for buy level at {buy_grid_level}")
+            self.logger.info(
+                f"Looking for paired sell level for buy level at {buy_grid_level}"
+            )
             self.logger.info(f"Available sell grids: {self.sorted_sell_grids}")
 
             for sell_price in self.sorted_sell_grids:
                 sell_level = self.grid_levels[sell_price]
-                self.logger.info(f"Checking sell level {sell_price}, state: {sell_level.state}")
+                self.logger.info(
+                    f"Checking sell level {sell_price}, state: {sell_level.state}"
+                )
 
                 if sell_level and not self.can_place_order(sell_level, OrderSide.SELL):
                     self.logger.info(
@@ -198,7 +228,9 @@ class GridManager:
                     continue
 
                 if sell_price > buy_grid_level.price:
-                    self.logger.info(f"Paired sell level found at {sell_price} for buy level {buy_grid_level}.")
+                    self.logger.info(
+                        f"Paired sell level found at {sell_price} for buy level {buy_grid_level}."
+                    )
                     return sell_level
 
             self.logger.warning(f"No suitable sell level found above {buy_grid_level}")
@@ -208,7 +240,9 @@ class GridManager:
             self.logger.info(f"Available price grids: {self.price_grids}")
             sorted_prices = sorted(self.price_grids)
             current_index = sorted_prices.index(buy_grid_level.price)
-            self.logger.info(f"Current index of buy level {buy_grid_level.price}: {current_index}")
+            self.logger.info(
+                f"Current index of buy level {buy_grid_level.price}: {current_index}"
+            )
 
             if current_index + 1 < len(sorted_prices):
                 paired_sell_price = sorted_prices[current_index + 1]
@@ -219,7 +253,9 @@ class GridManager:
                 )
                 return sell_level
 
-            self.logger.warning(f"No suitable sell level found for buy grid level {buy_grid_level}")
+            self.logger.warning(
+                f"No suitable sell level found for buy grid level {buy_grid_level}"
+            )
             return None
 
         else:
@@ -261,10 +297,14 @@ class GridManager:
 
         if order.side == OrderSide.BUY:
             grid_level.state = GridCycleState.WAITING_FOR_BUY_FILL
-            self.logger.info(f"Buy order placed and marked as pending at grid level {grid_level.price}.")
+            self.logger.info(
+                f"Buy order placed and marked as pending at grid level {grid_level.price}."
+            )
         elif order.side == OrderSide.SELL:
             grid_level.state = GridCycleState.WAITING_FOR_SELL_FILL
-            self.logger.info(f"Sell order placed and marked as pending at grid level {grid_level.price}.")
+            self.logger.info(
+                f"Sell order placed and marked as pending at grid level {grid_level.price}."
+            )
 
     def complete_order(
         self,
@@ -343,9 +383,15 @@ class GridManager:
 
         elif self.strategy_type == StrategyType.HEDGED_GRID:
             if order_side == OrderSide.BUY:
-                return grid_level.state in {GridCycleState.READY_TO_BUY, GridCycleState.READY_TO_BUY_OR_SELL}
+                return grid_level.state in {
+                    GridCycleState.READY_TO_BUY,
+                    GridCycleState.READY_TO_BUY_OR_SELL,
+                }
             elif order_side == OrderSide.SELL:
-                return grid_level.state in {GridCycleState.READY_TO_SELL, GridCycleState.READY_TO_BUY_OR_SELL}
+                return grid_level.state in {
+                    GridCycleState.READY_TO_SELL,
+                    GridCycleState.READY_TO_BUY_OR_SELL,
+                }
 
         else:
             return False
@@ -461,7 +507,9 @@ class GridManager:
 
         total_spacing = 0.0
         for i in range(1, len(self.price_grids)):
-            spacing = (self.price_grids[i] - self.price_grids[i-1]) / self.price_grids[i-1]
+            spacing = (
+                self.price_grids[i] - self.price_grids[i - 1]
+            ) / self.price_grids[i - 1]
             total_spacing += spacing
 
         return (total_spacing / (len(self.price_grids) - 1)) * 100
@@ -475,12 +523,22 @@ class GridManager:
         """
         return {
             "num_grids": len(self.price_grids) if hasattr(self, "price_grids") else 0,
-            "grid_bottom": min(self.price_grids) if hasattr(self, "price_grids") and self.price_grids else 0,
-            "grid_top": max(self.price_grids) if hasattr(self, "price_grids") and self.price_grids else 0,
-            "central_price": self.central_price if hasattr(self, "central_price") else 0,
+            "grid_bottom": min(self.price_grids)
+            if hasattr(self, "price_grids") and self.price_grids
+            else 0,
+            "grid_top": max(self.price_grids)
+            if hasattr(self, "price_grids") and self.price_grids
+            else 0,
+            "central_price": self.central_price
+            if hasattr(self, "central_price")
+            else 0,
             "spacing_multiplier": self._spacing_multiplier,
             "avg_spacing_percent": self.get_grid_spacing_percent(),
             "strategy_type": self.strategy_type.value if self.strategy_type else None,
-            "buy_grids_count": len(self.sorted_buy_grids) if hasattr(self, "sorted_buy_grids") else 0,
-            "sell_grids_count": len(self.sorted_sell_grids) if hasattr(self, "sorted_sell_grids") else 0,
+            "buy_grids_count": len(self.sorted_buy_grids)
+            if hasattr(self, "sorted_buy_grids")
+            else 0,
+            "sell_grids_count": len(self.sorted_sell_grids)
+            if hasattr(self, "sorted_sell_grids")
+            else 0,
         }

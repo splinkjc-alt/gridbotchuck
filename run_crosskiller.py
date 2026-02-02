@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from dotenv import load_dotenv  # noqa: E402
+
 load_dotenv()
 
 from config.config_manager import ConfigManager  # noqa: E402
@@ -31,7 +32,7 @@ async def main():
         handlers=[
             logging.StreamHandler(),
             logging.FileHandler("logs/crosskiller_error.log"),
-        ]
+        ],
     )
     logger = logging.getLogger("EMABot")
 
@@ -54,9 +55,9 @@ async def main():
     logger.info(f"Max Positions: {max_positions}")
 
     # Safety parameters
-    stop_loss = 7.0      # Exit if down 7%
-    take_profit = 5.0    # Exit if up 5%
-    max_hold = 6.0       # Exit after 6 hours max
+    stop_loss = 7.0  # Exit if down 7%
+    take_profit = 5.0  # Exit if up 5%
+    max_hold = 6.0  # Exit after 6 hours max
 
     logger.info("=" * 60)
     logger.info("SAFETY FEATURES ENABLED:")

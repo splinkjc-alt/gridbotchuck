@@ -51,7 +51,9 @@ def test_save_or_append_performance_results_invalid_json(new_results_fixture):
 
         mocked_file.assert_any_call("results.json")
         mocked_file.assert_any_call("results.json", "w")
-        mock_logger_warning.assert_called_once_with("Could not decode JSON from results.json. Overwriting the file.")
+        mock_logger_warning.assert_called_once_with(
+            "Could not decode JSON from results.json. Overwriting the file."
+        )
 
 
 def test_save_or_append_performance_results_os_error(new_results_fixture):
@@ -61,7 +63,9 @@ def test_save_or_append_performance_results_os_error(new_results_fixture):
     ):
         save_or_append_performance_results(new_results_fixture, "results.json")
 
-        mock_logger_error.assert_called_once_with("Failed to save performance metrics to results.json: Test OS Error")
+        mock_logger_error.assert_called_once_with(
+            "Failed to save performance metrics to results.json: Test OS Error"
+        )
 
 
 def test_save_or_append_performance_results_unexpected_exception(new_results_fixture):

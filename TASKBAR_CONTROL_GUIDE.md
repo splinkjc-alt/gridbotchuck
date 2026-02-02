@@ -10,7 +10,7 @@ You now have a **system tray application** that puts an icon in your Windows tas
 
 ### System Tray Icon
 - ✅ **Green circle (✓)** = Bot is running
-- ✅ **Red circle (✗)** = Bot is stopped  
+- ✅ **Red circle (✗)** = Bot is stopped
 - ✅ **Orange circle (⏸)** = Bot is paused
 
 ### Right-Click Menu
@@ -278,7 +278,7 @@ Closes the taskbar control application:
 
 ## Security Notes
 
-⚠️ This application controls your bot via local API calls. 
+⚠️ This application controls your bot via local API calls.
 
 **Security features:**
 - ✅ Local network only (no internet exposure)

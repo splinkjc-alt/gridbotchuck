@@ -85,36 +85,34 @@ def post_signals():
     fields = []
 
     if buy_signals:
-        buy_text = "\n".join([
-            f"**{s['symbol']}** @ ${s['price']:.4f} (RSI: {s['rsi']:.1f})"
-            for s in buy_signals[:5]
-        ])
-        fields.append({
-            "name": "🟢 BUY Signals",
-            "value": buy_text or "None",
-            "inline": True
-        })
+        buy_text = "\n".join(
+            [
+                f"**{s['symbol']}** @ ${s['price']:.4f} (RSI: {s['rsi']:.1f})"
+                for s in buy_signals[:5]
+            ]
+        )
+        fields.append(
+            {"name": "🟢 BUY Signals", "value": buy_text or "None", "inline": True}
+        )
 
     if sell_signals:
-        sell_text = "\n".join([
-            f"**{s['symbol']}** @ ${s['price']:.4f} (RSI: {s['rsi']:.1f})"
-            for s in sell_signals[:5]
-        ])
-        fields.append({
-            "name": "🔴 SELL Signals",
-            "value": sell_text or "None",
-            "inline": True
-        })
+        sell_text = "\n".join(
+            [
+                f"**{s['symbol']}** @ ${s['price']:.4f} (RSI: {s['rsi']:.1f})"
+                for s in sell_signals[:5]
+            ]
+        )
+        fields.append(
+            {"name": "🔴 SELL Signals", "value": sell_text or "None", "inline": True}
+        )
 
     embed = {
         "title": "📊 GridBot Chuck - Live Signals",
         "description": "Scanning 15 crypto + 5 stocks with per-asset optimized settings",
-        "color": 0x00ff00 if buy_signals else 0xff0000,
+        "color": 0x00FF00 if buy_signals else 0xFF0000,
         "fields": fields,
-        "footer": {
-            "text": "github.com/splinkjc-alt/gridbotchuck"
-        },
-        "timestamp": datetime.now(tz=UTC).isoformat()
+        "footer": {"text": "github.com/splinkjc-alt/gridbotchuck"},
+        "timestamp": datetime.now(tz=UTC).isoformat(),
     }
 
     post_to_discord(embed=embed)
@@ -143,12 +141,10 @@ def post_promo():
             {
                 "name": "🔗 GitHub",
                 "value": "[splinkjc-alt/gridbotchuck](https://github.com/splinkjc-alt/gridbotchuck)",
-                "inline": True
+                "inline": True,
             }
         ],
-        "footer": {
-            "text": "⚠️ Not financial advice. Paper trading. DYOR."
-        }
+        "footer": {"text": "⚠️ Not financial advice. Paper trading. DYOR."},
     }
 
     post_to_discord(embed=embed)
@@ -163,9 +159,15 @@ def post_stats():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
 
-    total = conn.execute("SELECT COUNT(*) as cnt FROM signals WHERE signal IN ('BUY', 'SELL')").fetchone()["cnt"]
-    validated = conn.execute("SELECT COUNT(*) as cnt FROM signals WHERE outcome_checked = 1").fetchone()["cnt"]
-    correct = conn.execute("SELECT COUNT(*) as cnt FROM signals WHERE outcome = 'CORRECT'").fetchone()["cnt"]
+    total = conn.execute(
+        "SELECT COUNT(*) as cnt FROM signals WHERE signal IN ('BUY', 'SELL')"
+    ).fetchone()["cnt"]
+    validated = conn.execute(
+        "SELECT COUNT(*) as cnt FROM signals WHERE outcome_checked = 1"
+    ).fetchone()["cnt"]
+    correct = conn.execute(
+        "SELECT COUNT(*) as cnt FROM signals WHERE outcome = 'CORRECT'"
+    ).fetchone()["cnt"]
 
     conn.close()
 
@@ -173,7 +175,11 @@ def post_stats():
 
     embed = {
         "title": "📈 GridBot Chuck - Signal Accuracy",
-        "color": 0x00ff00 if accuracy >= 60 else 0xffaa00 if accuracy >= 50 else 0xff0000,
+        "color": 0x00FF00
+        if accuracy >= 60
+        else 0xFFAA00
+        if accuracy >= 50
+        else 0xFF0000,
         "fields": [
             {"name": "Total Signals", "value": str(total), "inline": True},
             {"name": "Validated", "value": str(validated), "inline": True},
@@ -182,10 +188,8 @@ def post_stats():
             {"name": "Wrong", "value": str(validated - correct), "inline": True},
             {"name": "Pending", "value": str(total - validated), "inline": True},
         ],
-        "footer": {
-            "text": "github.com/splinkjc-alt/gridbotchuck"
-        },
-        "timestamp": datetime.now(tz=UTC).isoformat()
+        "footer": {"text": "github.com/splinkjc-alt/gridbotchuck"},
+        "timestamp": datetime.now(tz=UTC).isoformat(),
     }
 
     post_to_discord(embed=embed)
@@ -201,7 +205,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.test:
-        post_to_discord(content="🤖 GridBot Chuck webhook test - connection successful!")
+        post_to_discord(
+            content="🤖 GridBot Chuck webhook test - connection successful!"
+        )
     elif args.signal:
         post_signals()
     elif args.promo:
