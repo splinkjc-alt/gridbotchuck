@@ -10,10 +10,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # noqa: E402
 load_dotenv()
 
-import ccxt
+import ccxt  # noqa: E402
 
 
 def reset_coinbase_to_usd():
@@ -59,7 +59,7 @@ def reset_coinbase_to_usd():
                             'price': ticker['last'],
                             'value_usd': value_usd
                         })
-                except Exception as e:
+                except Exception:
                     if amount > 0.0001:
                         print(f"  {currency}: {amount:.6f} (no USD pair)")
 

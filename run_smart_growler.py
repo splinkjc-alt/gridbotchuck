@@ -20,8 +20,8 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).parent))
 load_dotenv()
 
-from market_scanner.pair_backtester import PairBacktester
-from shared_pair_tracker import get_tracker
+from market_scanner.pair_backtester import PairBacktester  # noqa: E402
+from shared_pair_tracker import get_tracker  # noqa: E402
 
 
 def send_telegram(message: str):

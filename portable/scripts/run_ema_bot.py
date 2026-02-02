@@ -21,9 +21,9 @@ portable_root = script_dir.parent
 # Add script directory to path
 sys.path.insert(0, str(script_dir))
 
-import ccxt.async_support as ccxt
-from dotenv import load_dotenv
-import pandas as pd
+import ccxt.async_support as ccxt  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
+import pandas as pd  # noqa: E402
 
 # Load env from config folder
 env_path = portable_root / "config" / ".env"

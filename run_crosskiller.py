@@ -14,13 +14,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # noqa: E402
 load_dotenv()
 
-from config.config_manager import ConfigManager
-from config.config_validator import ConfigValidator
-from core.services.exchange_service_factory import ExchangeServiceFactory
-from strategies.ema_crossover_strategy import EMACrossoverStrategy
+from config.config_manager import ConfigManager  # noqa: E402
+from config.config_validator import ConfigValidator  # noqa: E402
+from core.services.exchange_service_factory import ExchangeServiceFactory  # noqa: E402
+from strategies.ema_crossover_strategy import EMACrossoverStrategy  # noqa: E402
 
 
 async def main():
